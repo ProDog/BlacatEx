@@ -232,7 +232,7 @@
           "lib/netstandard1.0/_._": {}
         }
       },
-      "NBitcoin/4.1.1.46": {
+      "NBitcoin/4.1.1.48": {
         "type": "package",
         "dependencies": {
           "Newtonsoft.Json": "11.0.2",
@@ -1808,10 +1808,10 @@
         "version.txt"
       ]
     },
-    "NBitcoin/4.1.1.46": {
-      "sha512": "nBNn1oQwLntBwY6RrGGOwDg88ag+kWOtZbTgVr5BD6kdAh0Jawol7Y0hcHVlGJ6UEClB0GEGWMsexOIVHF25cg==",
+    "NBitcoin/4.1.1.48": {
+      "sha512": "bc2BaTLe4aL7Dhu6Nqm58KPCP71u6Mml6jdaliWAHhGquHQgzSsM8GVp40gBF+ogDfkLv09ujHW1i61xREDs4w==",
       "type": "package",
-      "path": "nbitcoin/4.1.1.46",
+      "path": "nbitcoin/4.1.1.48",
       "files": [
         ".signature.p7s",
         "lib/net452/NBitcoin.dll",
@@ -1826,7 +1826,7 @@
         "lib/netstandard1.3/NBitcoin.xml",
         "lib/netstandard2.0/NBitcoin.dll",
         "lib/netstandard2.0/NBitcoin.xml",
-        "nbitcoin.4.1.1.46.nupkg.sha512",
+        "nbitcoin.4.1.1.48.nupkg.sha512",
         "nbitcoin.nuspec"
       ]
     },
@@ -4662,7 +4662,7 @@
   "projectFileDependencyGroups": {
     ".NETCoreApp,Version=v2.1": [
       "Microsoft.NETCore.App >= 2.1.0",
-      "NBitcoin >= 4.1.1.46",
+      "NBitcoin >= 4.1.1.48",
       "Nethereum.Geth >= 2.5.1",
       "Newtonsoft.Json >= 11.0.2"
     ]
@@ -4674,11 +4674,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\Zoro\\CoinExchange\\CoinExchangeWatcher\\CoinExchangeWatcher\\CoinExchangeWatcher.csproj",
+      "projectUniqueName": "E:\\Zoro\\CoinExchangeWatcher\\CoinExchangeWatcher\\CoinExchangeWatcher.csproj",
       "projectName": "CoinExchangeWatcher",
-      "projectPath": "E:\\Zoro\\CoinExchange\\CoinExchangeWatcher\\CoinExchangeWatcher\\CoinExchangeWatcher.csproj",
+      "projectPath": "E:\\Zoro\\CoinExchangeWatcher\\CoinExchangeWatcher\\CoinExchangeWatcher.csproj",
       "packagesPath": "C:\\Users\\Administrator\\.nuget\\packages\\",
-      "outputPath": "E:\\Zoro\\CoinExchange\\CoinExchangeWatcher\\CoinExchangeWatcher\\obj\\",
+      "outputPath": "E:\\Zoro\\CoinExchangeWatcher\\CoinExchangeWatcher\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -4715,7 +4715,7 @@
           },
           "NBitcoin": {
             "target": "Package",
-            "version": "[4.1.1.46, )"
+            "version": "[4.1.1.48, )"
           },
           "Nethereum.Geth": {
             "target": "Package",
