@@ -10,3 +10,15 @@ E:\Zoro\CoinExchangeWatcher\CoinExchangeWatcher\obj\Debug\netcoreapp2.1\CoinExch
 E:\Zoro\CoinExchangeWatcher\CoinExchangeWatcher\obj\Debug\netcoreapp2.1\CoinExchangeWatcher.dll
 E:\Zoro\CoinExchangeWatcher\CoinExchangeWatcher\obj\Debug\netcoreapp2.1\CoinExchangeWatcher.pdb
 E:\Zoro\CoinExchangeWatcher\CoinExchangeWatcher\bin\Debug\netcoreapp2.1\config.json
+E:\ZoroChain\CoinExchangeWatcher\CoinExchangeWatcher\bin\Debug\netcoreapp2.1\config.json
+E:\ZoroChain\CoinExchangeWatcher\CoinExchangeWatcher\bin\Debug\netcoreapp2.1\CoinExchangeWatcher.deps.json
+E:\ZoroChain\CoinExchangeWatcher\CoinExchangeWatcher\bin\Debug\netcoreapp2.1\CoinExchangeWatcher.runtimeconfig.json
+E:\ZoroChain\CoinExchangeWatcher\CoinExchangeWatcher\bin\Debug\netcoreapp2.1\CoinExchangeWatcher.runtimeconfig.dev.json
+E:\ZoroChain\CoinExchangeWatcher\CoinExchangeWatcher\bin\Debug\netcoreapp2.1\CoinExchangeWatcher.dll
+E:\ZoroChain\CoinExchangeWatcher\CoinExchangeWatcher\bin\Debug\netcoreapp2.1\CoinExchangeWatcher.pdb
+E:\ZoroChain\CoinExchangeWatcher\CoinExchangeWatcher\obj\Debug\netcoreapp2.1\CoinExchangeWatcher.csprojAssemblyReference.cache
+E:\ZoroChain\CoinExchangeWatcher\CoinExchangeWatcher\obj\Debug\netcoreapp2.1\CoinExchangeWatcher.csproj.CoreCompileInputs.cache
+E:\ZoroChain\CoinExchangeWatcher\CoinExchangeWatcher\obj\Debug\netcoreapp2.1\CoinExchangeWatcher.AssemblyInfoInputs.cache
+E:\ZoroChain\CoinExchangeWatcher\CoinExchangeWatcher\obj\Debug\netcoreapp2.1\CoinExchangeWatcher.AssemblyInfo.cs
+E:\ZoroChain\CoinExchangeWatcher\CoinExchangeWatcher\obj\Debug\netcoreapp2.1\CoinExchangeWatcher.dll
+E:\ZoroChain\CoinExchangeWatcher\CoinExchangeWatcher\obj\Debug\netcoreapp2.1\CoinExchangeWatcher.pdb

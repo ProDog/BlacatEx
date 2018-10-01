@@ -23,18 +23,18 @@ namespace CoinExchange
         private static List<string> ethAddrList = new List<string>();
         private static Dictionary<string, int> confirmCountDic = new Dictionary<string, int>();
         private static string getPostUrl = "http://127.0.0.1:30000/newaddr/";
-        private static string btcRpcUrl = "http://47.52.192.77:8332";
-        private static string ethRpcUrl = "http://47.52.192.77:8545/";
-        private static Dictionary<string, BtcTransResponse> btcTransRspDic = new Dictionary<string, BtcTransResponse>();
-        private static Dictionary<string, EthTransResponse> ethTransRspDic = new Dictionary<string, EthTransResponse>();
+        private static string btcRpcUrl = "http:";
+        private static string ethRpcUrl = "http:";
         private static int btcHeight = 1;
         private static int ethHeight = 1;
-
+        private static string dbName = "MonitorData.db";
+        private static List<TransResponse> btcTransRspList = new List<TransResponse>();
+        private static List<TransResponse> ethTransRspList = new List<TransResponse>();
 
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
-
+            DbHelper.CreateDb(dbName);
             var confirmOj = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText("config.json").ToString());
             confirmCountDic = JsonConvert.DeserializeObject<Dictionary<string, int>>(confirmOj["confirm_count"].ToString());
 
@@ -53,7 +53,7 @@ namespace CoinExchange
             Thread EthThread = new Thread(EthWatcherStartAsync);
             Thread HttpThread = new Thread(HttpServerStart);
             BtcThread.Start();
-            EthThread.Start();
+            //EthThread.Start();
             HttpThread.Start();
         }
 
@@ -73,7 +73,7 @@ namespace CoinExchange
                 {
                     for (int i = btcHeight; i < count; i++)
                     {
-                        if (btcHeight % 100 == 0)
+                        //if (btcHeight % 10 == 0)
                             Console.WriteLine("Parse BTC Height:" + btcHeight);
                         await ParseBtcBlock(rpcC, i);
                     }
@@ -99,20 +99,48 @@ namespace CoinExchange
                     for (var vo = 0; vo < tran.Outputs.Count; vo++)
                     {
                         var vout = tran.Outputs[vo];
-                        var address = vout.ScriptPubKey.GetDestinationAddress(rpcC.Network); //注意比特币地址和网络有关，testnet 和mainnet地址不通用
-                        var add = vout.ScriptPubKey;
+                        var address = vout.ScriptPubKey.GetDestinationAddress(rpcC.Network); //注意比特币地址和网络有关，testnet 和 mainnet 地址不通用
+                        
                         for (int j = 0; j < btcAddrList.Count; j++)
                         {
                             if (address?.ToString() == btcAddrList[j])
                             {
                                 Console.WriteLine("Have a btc transfer for:" + address + "; amount:" + vout.Value);
+                                var btcTrans = new TransResponse();
+                                btcTrans.coinType = "btc";
+                                btcTrans.address = address.ToString();
+                                btcTrans.value = vout.Value.ToDecimal(MoneyUnit.BTC);
+                                btcTrans.confirmcount = 1;
+                                btcTrans.height = index;
+                                btcTrans.txid = tran.ToHex();
+                                btcTransRspList.Add(btcTrans);
                             }
                         }
                     }
                 }
             }
-
+            if (btcTransRspList.Count > 0)
+            {
+                CheckBtcConfirm(confirmCountDic["btc"], btcTransRspList, index);
+                SendTransInfo(btcTransRspList);
+            }
             btcHeight = index;
+        }
+
+        private static void CheckBtcConfirm(int num, List<TransResponse> btcTransRspList, int index)
+        {
+            foreach (var btcTran in btcTransRspList)
+            {
+                if (btcTran.height == index)
+                    return;
+                for (int i = 1; i <= num; i++)
+                {
+                    if (index - btcTran.height == i)
+                    {
+
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -154,9 +182,9 @@ namespace CoinExchange
                     {
                         if (tran.To == ethAddrList[j].ToLower())
                         {
-                            decimal v = (decimal) tran.Value.Value;
+                            decimal v = (decimal)tran.Value.Value;
                             decimal v2 = 1000000000000000000;
-                            var value = v / v2;                      
+                            var value = v / v2;
                             Console.WriteLine("Have a eth transfer for:" + tran.To + "; amount:" + value);
                         }
                     }
@@ -164,6 +192,15 @@ namespace CoinExchange
             }
 
             ethHeight = index;
+        }
+
+        private static void SendTransInfo(List<TransResponse> transRspList)
+        {
+            if (transRspList.Count > 0)
+            {
+
+            }
+            throw new NotImplementedException();
         }
 
         /// <summary>
