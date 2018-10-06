@@ -32,6 +32,7 @@ namespace CoinExchange
         private static int ethIndex = 1; //ETH监控高度
         private static string dbName = "MonitorData.db";  //Sqlite 数据库名
         
+
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
@@ -124,9 +125,12 @@ namespace CoinExchange
 
             if (btcTransRspList.Count > 0)
             {
+                //更新确认次数
                 CheckBtcConfirm(confirmCountDic["btc"], btcTransRspList, index, rpcC);
+                //发送和保存交易信息
                 SendTransInfo(btcTransRspList);
 
+                //移除确认次数为 6 和 0 的交易
                 btcTransRspList.RemoveAll(x => x.confirmcount == confirmCountDic["btc"] || x.confirmcount == 0);
             }
         }
@@ -179,7 +183,7 @@ namespace CoinExchange
         }
 
         /// <summary>
-        /// 解析一个ETH区块
+        /// 解析ETH区块
         /// </summary>
         /// <param name="web3"></param>
         /// <param name="index"></param>
@@ -215,34 +219,44 @@ namespace CoinExchange
         {
             if (transRspList.Count > 0)
             {
-                DataContractJsonSerializer serializer = new DataContractJsonSerializer(transRspList.GetType());
-                MemoryStream meStream = new MemoryStream();
-                serializer.WriteObject(meStream, transRspList);
-                byte[] dataBytes = new byte[meStream.Length];
-                meStream.Position = 0;
-                meStream.Read(dataBytes, 0, (int)meStream.Length);
-                //Encoding.UTF8.GetString(dataBytes);
-
-                HttpWebRequest req = (HttpWebRequest) WebRequest.Create(sendTranUrl);
-                req.Method = "POST";
-                req.ContentType = "application/x-www-form-urlencoded";
-
-                byte[] data = dataBytes;
-                req.ContentLength = data.Length;
-                using (Stream reqStream = req.GetRequestStream())
+                try
                 {
-                    reqStream.Write(data, 0, data.Length);
-                    reqStream.Close();
+                    DataContractJsonSerializer serializer = new DataContractJsonSerializer(transRspList.GetType());
+                    MemoryStream meStream = new MemoryStream();
+                    serializer.WriteObject(meStream, transRspList);
+                    byte[] dataBytes = new byte[meStream.Length];
+                    meStream.Position = 0;
+                    meStream.Read(dataBytes, 0, (int) meStream.Length);
+                    //Encoding.UTF8.GetString(dataBytes);
+
+                    //HttpWebRequest req = (HttpWebRequest) WebRequest.Create(sendTranUrl);
+                    //req.Method = "POST";
+                    //req.ContentType = "application/x-www-form-urlencoded";
+
+                    //byte[] data = dataBytes;
+                    //req.ContentLength = data.Length;
+                    //using (Stream reqStream = req.GetRequestStream())
+                    //{
+                    //    reqStream.Write(data, 0, data.Length);
+                    //    reqStream.Close();
+                    //}
+
+                    //HttpWebResponse resp = (HttpWebResponse) req.GetResponse();
+                    //Stream stream = resp.GetResponseStream();
+
+                    //using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+                    //{
+                    //    var result = reader.ReadToEnd();
+                    //}
+                }
+                catch (Exception ex)
+                {
+                    File.WriteAllText("sendErrLog.txt", ex.ToString());
+                    return;
                 }
 
-                HttpWebResponse resp = (HttpWebResponse) req.GetResponse();
-                Stream stream = resp.GetResponseStream();
-                
-                using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
-                {
-                    var result = reader.ReadToEnd();
-                }
-
+                //保存交易信息
+                DbHelper.SaveTransInfo(transRspList);
             }
 
         }
@@ -285,6 +299,7 @@ namespace CoinExchange
                             return;
                     }
 
+                    DbHelper.SaveAddress(json);
                     Console.WriteLine("Add a new " + json["type"].ToString() + " address: " + json["address"].ToString());
                 }
                 httpPostRequest.Stop();
