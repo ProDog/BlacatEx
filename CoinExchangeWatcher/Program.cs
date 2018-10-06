@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,19 +19,19 @@ namespace CoinExchange
 {
     class Program
     {
-        private static HttpListener httpPostRequest = new HttpListener();
-        private static List<string> btcAddrList = new List<string>();
-        private static List<string> ethAddrList = new List<string>();
-        private static Dictionary<string, int> confirmCountDic = new Dictionary<string, int>();
-        private static string getPostUrl = "http://127.0.0.1:30000/newaddr/";
-        private static string btcRpcUrl = "http:";
-        private static string ethRpcUrl = "http:";
-        private static int btcHeight = 1;
-        private static int ethHeight = 1;
-        private static string dbName = "MonitorData.db";
-        private static List<TransResponse> btcTransRspList = new List<TransResponse>();
-        private static List<TransResponse> ethTransRspList = new List<TransResponse>();
-
+        private static List<string> btcAddrList = new List<string>(); //BTC监听地址列表
+        private static List<string> ethAddrList = new List<string>();  //ETH监听地址列表
+        private static Dictionary<string, int> confirmCountDic = new Dictionary<string, int>();  //各币种确认次数
+        private static string getAddrUrl = "http://127.0.0.1:30000/newaddr/"; //接收新地址 url
+        private static string sendTranUrl = "http://0.0.0.0:0000/send/"; //发送交易信息 url
+        private static List<TransResponse> btcTransRspList = new List<TransResponse>(); //BTC 交易列表
+        private static List<TransResponse> ethTransRspList = new List<TransResponse>(); //ETH 交易列表
+        private static string btcRpcUrl = "http://47.52.192.77:8332";  //BTC RPC url
+        private static string ethRpcUrl = "http://47.52.192.77:8545/";  //ETH RPC url
+        private static int btcIndex = 544573; //BTC 监控高度
+        private static int ethIndex = 1; //ETH监控高度
+        private static string dbName = "MonitorData.db";  //Sqlite 数据库名
+        
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
@@ -69,28 +70,29 @@ namespace CoinExchange
             while (true)
             {
                 var count = await rpcC.GetBlockCountAsync();
-                if (count > btcHeight)
+                if (count > btcIndex)
                 {
-                    for (int i = btcHeight; i < count; i++)
+                    for (int i = btcIndex; i <= count; i++)
                     {
-                        //if (btcHeight % 10 == 0)
-                            Console.WriteLine("Parse BTC Height:" + btcHeight);
+                        Console.WriteLine("Parse BTC Height:" + i);
                         await ParseBtcBlock(rpcC, i);
+                        btcIndex = i;
                     }
                 }
             }
         }
 
         /// <summary>
-        /// 解析一个比特币区块
+        /// 解析比特币区块
         /// </summary>
         /// <param name="rpcC"></param>
-        /// <param name="index"></param>
+        /// <param name="index">被解析区块</param>
+        /// <param name="height">区块高度</param>
         /// <returns></returns>
         private static async Task ParseBtcBlock(NBitcoin.RPC.RPCClient rpcC, int index)
         {
             var block = await rpcC.GetBlockAsync(index);
-            //Console.WriteLine("TransCount:" + block.Transactions.Count);
+            
             if (block.Transactions.Count > 0 && btcAddrList.Count > 0)
             {
                 for (var i = 0; i < block.Transactions.Count; i++)
@@ -99,50 +101,61 @@ namespace CoinExchange
                     for (var vo = 0; vo < tran.Outputs.Count; vo++)
                     {
                         var vout = tran.Outputs[vo];
-                        var address = vout.ScriptPubKey.GetDestinationAddress(rpcC.Network); //注意比特币地址和网络有关，testnet 和 mainnet 地址不通用
-                        
+                        var address = vout.ScriptPubKey.GetDestinationAddress(rpcC.Network); //比特币地址和网络有关，testnet 和 mainnet 地址不通用
+
                         for (int j = 0; j < btcAddrList.Count; j++)
                         {
                             if (address?.ToString() == btcAddrList[j])
                             {
-                                Console.WriteLine("Have a btc transfer for:" + address + "; amount:" + vout.Value);
+                                Console.WriteLine("Have a btc transfer for:" + address + "; amount:" + vout.Value.ToDecimal(MoneyUnit.BTC));
                                 var btcTrans = new TransResponse();
                                 btcTrans.coinType = "btc";
                                 btcTrans.address = address.ToString();
                                 btcTrans.value = vout.Value.ToDecimal(MoneyUnit.BTC);
                                 btcTrans.confirmcount = 1;
                                 btcTrans.height = index;
-                                btcTrans.txid = tran.ToHex();
+                                btcTrans.txid = tran.GetHash().ToString();
                                 btcTransRspList.Add(btcTrans);
                             }
                         }
                     }
                 }
             }
+
             if (btcTransRspList.Count > 0)
             {
-                CheckBtcConfirm(confirmCountDic["btc"], btcTransRspList, index);
+                CheckBtcConfirm(confirmCountDic["btc"], btcTransRspList, index, rpcC);
                 SendTransInfo(btcTransRspList);
+
+                btcTransRspList.RemoveAll(x => x.confirmcount == confirmCountDic["btc"] || x.confirmcount == 0);
             }
-            btcHeight = index;
         }
 
-        private static void CheckBtcConfirm(int num, List<TransResponse> btcTransRspList, int index)
+        /// <summary>
+        /// 检查确认次数
+        /// </summary>
+        /// <param name="num">需确认次数</param>
+        /// <param name="btcTransRspList">交易列表</param>
+        /// <param name="index">当前解析区块</param>
+        /// <param name="rpcC"></param>
+        private static void CheckBtcConfirm(int num, List<TransResponse> btcTransRspList, int index, NBitcoin.RPC.RPCClient rpcC)
         {
             foreach (var btcTran in btcTransRspList)
             {
-                if (btcTran.height == index)
-                    return;
-                for (int i = 1; i <= num; i++)
+                if (index > btcTran.height && index - btcTran.height < num)
                 {
-                    if (index - btcTran.height == i)
+                    var block = rpcC.GetBlock(btcTran.height);
+                    //如果原区块中还包含该交易，则确认数 = 当前区块高度 - 交易所在区块高度 + 1，不包含该交易，确认数统一记为 0
+                    if (block.Transactions.Count > 0 && block.Transactions.Exists(x => x.GetHash().ToString() == btcTran.txid))
+                        btcTran.confirmcount = index - btcTran.height + 1;
+                    else
                     {
-
+                        btcTran.confirmcount = 0;
                     }
                 }
             }
         }
-
+        
         /// <summary>
         /// ETH转账监听服务
         /// </summary>
@@ -152,13 +165,14 @@ namespace CoinExchange
             while (true)
             {
                 var sync = await web3.Eth.Syncing.SendRequestAsync();
-                if (sync.CurrentBlock.Value >= ethHeight)
+                if (sync.CurrentBlock.Value >= ethIndex)
                 {
-                    for (int i = ethHeight; i <= sync.CurrentBlock.Value; i++)
+                    for (int i = ethIndex; i <= sync.CurrentBlock.Value; i++)
                     {
-                        if (ethHeight % 1000 == 0)
-                            Console.WriteLine("Parse ETH Height:" + ethHeight);
+                        if (ethIndex % 1000 == 0)
+                            Console.WriteLine("Parse ETH Height:" + ethIndex);
                         await ParseEthBlock(web3, i);
+                        ethIndex = i;
                     }
                 }
             }
@@ -190,25 +204,57 @@ namespace CoinExchange
                     }
                 }
             }
-
-            ethHeight = index;
         }
 
+
+        /// <summary>
+        /// 发送交易数据
+        /// </summary>
+        /// <param name="transRspList">交易数据列表</param>
         private static void SendTransInfo(List<TransResponse> transRspList)
         {
             if (transRspList.Count > 0)
             {
+                DataContractJsonSerializer serializer = new DataContractJsonSerializer(transRspList.GetType());
+                MemoryStream meStream = new MemoryStream();
+                serializer.WriteObject(meStream, transRspList);
+                byte[] dataBytes = new byte[meStream.Length];
+                meStream.Position = 0;
+                meStream.Read(dataBytes, 0, (int)meStream.Length);
+                //Encoding.UTF8.GetString(dataBytes);
+
+                HttpWebRequest req = (HttpWebRequest) WebRequest.Create(sendTranUrl);
+                req.Method = "POST";
+                req.ContentType = "application/x-www-form-urlencoded";
+
+                byte[] data = dataBytes;
+                req.ContentLength = data.Length;
+                using (Stream reqStream = req.GetRequestStream())
+                {
+                    reqStream.Write(data, 0, data.Length);
+                    reqStream.Close();
+                }
+
+                HttpWebResponse resp = (HttpWebResponse) req.GetResponse();
+                Stream stream = resp.GetResponseStream();
+                
+                using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    var result = reader.ReadToEnd();
+                }
 
             }
-            throw new NotImplementedException();
+
         }
 
+
+        private static HttpListener httpPostRequest = new HttpListener();
         /// <summary>
         /// 新地址接收
         /// </summary>
         private static void HttpServerStart()
         {
-            httpPostRequest.Prefixes.Add(getPostUrl);
+            httpPostRequest.Prefixes.Add(getAddrUrl);
             httpPostRequest.Start();
             Thread ThrednHttpPostRequest = new Thread(new ThreadStart(httpPostRequestHandle));
             ThrednHttpPostRequest.Start();
