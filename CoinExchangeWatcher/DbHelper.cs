@@ -46,7 +46,7 @@ namespace CoinExchangeWatcher
             StringBuilder sbSql = new StringBuilder();
             foreach (var tran in transRspList)
             {
-                if (tran.confirmcount==1)
+                if (tran.confirmcount == 1)
                 {
                     sbSql.Append(
                         $"insert into TransData (CoinType,Height,Txid,Address,Value,ConfirmCount,UpdateTime) values ('{tran.coinType}',{tran.height},'{tran.txid}','{tran.address}',{tran.value},{tran.confirmcount},'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:SS")}');");
@@ -56,9 +56,29 @@ namespace CoinExchangeWatcher
                     sbSql.Append(
                         $"update TransData set ConfirmCount={tran.confirmcount},UpdateTime='{DateTime.Now.ToString("yyyy-MM-dd HH:mm:SS")}';");
                 }
-               
+
             }
             ExecuteSql(sbSql.ToString());
+        }
+
+        public static List<string> GetEthAddr()
+        {
+            throw new NotImplementedException();
+        }
+
+        public static int GetBtcIndex()
+        {
+            throw new NotImplementedException();
+        }
+
+        public static List<string> GetBtcAddr()
+        {
+            throw new NotImplementedException();
+        }
+
+        public static int GetEthIndex()
+        {
+            throw new NotImplementedException();
         }
 
         private static void ExecuteSql(string sql)

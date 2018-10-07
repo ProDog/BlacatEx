@@ -28,34 +28,25 @@ namespace CoinExchange
         private static List<TransResponse> ethTransRspList = new List<TransResponse>(); //ETH 交易列表
         private static string btcRpcUrl = "http://47.52.192.77:8332";  //BTC RPC url
         private static string ethRpcUrl = "http://47.52.192.77:8545/";  //ETH RPC url
-        private static int btcIndex = 544573; //BTC 监控高度
+        private static int btcIndex = 1; //BTC 监控高度
         private static int ethIndex = 1; //ETH监控高度
         private static string dbName = "MonitorData.db";  //Sqlite 数据库名
         
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
             DbHelper.CreateDb(dbName);
             var confirmOj = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText("config.json").ToString());
             confirmCountDic = JsonConvert.DeserializeObject<Dictionary<string, int>>(confirmOj["confirm_count"].ToString());
 
-            var btcAddr = File.ReadAllLines("BTCAddress.txt").ToArray();
-            foreach (var s in btcAddr)
-            {
-                btcAddrList.Add(s);
-            }
-            var ethAddr = File.ReadAllLines("ETHAddress.txt").ToArray();
-            foreach (var s in ethAddr)
-            {
-                ethAddrList.Add(s);
-            }
+            btcAddrList = DbHelper.GetBtcAddr();
+            ethAddrList = DbHelper.GetEthAddr();
 
             Thread BtcThread = new Thread(BtcWatcherStartAsync);
             Thread EthThread = new Thread(EthWatcherStartAsync);
             Thread HttpThread = new Thread(HttpServerStart);
             BtcThread.Start();
-            //EthThread.Start();
+            EthThread.Start();
             HttpThread.Start();
         }
 
@@ -67,6 +58,7 @@ namespace CoinExchange
             var key = new System.Net.NetworkCredential("1", "1");
             var uri = new Uri(btcRpcUrl);
             NBitcoin.RPC.RPCClient rpcC = new NBitcoin.RPC.RPCClient(key, uri);
+            btcIndex = DbHelper.GetBtcIndex();
 
             while (true)
             {
@@ -129,14 +121,13 @@ namespace CoinExchange
                 CheckBtcConfirm(confirmCountDic["btc"], btcTransRspList, index, rpcC);
                 //发送和保存交易信息
                 SendTransInfo(btcTransRspList);
-
-                //移除确认次数为 6 和 0 的交易
+                //移除确认次数为 设定数量 和 0 的交易
                 btcTransRspList.RemoveAll(x => x.confirmcount == confirmCountDic["btc"] || x.confirmcount == 0);
             }
         }
 
         /// <summary>
-        /// 检查确认次数
+        /// 检查 BTC 确认次数
         /// </summary>
         /// <param name="num">需确认次数</param>
         /// <param name="btcTransRspList">交易列表</param>
@@ -166,6 +157,8 @@ namespace CoinExchange
         private static async void EthWatcherStartAsync()
         {
             Web3Geth web3 = new Web3Geth(ethRpcUrl);
+            ethIndex = DbHelper.GetEthIndex();
+
             while (true)
             {
                 var sync = await web3.Eth.Syncing.SendRequestAsync();
@@ -204,11 +197,50 @@ namespace CoinExchange
                             decimal v2 = 1000000000000000000;
                             var value = v / v2;
                             Console.WriteLine("Have a eth transfer for:" + tran.To + "; amount:" + value);
+
+                            var ethTrans = new TransResponse();
+                            ethTrans.coinType = "eth";
+                            ethTrans.address = tran.To.ToString();
+                            ethTrans.value = value;
+                            ethTrans.confirmcount = 1;
+                            ethTrans.height = index;
+                            ethTrans.txid = tran.TransactionHash;
+                            ethTransRspList.Add(ethTrans);
                         }
                     }
                 }
             }
+
+            if (ethTransRspList.Count > 0)
+            {
+                //更新确认次数
+                await CheckEthConfirmAsync(confirmCountDic["eth"], ethTransRspList, index, web3);
+                //发送和保存交易信息
+                SendTransInfo(btcTransRspList);
+                //移除确认次数为 设定数量 和 0 的交易
+                ethTransRspList.RemoveAll(x => x.confirmcount == confirmCountDic["btc"] || x.confirmcount == 0);
+            }
         }
+
+        private static async Task CheckEthConfirmAsync(int num, List<TransResponse> ethTransRspList, int index, Web3Geth web3)
+        {
+            foreach (var ethTran in ethTransRspList)
+            {
+                if (index > ethTran.height && index - ethTran.height < num)
+                {
+                    var block = await web3.Eth.Blocks.GetBlockWithTransactionsByNumber.SendRequestAsync(new HexBigInteger(ethTran.height));
+                    //如果原区块中还包含该交易，则确认数 = 当前区块高度 - 交易所在区块高度 + 1，不包含该交易，确认数统一记为 0
+                    if (block.Transactions.Length > 0 && block.Transactions.ToList().Exists(x => x.TransactionHash.ToString() == ethTran.txid))
+                        ethTran.confirmcount = index - ethTran.height + 1;
+                    else
+                    {
+                        ethTran.confirmcount = 0;
+                    }
+                }
+            }
+        }
+
+
 
 
         /// <summary>
