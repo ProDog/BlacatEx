@@ -22,7 +22,7 @@ namespace CoinExchange
         private static List<string> btcAddrList = new List<string>(); //BTC监听地址列表
         private static List<string> ethAddrList = new List<string>();  //ETH监听地址列表
         private static Dictionary<string, int> confirmCountDic = new Dictionary<string, int>();  //各币种确认次数
-        private static string getAddrUrl = "http://127.0.0.1:30000/newaddr/"; //接收新地址 url
+        private static string getAddrUrl = "http://127.0.0.1:30000/addr/"; //接收新地址 url
         private static string sendTranUrl = "http://0.0.0.0:0000/send/"; //发送交易信息 url
         private static List<TransResponse> btcTransRspList = new List<TransResponse>(); //BTC 交易列表
         private static List<TransResponse> ethTransRspList = new List<TransResponse>(); //ETH 交易列表
@@ -31,7 +31,6 @@ namespace CoinExchange
         private static int btcIndex = 1; //BTC 监控高度
         private static int ethIndex = 1; //ETH监控高度
         private static string dbName = "MonitorData.db";  //Sqlite 数据库名
-        
 
         static void Main(string[] args)
         {
@@ -85,7 +84,7 @@ namespace CoinExchange
         private static async Task ParseBtcBlock(NBitcoin.RPC.RPCClient rpcC, int index)
         {
             var block = await rpcC.GetBlockAsync(index);
-            
+
             if (block.Transactions.Count > 0 && btcAddrList.Count > 0)
             {
                 for (var i = 0; i < block.Transactions.Count; i++)
@@ -150,7 +149,7 @@ namespace CoinExchange
                 }
             }
         }
-        
+
         /// <summary>
         /// ETH转账监听服务
         /// </summary>
@@ -239,8 +238,7 @@ namespace CoinExchange
                 }
             }
         }
-
-
+        
 
 
         /// <summary>
@@ -258,7 +256,7 @@ namespace CoinExchange
                     serializer.WriteObject(meStream, transRspList);
                     byte[] dataBytes = new byte[meStream.Length];
                     meStream.Position = 0;
-                    meStream.Read(dataBytes, 0, (int) meStream.Length);
+                    meStream.Read(dataBytes, 0, (int)meStream.Length);
                     //Encoding.UTF8.GetString(dataBytes);
 
                     //HttpWebRequest req = (HttpWebRequest) WebRequest.Create(sendTranUrl);
@@ -334,7 +332,16 @@ namespace CoinExchange
                     DbHelper.SaveAddress(json);
                     Console.WriteLine("Add a new " + json["type"].ToString() + " address: " + json["address"].ToString());
                 }
-                httpPostRequest.Stop();
+
+                requestContext.Response.StatusCode = 200;
+                requestContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+                requestContext.Response.ContentType = "application/json";
+                requestContext.Response.ContentEncoding = Encoding.UTF8;
+                byte[] buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new { success = "true", msg = "send success" }));
+                requestContext.Response.ContentLength64 = buffer.Length;
+                var output = requestContext.Response.OutputStream; output.Write(buffer, 0, buffer.Length);
+                output.Close();
+                //httpPostRequest.Stop();
             }
         }
     }

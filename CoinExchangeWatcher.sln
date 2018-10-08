@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.28010.2003
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoinExchangeWatcher", "CoinExchangeWatcher\CoinExchangeWatcher.csproj", "{3C2BCEAC-E1F7-4AE5-BF9C-E6991FC7FC9B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GetAddress", "GetAddress\GetAddress.csproj", "{DCD2EF73-A3F0-40F8-9C4B-378A827B2A30}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreateAccount", "CreateAccount\CreateAccount.csproj", "{39A4F4CE-E98C-45C3-8028-0821641222C1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{3C2BCEAC-E1F7-4AE5-BF9C-E6991FC7FC9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C2BCEAC-E1F7-4AE5-BF9C-E6991FC7FC9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3C2BCEAC-E1F7-4AE5-BF9C-E6991FC7FC9B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DCD2EF73-A3F0-40F8-9C4B-378A827B2A30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DCD2EF73-A3F0-40F8-9C4B-378A827B2A30}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DCD2EF73-A3F0-40F8-9C4B-378A827B2A30}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DCD2EF73-A3F0-40F8-9C4B-378A827B2A30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{39A4F4CE-E98C-45C3-8028-0821641222C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39A4F4CE-E98C-45C3-8028-0821641222C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39A4F4CE-E98C-45C3-8028-0821641222C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39A4F4CE-E98C-45C3-8028-0821641222C1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

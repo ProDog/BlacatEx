@@ -6,3 +6,14 @@ E:\ZoroChain\CoinExchangeWatcher\GetAddress\obj\Debug\netcoreapp2.1\GetAddress.c
 E:\ZoroChain\CoinExchangeWatcher\GetAddress\obj\Debug\netcoreapp2.1\GetAddress.AssemblyInfoInputs.cache
 E:\ZoroChain\CoinExchangeWatcher\GetAddress\obj\Debug\netcoreapp2.1\GetAddress.AssemblyInfo.cs
 E:\ZoroChain\CoinExchangeWatcher\GetAddress\obj\Debug\netcoreapp2.1\GetAddress.csprojAssemblyReference.cache
+E:\Zoro\CoinExchangeWatcher\GetAddress\bin\Debug\netcoreapp2.1\GetAddress.deps.json
+E:\Zoro\CoinExchangeWatcher\GetAddress\bin\Debug\netcoreapp2.1\GetAddress.runtimeconfig.json
+E:\Zoro\CoinExchangeWatcher\GetAddress\bin\Debug\netcoreapp2.1\GetAddress.runtimeconfig.dev.json
+E:\Zoro\CoinExchangeWatcher\GetAddress\bin\Debug\netcoreapp2.1\GetAddress.dll
+E:\Zoro\CoinExchangeWatcher\GetAddress\bin\Debug\netcoreapp2.1\GetAddress.pdb
+E:\Zoro\CoinExchangeWatcher\GetAddress\obj\Debug\netcoreapp2.1\GetAddress.csprojAssemblyReference.cache
+E:\Zoro\CoinExchangeWatcher\GetAddress\obj\Debug\netcoreapp2.1\GetAddress.csproj.CoreCompileInputs.cache
+E:\Zoro\CoinExchangeWatcher\GetAddress\obj\Debug\netcoreapp2.1\GetAddress.AssemblyInfoInputs.cache
+E:\Zoro\CoinExchangeWatcher\GetAddress\obj\Debug\netcoreapp2.1\GetAddress.AssemblyInfo.cs
+E:\Zoro\CoinExchangeWatcher\GetAddress\obj\Debug\netcoreapp2.1\GetAddress.dll
+E:\Zoro\CoinExchangeWatcher\GetAddress\obj\Debug\netcoreapp2.1\GetAddress.pdb

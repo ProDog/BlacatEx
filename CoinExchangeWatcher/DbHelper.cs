@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SQLite;
 using System.IO;
 using System.Text;
@@ -33,7 +34,7 @@ namespace CoinExchangeWatcher
         /// <param name="json"></param>
         public static void SaveAddress(JObject json)
         {
-            var sql = $"insert into Address (CoinType,Address,DateTime) values ('{json["type"]}','{json["address"]}','{DateTime.Now.ToString("yyyy-MM-dd HH:mm:SS")}')";
+            var sql = $"insert into Address (CoinType,Address,DateTime) values ('{json["type"]}','{json["address"]}','{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}')";
             ExecuteSql(sql);
         }
 
@@ -49,36 +50,66 @@ namespace CoinExchangeWatcher
                 if (tran.confirmcount == 1)
                 {
                     sbSql.Append(
-                        $"insert into TransData (CoinType,Height,Txid,Address,Value,ConfirmCount,UpdateTime) values ('{tran.coinType}',{tran.height},'{tran.txid}','{tran.address}',{tran.value},{tran.confirmcount},'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:SS")}');");
+                        $"insert into TransData (CoinType,Height,Txid,Address,Value,ConfirmCount,UpdateTime) values ('{tran.coinType}',{tran.height},'{tran.txid}','{tran.address}',{tran.value},{tran.confirmcount},'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}');");
                 }
                 else
                 {
                     sbSql.Append(
-                        $"update TransData set ConfirmCount={tran.confirmcount},UpdateTime='{DateTime.Now.ToString("yyyy-MM-dd HH:mm:SS")}';");
+                        $"update TransData set ConfirmCount={tran.confirmcount},UpdateTime='{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}';");
                 }
 
             }
             ExecuteSql(sbSql.ToString());
         }
 
+        public static List<string> GetBtcAddr()
+        {
+            var list = new List<string>();
+            var sql = "select Address from Address where CoinType='btc' ";
+            var table = ExecuSqlToDataTable(sql);
+            if (table.Rows.Count > 0)
+            {
+                for (int i = 0; i < table.Rows.Count; i++)
+                {
+                    list.Add(table.Rows[i][0].ToString());
+                }
+            }
+
+            return list;
+        }
+
         public static List<string> GetEthAddr()
         {
-            throw new NotImplementedException();
+            var list = new List<string>();
+            var sql = "select Address from Address where CoinType='eth' ";
+            var table = ExecuSqlToDataTable(sql);
+            if (table.Rows.Count > 0)
+            {
+                for (int i = 0; i < table.Rows.Count; i++)
+                {
+                    list.Add(table.Rows[i][0].ToString());
+                }
+            }
+
+            return list;
         }
 
         public static int GetBtcIndex()
         {
-            throw new NotImplementedException();
-        }
-
-        public static List<string> GetBtcAddr()
-        {
-            throw new NotImplementedException();
+            var sql = "select max(Height) from TransData where CoinType='btc' ";
+            var table = ExecuSqlToDataTable(sql);
+            if (table.Rows.Count > 0 && !string.IsNullOrEmpty(table.Rows[0][0].ToString()))
+                return Convert.ToInt32(table.Rows[0][0]);
+            return 1;
         }
 
         public static int GetEthIndex()
         {
-            throw new NotImplementedException();
+            var sql = "select max(Height) from TransData where CoinType='eth' ";
+            var table = ExecuSqlToDataTable(sql);
+            if (table.Rows.Count > 0 && !string.IsNullOrEmpty(table.Rows[0][0].ToString()))
+                return Convert.ToInt32(table.Rows[0][0]);
+            return 1;
         }
 
         private static void ExecuteSql(string sql)
@@ -105,5 +136,18 @@ namespace CoinExchangeWatcher
                 conn.Close();
             }
         }
+
+        private static DataTable ExecuSqlToDataTable(string sql)
+        {
+            DataTable table = new DataTable();
+            SQLiteConnection conn = new SQLiteConnection("Data Source = MonitorData.db");
+            SQLiteCommand cmd = new SQLiteCommand(sql, conn);
+            SQLiteDataAdapter sqliteDa = new SQLiteDataAdapter(cmd);
+            conn.Open();
+            sqliteDa.Fill(table);
+            conn.Close();
+            return table;
+           
+        }      
     }
 }
