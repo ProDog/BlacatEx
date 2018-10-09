@@ -1,0 +1,10 @@
+E:\Zoro\CoinExchangeWatcher\CreateAddress\bin\Debug\netcoreapp2.1\CreateAddress.deps.json
+E:\Zoro\CoinExchangeWatcher\CreateAddress\bin\Debug\netcoreapp2.1\CreateAddress.runtimeconfig.json
+E:\Zoro\CoinExchangeWatcher\CreateAddress\bin\Debug\netcoreapp2.1\CreateAddress.runtimeconfig.dev.json
+E:\Zoro\CoinExchangeWatcher\CreateAddress\bin\Debug\netcoreapp2.1\CreateAddress.dll
+E:\Zoro\CoinExchangeWatcher\CreateAddress\obj\Debug\netcoreapp2.1\CreateAddress.csproj.CoreCompileInputs.cache
+E:\Zoro\CoinExchangeWatcher\CreateAddress\obj\Debug\netcoreapp2.1\CreateAddress.AssemblyInfoInputs.cache
+E:\Zoro\CoinExchangeWatcher\CreateAddress\obj\Debug\netcoreapp2.1\CreateAddress.AssemblyInfo.cs
+E:\Zoro\CoinExchangeWatcher\CreateAddress\bin\Debug\netcoreapp2.1\CreateAddress.pdb
+E:\Zoro\CoinExchangeWatcher\CreateAddress\obj\Debug\netcoreapp2.1\CreateAddress.dll
+E:\Zoro\CoinExchangeWatcher\CreateAddress\obj\Debug\netcoreapp2.1\CreateAddress.pdb

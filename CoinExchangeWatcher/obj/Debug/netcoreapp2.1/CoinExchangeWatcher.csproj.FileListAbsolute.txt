@@ -3,7 +3,6 @@ E:\Zoro\CoinExchangeWatcher\CoinExchangeWatcher\bin\Debug\netcoreapp2.1\CoinExch
 E:\Zoro\CoinExchangeWatcher\CoinExchangeWatcher\bin\Debug\netcoreapp2.1\CoinExchangeWatcher.runtimeconfig.dev.json
 E:\Zoro\CoinExchangeWatcher\CoinExchangeWatcher\bin\Debug\netcoreapp2.1\CoinExchangeWatcher.dll
 E:\Zoro\CoinExchangeWatcher\CoinExchangeWatcher\bin\Debug\netcoreapp2.1\CoinExchangeWatcher.pdb
-E:\Zoro\CoinExchangeWatcher\CoinExchangeWatcher\obj\Debug\netcoreapp2.1\CoinExchangeWatcher.csprojAssemblyReference.cache
 E:\Zoro\CoinExchangeWatcher\CoinExchangeWatcher\obj\Debug\netcoreapp2.1\CoinExchangeWatcher.csproj.CoreCompileInputs.cache
 E:\Zoro\CoinExchangeWatcher\CoinExchangeWatcher\obj\Debug\netcoreapp2.1\CoinExchangeWatcher.AssemblyInfoInputs.cache
 E:\Zoro\CoinExchangeWatcher\CoinExchangeWatcher\obj\Debug\netcoreapp2.1\CoinExchangeWatcher.AssemblyInfo.cs
