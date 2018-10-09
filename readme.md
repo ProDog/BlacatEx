@@ -39,7 +39,7 @@
 ```
 
 ### 创建钱包
-为用户创建各币种的钱包，调用接口：http://xx.xx.xx.xx:7080/getaccount/{type}，  参数：type，币种简称，如 btc，eth 等，调用方式：GET，返回格式：
+为用户创建各币种的钱包，调用接口：http://xx.xx.xx.xx:7080/getaccount/{type}，  参数 type 是币种简称，如 btc，eth 等，调用方式：GET，返回格式：
 ```
 {
     "priKey":"Ky9hKMaG2cg6fMvDju91K5PUrnm8boQcRojQ84xGYid9KxCkrWu8",
@@ -48,7 +48,7 @@
 ```
 
 ### 发送新地址
-当有用户创建了新地址时，发送给监控程序，url：http://127.0.0.1:30000/addr/，  发送方式：POST，type，币种简称，如 btc，eth 等，发送数据格式：
+当有用户创建了新地址时，发送给监控程序，url：http://127.0.0.1:30000/addr/，  发送方式：POST，type 是币种简称，如 btc，eth 等，发送数据格式：
 ```
 {
     "type":"btc",
