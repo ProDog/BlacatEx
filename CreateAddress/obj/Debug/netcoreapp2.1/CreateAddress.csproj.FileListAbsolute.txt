@@ -8,3 +8,4 @@ E:\Zoro\CoinExchangeWatcher\CreateAddress\obj\Debug\netcoreapp2.1\CreateAddress.
 E:\Zoro\CoinExchangeWatcher\CreateAddress\bin\Debug\netcoreapp2.1\CreateAddress.pdb
 E:\Zoro\CoinExchangeWatcher\CreateAddress\obj\Debug\netcoreapp2.1\CreateAddress.dll
 E:\Zoro\CoinExchangeWatcher\CreateAddress\obj\Debug\netcoreapp2.1\CreateAddress.pdb
+E:\Zoro\CoinExchangeWatcher\CreateAddress\obj\Debug\netcoreapp2.1\CreateAddress.csprojAssemblyReference.cache

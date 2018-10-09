@@ -37,7 +37,6 @@ namespace CreateAddress
             {
                 httpGetRequest.Start();
                 HttpListenerContext requestContext = httpGetRequest.GetContext();
-                StreamReader sr = new StreamReader(requestContext.Request.InputStream);
                 var info = requestContext.Request.RawUrl.Split('/');
                 if (info.Length > 2)
                 {
@@ -65,7 +64,7 @@ namespace CreateAddress
                             break;
                     }
                     var sendString = "{\"type\":\"" + type + "\",\"address\":\"" + address + "\"}";
-                    SendAddress(sendString);
+                    //SendAddress(sendString);
                 }
 
                 requestContext.Response.StatusCode = 200;

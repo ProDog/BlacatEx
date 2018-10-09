@@ -21,3 +21,4 @@ E:\ZoroChain\CoinExchangeWatcher\CoinExchangeWatcher\obj\Debug\netcoreapp2.1\Coi
 E:\ZoroChain\CoinExchangeWatcher\CoinExchangeWatcher\obj\Debug\netcoreapp2.1\CoinExchangeWatcher.AssemblyInfo.cs
 E:\ZoroChain\CoinExchangeWatcher\CoinExchangeWatcher\obj\Debug\netcoreapp2.1\CoinExchangeWatcher.dll
 E:\ZoroChain\CoinExchangeWatcher\CoinExchangeWatcher\obj\Debug\netcoreapp2.1\CoinExchangeWatcher.pdb
+E:\Zoro\CoinExchangeWatcher\CoinExchangeWatcher\obj\Debug\netcoreapp2.1\CoinExchangeWatcher.csprojAssemblyReference.cache

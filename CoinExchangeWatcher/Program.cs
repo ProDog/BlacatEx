@@ -162,12 +162,12 @@ namespace CoinExchange
             while (true)
             {
                 var sync = await web3.Eth.Syncing.SendRequestAsync();
-                if (sync.CurrentBlock.Value >= ethIndex)
+                if (sync.CurrentBlock.Value > ethIndex)
                 {
                     for (int i = ethIndex; i <= sync.CurrentBlock.Value; i++)
                     {
-                        if (ethIndex % 10 == 0)
-                            Console.WriteLine("Parse ETH Height:" + ethIndex);
+
+                        Console.WriteLine("Parse ETH Height:" + ethIndex);
                         await ParseEthBlock(web3, i);
                         DbHelper.SaveIndex(i, "eth");
                         ethIndex = i;
@@ -217,9 +217,9 @@ namespace CoinExchange
                 //更新确认次数
                 await CheckEthConfirmAsync(confirmCountDic["eth"], ethTransRspList, index, web3);
                 //发送和保存交易信息
-                SendTransInfo(btcTransRspList);
+                SendTransInfo(ethTransRspList);
                 //移除确认次数为 设定数量 和 0 的交易
-                ethTransRspList.RemoveAll(x => x.confirmcount == confirmCountDic["btc"] || x.confirmcount == 0);
+                ethTransRspList.RemoveAll(x => x.confirmcount == confirmCountDic["eth"] || x.confirmcount == 0);
             }
         }
 
@@ -230,6 +230,7 @@ namespace CoinExchange
                 if (index > ethTran.height && index - ethTran.height < num)
                 {
                     var block = await web3.Eth.Blocks.GetBlockWithTransactionsByNumber.SendRequestAsync(new HexBigInteger(ethTran.height));
+
                     //如果原区块中还包含该交易，则确认数 = 当前区块高度 - 交易所在区块高度 + 1，不包含该交易，确认数统一记为 0
                     if (block.Transactions.Length > 0 && block.Transactions.ToList().Exists(x => x.TransactionHash.ToString() == ethTran.txid))
                         ethTran.confirmcount = index - ethTran.height + 1;
