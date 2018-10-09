@@ -57,7 +57,7 @@ namespace CoinExchange
             var key = new System.Net.NetworkCredential("1", "1");
             var uri = new Uri(btcRpcUrl);
             NBitcoin.RPC.RPCClient rpcC = new NBitcoin.RPC.RPCClient(key, uri);
-            btcIndex = DbHelper.GetBtcIndex();
+            btcIndex = DbHelper.GetBtcIndex() + 1;
 
             while (true)
             {
@@ -68,6 +68,7 @@ namespace CoinExchange
                     {
                         Console.WriteLine("Parse BTC Height:" + i);
                         await ParseBtcBlock(rpcC, i);
+                        DbHelper.SaveIndex(i, "btc");
                         btcIndex = i;
                     }
                 }
@@ -156,7 +157,7 @@ namespace CoinExchange
         private static async void EthWatcherStartAsync()
         {
             Web3Geth web3 = new Web3Geth(ethRpcUrl);
-            ethIndex = DbHelper.GetEthIndex();
+            ethIndex = DbHelper.GetEthIndex() + 1;
 
             while (true)
             {
@@ -165,9 +166,10 @@ namespace CoinExchange
                 {
                     for (int i = ethIndex; i <= sync.CurrentBlock.Value; i++)
                     {
-                        if (ethIndex % 1000 == 0)
+                        if (ethIndex % 10 == 0)
                             Console.WriteLine("Parse ETH Height:" + ethIndex);
                         await ParseEthBlock(web3, i);
+                        DbHelper.SaveIndex(i, "eth");
                         ethIndex = i;
                     }
                 }
@@ -341,7 +343,6 @@ namespace CoinExchange
                 requestContext.Response.ContentLength64 = buffer.Length;
                 var output = requestContext.Response.OutputStream; output.Write(buffer, 0, buffer.Length);
                 output.Close();
-                //httpPostRequest.Stop();
             }
         }
     }

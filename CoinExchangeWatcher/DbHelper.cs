@@ -16,7 +16,8 @@ namespace CoinExchangeWatcher
                 return;
             SQLiteConnection.CreateFile(dbName);
             string sqlString = "CREATE TABLE TransData (CoinType TEXT NOT NULL,Height INTEGER NOT NULL,Txid TEXT NOT NULL,Address TEXT NOT NULL,Value REAL NOT NULL,ConfirmCount INTEGER NOT NULL,UpdateTime TEXT NOT NULL);" +
-                               "CREATE TABLE Address (CoinType TEXT NOT NULL,Address TEXT NOT NULL,DateTime TEXT NOT NULL)";
+                               "CREATE TABLE Address (CoinType TEXT NOT NULL,Address TEXT NOT NULL,DateTime TEXT NOT NULL);" +
+                               "CREATE TABLE ParseIndex (CoinType TEXT PRIMARY KEY NOT NULL,Height INTEGER NOT NULL,DateTime TEXT NOT NULL)";
             SQLiteConnection conn = new SQLiteConnection();
             conn.ConnectionString = "DataSource = " + dbName;
             conn.Open();           
@@ -94,9 +95,16 @@ namespace CoinExchangeWatcher
             return list;
         }
 
+        public static void SaveIndex(int i, string type)
+        {
+            var sql =
+                $"Replace into ParseIndex (CoinType,Height,DateTime) values ('{type}',{i},'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}')";
+            ExecuteSql(sql);
+        }
+
         public static int GetBtcIndex()
         {
-            var sql = "select max(Height) from TransData where CoinType='btc' ";
+            var sql = "select Height from ParseIndex where CoinType='btc' ";
             var table = ExecuSqlToDataTable(sql);
             if (table.Rows.Count > 0 && !string.IsNullOrEmpty(table.Rows[0][0].ToString()))
                 return Convert.ToInt32(table.Rows[0][0]);
@@ -105,7 +113,7 @@ namespace CoinExchangeWatcher
 
         public static int GetEthIndex()
         {
-            var sql = "select max(Height) from TransData where CoinType='eth' ";
+            var sql = "select Height from ParseIndex where CoinType='eth' ";
             var table = ExecuSqlToDataTable(sql);
             if (table.Rows.Count > 0 && !string.IsNullOrEmpty(table.Rows[0][0].ToString()))
                 return Convert.ToInt32(table.Rows[0][0]);

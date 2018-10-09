@@ -137,3 +137,4 @@ E:\Zoro\CoinExchangeWatcher\CreateAccount\obj\Debug\CreateAccount.csproj.CoreCom
 E:\Zoro\CoinExchangeWatcher\CreateAccount\obj\Debug\CreateAccount.csproj.CopyComplete
 E:\Zoro\CoinExchangeWatcher\CreateAccount\obj\Debug\CreateAccount.exe
 E:\Zoro\CoinExchangeWatcher\CreateAccount\obj\Debug\CreateAccount.pdb
+E:\Zoro\CoinExchangeWatcher\CreateAccount\obj\Debug\CreateAccount.csprojAssemblyReference.cache
