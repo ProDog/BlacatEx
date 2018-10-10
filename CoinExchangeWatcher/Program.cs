@@ -38,14 +38,19 @@ namespace CoinExchange
             var confirmOj = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText("config.json").ToString());
             confirmCountDic = JsonConvert.DeserializeObject<Dictionary<string, int>>(confirmOj["confirm_count"].ToString());
 
+            //程序启动时读取监控的地址、上一次解析的区块高度、上次确认数未达到设定数目的交易
             btcAddrList = DbHelper.GetBtcAddr();
             ethAddrList = DbHelper.GetEthAddr();
+            btcIndex = DbHelper.GetBtcIndex() + 1;
+            ethIndex = DbHelper.GetEthIndex() + 1;
+            DbHelper.GetBtcRspList(ref btcTransRspList);
+            DbHelper.GetEthRspList(ref ethTransRspList);
 
             Thread BtcThread = new Thread(BtcWatcherStartAsync);
             Thread EthThread = new Thread(EthWatcherStartAsync);
             Thread HttpThread = new Thread(HttpServerStart);
             BtcThread.Start();
-            EthThread.Start();
+            //EthThread.Start();
             HttpThread.Start();
         }
 
@@ -57,7 +62,6 @@ namespace CoinExchange
             var key = new System.Net.NetworkCredential("1", "1");
             var uri = new Uri(btcRpcUrl);
             NBitcoin.RPC.RPCClient rpcC = new NBitcoin.RPC.RPCClient(key, uri);
-            btcIndex = DbHelper.GetBtcIndex() + 1;
 
             while (true)
             {
@@ -157,7 +161,6 @@ namespace CoinExchange
         private static async void EthWatcherStartAsync()
         {
             Web3Geth web3 = new Web3Geth(ethRpcUrl);
-            ethIndex = DbHelper.GetEthIndex() + 1;
 
             while (true)
             {

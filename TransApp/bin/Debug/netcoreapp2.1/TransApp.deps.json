@@ -1,7 +1,7 @@
 {
   "runtimeTarget": {
     "name": ".NETCoreApp,Version=v2.1",
-    "signature": "e1b429b9b9705daeb64d731b9f00c9faaf5d13e6"
+    "signature": "8e19ce7c9f4697b231b5db29bbe0e1e8dfb15cc6"
   },
   "compilationOptions": {},
   "targets": {
@@ -9,7 +9,8 @@
       "TransApp/1.0.0": {
         "dependencies": {
           "NBitcoin": "4.1.1.51",
-          "Nethereum.Geth": "2.5.1"
+          "Nethereum.Geth": "2.5.1",
+          "QBitNinja.Client": "1.0.3.47"
         },
         "runtime": {
           "TransApp.dll": {}
@@ -239,6 +240,17 @@
           "lib/netstandard2.0/BouncyCastle.Crypto.dll": {
             "assemblyVersion": "1.8.2.0",
             "fileVersion": "1.8.2.223"
+          }
+        }
+      },
+      "QBitNinja.Client/1.0.3.47": {
+        "dependencies": {
+          "NBitcoin": "4.1.1.51"
+        },
+        "runtime": {
+          "lib/netstandard1.1/QBitNinja.Client.dll": {
+            "assemblyVersion": "1.0.3.47",
+            "fileVersion": "1.0.3.47"
           }
         }
       },
@@ -988,6 +1000,13 @@
       "sha512": "sha512-XpJVIhjPiO0o+DU36eeIzqnRilDmE8Z7Kfhm9V9o1yNqM3ikgleD94Z5W/LeEu3t63LaZl2CNJexaix+I6AUMg==",
       "path": "portable.bouncycastle/1.8.2",
       "hashPath": "portable.bouncycastle.1.8.2.nupkg.sha512"
+    },
+    "QBitNinja.Client/1.0.3.47": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ANPW0At+miKKsyGXVToC5dG8HtZNsa3jD1khO/jswXPo9z20h0Bnyuw5a0/E9/B/IUydhj7bH1KiRpgMx6QSOg==",
+      "path": "qbitninja.client/1.0.3.47",
+      "hashPath": "qbitninja.client.1.0.3.47.nupkg.sha512"
     },
     "runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl/4.3.2": {
       "type": "package",

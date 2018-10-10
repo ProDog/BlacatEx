@@ -56,11 +56,21 @@ namespace CoinExchangeWatcher
                 else
                 {
                     sbSql.Append(
-                        $"update TransData set ConfirmCount={tran.confirmcount},UpdateTime='{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}';");
+                        $"update TransData set ConfirmCount={tran.confirmcount},UpdateTime='{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}' where Txid='{tran.txid}';");
                 }
 
             }
             ExecuteSql(sbSql.ToString());
+        }
+
+        internal static List<TransResponse> GetEthRspList(ref List<TransResponse> btcTransRspList)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal static List<TransResponse> GetBtcRspList(ref List<TransResponse> btcTransRspList)
+        {
+            throw new NotImplementedException();
         }
 
         public static List<string> GetBtcAddr()
