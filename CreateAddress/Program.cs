@@ -10,7 +10,7 @@ namespace CreateAddress
 {
     class Program
     {
-        private static string sendAddrUrl = "http://127.0.0.1:30000/addr/";
+        private static string sendAddrUrl = "http://127.0.0.1:7081/addr/";
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
@@ -22,7 +22,7 @@ namespace CreateAddress
       
         private static void HttpServerStart()
         {
-            httpGetRequest.Prefixes.Add("http://127.0.0.1:7080/getaccount/");
+            httpGetRequest.Prefixes.Add("http://+:7080/getaccount");
             httpGetRequest.Start();
             Thread ThrednHttpPostRequest = new Thread(new ThreadStart(httpGetRequestHandle));
             ThrednHttpPostRequest.Start();

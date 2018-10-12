@@ -63,14 +63,16 @@ namespace CoinExchangeWatcher
             ExecuteSql(sbSql.ToString());
         }
 
-        internal static List<TransResponse> GetEthRspList(ref List<TransResponse> btcTransRspList)
+        public static List<TransResponse> GetBtcRspList(ref List<TransResponse> btcTransRspList)
         {
-            throw new NotImplementedException();
+            var sql = "select ";
+            return btcTransRspList;
         }
 
-        internal static List<TransResponse> GetBtcRspList(ref List<TransResponse> btcTransRspList)
+        public static List<TransResponse> GetEthRspList(ref List<TransResponse> ethTransRspList)
         {
-            throw new NotImplementedException();
+            var sql = "";
+            return ethTransRspList;
         }
 
         public static List<string> GetBtcAddr()

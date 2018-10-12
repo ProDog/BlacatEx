@@ -22,7 +22,7 @@ namespace CoinExchange
         private static List<string> btcAddrList = new List<string>(); //BTC监听地址列表
         private static List<string> ethAddrList = new List<string>();  //ETH监听地址列表
         private static Dictionary<string, int> confirmCountDic = new Dictionary<string, int>();  //各币种确认次数
-        private static string getAddrUrl = "http://127.0.0.1:30000/addr/"; //接收新地址 url
+        private static string getAddrUrl = "http://127.0.0.1:7081/addr/"; //接收新地址 url
         private static string sendTranUrl = "http://0.0.0.0:0000/send/"; //发送交易信息 url
         private static List<TransResponse> btcTransRspList = new List<TransResponse>(); //BTC 交易列表
         private static List<TransResponse> ethTransRspList = new List<TransResponse>(); //ETH 交易列表
@@ -41,8 +41,8 @@ namespace CoinExchange
             //程序启动时读取监控的地址、上一次解析的区块高度、上次确认数未达到设定数目的交易
             btcAddrList = DbHelper.GetBtcAddr();
             ethAddrList = DbHelper.GetEthAddr();
-            btcIndex = DbHelper.GetBtcIndex() + 1;
-            ethIndex = DbHelper.GetEthIndex() + 1;
+            //btcIndex = DbHelper.GetBtcIndex() + 1;
+            //ethIndex = DbHelper.GetEthIndex() + 1;
             DbHelper.GetBtcRspList(ref btcTransRspList);
             DbHelper.GetEthRspList(ref ethTransRspList);
 
@@ -50,7 +50,7 @@ namespace CoinExchange
             Thread EthThread = new Thread(EthWatcherStartAsync);
             Thread HttpThread = new Thread(HttpServerStart);
             BtcThread.Start();
-            //EthThread.Start();
+            EthThread.Start();
             HttpThread.Start();
         }
 
