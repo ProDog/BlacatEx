@@ -67,9 +67,15 @@
        "amount": 23.256
 }
 ```
+返回 txid
+```
+{
+    "txid": "73d82f176a2b357256138bd0a6aeddd2131829dadccdee18f98a65da19282228"
+}
+```
 
 ### 发送新地址
-当有用户创建了新地址时，发送给监控程序，url：http://127.0.0.1:30000/addr/，  发送方式：POST，type 是币种简称，如 btc，eth 等，发送数据格式：
+当有用户创建了新地址时，发送给监控程序，url：http://xx.xx.xx.xx:30000/addr/，  发送方式：POST，type 是币种简称，如 btc，eth 等，发送数据格式：
 ```
 {
     "type":"btc",
