@@ -461,6 +461,19 @@
           "lib/netstandard2.0/BouncyCastle.Crypto.dll": {}
         }
       },
+      "QBitNinja.Client/1.0.3.47": {
+        "type": "package",
+        "dependencies": {
+          "NBitcoin": "4.1.1.1",
+          "NETStandard.Library": "1.6.1"
+        },
+        "compile": {
+          "lib/netstandard1.1/QBitNinja.Client.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard1.1/QBitNinja.Client.dll": {}
+        }
+      },
       "runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl/4.3.2": {
         "type": "package",
         "runtimeTargets": {
@@ -2189,6 +2202,18 @@
         "lib/portable-net40+sl5+win8+wp8+wpa81/BouncyCastle.Crypto.xml",
         "portable.bouncycastle.1.8.2.nupkg.sha512",
         "portable.bouncycastle.nuspec"
+      ]
+    },
+    "QBitNinja.Client/1.0.3.47": {
+      "sha512": "ANPW0At+miKKsyGXVToC5dG8HtZNsa3jD1khO/jswXPo9z20h0Bnyuw5a0/E9/B/IUydhj7bH1KiRpgMx6QSOg==",
+      "type": "package",
+      "path": "qbitninja.client/1.0.3.47",
+      "files": [
+        "lib/net452/QBitNinja.Client.dll",
+        "lib/net461/QBitNinja.Client.dll",
+        "lib/netstandard1.1/QBitNinja.Client.dll",
+        "qbitninja.client.1.0.3.47.nupkg.sha512",
+        "qbitninja.client.nuspec"
       ]
     },
     "runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl/4.3.2": {
@@ -4755,6 +4780,7 @@
       "NBitcoin >= 4.1.1.48",
       "Nethereum.Geth >= 2.5.1",
       "Newtonsoft.Json >= 11.0.2",
+      "QBitNinja.Client >= 1.0.3.47",
       "System.Data.SQLite >= 1.0.109.2"
     ]
   },
@@ -4815,6 +4841,10 @@
           "Newtonsoft.Json": {
             "target": "Package",
             "version": "[11.0.2, )"
+          },
+          "QBitNinja.Client": {
+            "target": "Package",
+            "version": "[1.0.3.47, )"
           },
           "System.Data.SQLite": {
             "target": "Package",

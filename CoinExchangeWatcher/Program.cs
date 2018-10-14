@@ -11,9 +11,13 @@ using CoinExchangeWatcher;
 using NBitcoin;
 using NBitcoin.RPC;
 using Nethereum.Geth;
+using Nethereum.Hex.HexConvertors.Extensions;
 using Nethereum.Hex.HexTypes;
+using Nethereum.Web3;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using QBitNinja.Client;
+using QBitNinja.Client.Models;
 
 namespace CoinExchange
 {
@@ -22,7 +26,7 @@ namespace CoinExchange
         private static List<string> btcAddrList = new List<string>(); //BTC监听地址列表
         private static List<string> ethAddrList = new List<string>();  //ETH监听地址列表
         private static Dictionary<string, int> confirmCountDic = new Dictionary<string, int>();  //各币种确认次数
-        private static string getAddrUrl = "http://127.0.0.1:7081/addr/"; //接收新地址 url
+        private static string getAddrUrl = "http://127.0.0.1:7080/"; //接收新地址 url
         private static string sendTranUrl = "http://0.0.0.0:0000/send/"; //发送交易信息 url
         private static List<TransResponse> btcTransRspList = new List<TransResponse>(); //BTC 交易列表
         private static List<TransResponse> ethTransRspList = new List<TransResponse>(); //ETH 交易列表
@@ -43,8 +47,8 @@ namespace CoinExchange
             ethAddrList = DbHelper.GetEthAddr();
             //btcIndex = DbHelper.GetBtcIndex() + 1;
             //ethIndex = DbHelper.GetEthIndex() + 1;
-            DbHelper.GetBtcRspList(ref btcTransRspList);
-            DbHelper.GetEthRspList(ref ethTransRspList);
+            DbHelper.GetRspList(ref btcTransRspList, confirmCountDic["btc"], "btc");
+            DbHelper.GetRspList(ref ethTransRspList, confirmCountDic["eth"], "eth");
 
             Thread BtcThread = new Thread(BtcWatcherStartAsync);
             Thread EthThread = new Thread(EthWatcherStartAsync);
@@ -317,26 +321,80 @@ namespace CoinExchange
                 httpPostRequest.Start();
                 HttpListenerContext requestContext = httpPostRequest.GetContext();
                 StreamReader sr = new StreamReader(requestContext.Request.InputStream);
+                var urlPara = requestContext.Request.RawUrl.Split('/');
                 var info = sr.ReadToEnd();
-                if (!string.IsNullOrEmpty(info))
+                var json = Newtonsoft.Json.Linq.JObject.Parse(info);
+                var returnString = string.Empty;
+                if (urlPara.Length > 1)
                 {
-                    var json = Newtonsoft.Json.Linq.JObject.Parse(info);
-                    if (!json.ContainsKey("address"))
-                        return;
-                    switch (json["type"].ToString())
+                    var method = urlPara[1];
+                    if (method == "getaccount")
                     {
-                        case "btc":
-                            btcAddrList.Add(json["address"].ToString());
-                            break;
-                        case "eth":
-                            ethAddrList.Add(json["address"].ToString());
-                            break;
-                        default:
+                        var coinType = urlPara[2];
+                        string address = string.Empty;
+                        string priKey = string.Empty;
+                        switch (coinType)
+                        {
+                            case "btc":
+                                var btcPrikey = new Key();
+                                priKey = btcPrikey.GetWif(Network.Main).ToString();
+                                address = btcPrikey.PubKey.GetAddress(Network.Main).ToString();
+                                break;
+                            case "eth":
+                                var ecKey = Nethereum.Signer.EthECKey.GenerateKey();
+                                var ethPrikey = ecKey.GetPrivateKeyAsBytes().ToHex();
+                                priKey = ethPrikey.ToString();
+                                address = new Nethereum.Web3.Accounts.Account(ethPrikey).Address;
+                                break;
+                            default:
+                                priKey = null;
+                                address = null;
+                                break;
+                        }
+                        returnString = "{\"type\":\"" + coinType + "\",\"address\":\"" + address + "\"}";
+                    }
+                    if (method == "addr")
+                    {
+                        DbHelper.SaveAddress(json);
+                        Console.WriteLine("Add a new " + json["type"].ToString() + " address: " + json["address"].ToString());
+                    }
+                    if (method == "trans")
+                    {
+                        if (!json.ContainsKey("address") || !json.ContainsKey("prikey"))
                             return;
+                        switch (json["type"].ToString())
+                        {
+                            case "btc":
+                                SendBtcTrans(json);
+                                break;
+                            case "eth":
+                                SendEthTrans(json);
+                                break;
+                            default:
+                                return;
+                        }
                     }
 
-                    DbHelper.SaveAddress(json);
-                    Console.WriteLine("Add a new " + json["type"].ToString() + " address: " + json["address"].ToString());
+                    if (method == "getbalance")
+                    {
+                        //获取余额时要传私钥进来、用Post吧
+                        var coinType = urlPara[2];
+                        var priKey = urlPara[3];
+                        decimal balance = 0;
+                        switch (coinType)
+                        {
+                            case "btc":
+                                var uri = new Uri(btcRpcUrl);
+
+                                var btcPriKey = new BitcoinSecret(json["prikey"].ToString());
+                                var network = btcPriKey.Network;
+                                var address = btcPriKey.GetAddress();
+                                var client = new QBitNinjaClient(uri, network);
+                                //balance = client.GetBalance();
+                                break;
+
+                        }
+                    }                    
                 }
 
                 requestContext.Response.StatusCode = 200;
@@ -348,6 +406,74 @@ namespace CoinExchange
                 var output = requestContext.Response.OutputStream; output.Write(buffer, 0, buffer.Length);
                 output.Close();
             }
+        }
+
+        private static void SendBtcTrans(JObject json)
+        {
+            var uri = new Uri(btcRpcUrl);
+
+            var btcPriKey = new BitcoinSecret(json["prikey"].ToString());
+            var network = btcPriKey.Network;
+            var address = btcPriKey.GetAddress();
+            var client = new QBitNinjaClient(uri, network);
+            
+            var transactionId = uint256.Parse(json["txid"].ToString());
+            var transactionResponse = client.GetTransaction(transactionId).Result;
+
+            var receivedCoins = transactionResponse.ReceivedCoins;
+            OutPoint outPointToSpend = null;
+            foreach (var coin in receivedCoins)
+            {
+                if (coin.TxOut.ScriptPubKey == btcPriKey.ScriptPubKey)
+                {
+                    outPointToSpend = coin.Outpoint;
+                }
+            }
+            var txInAmount = (Money)receivedCoins[(int)outPointToSpend.N].Amount;
+            BitcoinAddress receiveAddress = new BitcoinPubKeyAddress("address", network);
+            var transaction = Transaction.Create(network);
+            transaction.Inputs.Add(new TxIn()
+            {
+                PrevOut = outPointToSpend
+            });
+
+            var minerFee = txInAmount.ToDecimal(MoneyUnit.BTC) * (decimal)0.02;
+
+            transaction.Outputs.Add(new TxOut()
+            {
+                Value = Money.Coins(txInAmount.ToDecimal(MoneyUnit.BTC) - minerFee),
+                ScriptPubKey = receiveAddress.ScriptPubKey
+            });
+
+            transaction.Inputs[0].ScriptSig = btcPriKey.ScriptPubKey;
+            transaction.Sign(btcPriKey, false);
+
+            BroadcastResponse broadcastResponse = client.Broadcast(transaction).Result;
+
+            if (!broadcastResponse.Success)
+            {
+                Console.Error.WriteLine("ErrorCode: " + broadcastResponse.Error.ErrorCode);
+                Console.Error.WriteLine("Error message: " + broadcastResponse.Error.Reason);
+            }
+            else
+            {
+                Console.WriteLine("Success! You can check out the hash of the transaciton in any block explorer:");
+                Console.WriteLine(transaction.GetHash());
+            }
+        }
+
+        private static async System.Threading.Tasks.Task SendEthTrans(JObject json)
+        {
+            //const int UNLOCK_TIMEOUT = 2 * 60; // 2 minutes (arbitrary)
+            //var account = new ManagedAccount(json["address"].ToString(), json["prikey"].ToString());
+            //var web3 = new Web3(account,ethRpcUrl);
+            //await web3.TransactionManager.SendTransactionAsync(account.Address, "", new HexBigInteger(20));
+            var web3 = new Web3(ethRpcUrl);
+            var balanceWei = await web3.Eth.GetBalance.SendRequestAsync(json["address"].ToString());
+            var balanceEther = Web3.Convert.FromWei(balanceWei);
+
+            var unlockResult = await web3.Personal.UnlockAccount.SendRequestAsync(json["address"].ToString(), json["prikey"].ToString(), 2 * 60);
+            var sendTxHash = await web3.Eth.TransactionManager.SendTransactionAsync(json["address"].ToString(), "toAddress", new HexBigInteger(balanceWei));
         }
     }
 }

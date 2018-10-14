@@ -9,6 +9,7 @@
     <PackageReference Include="NBitcoin" Version="4.1.1.48" />
     <PackageReference Include="Nethereum.Geth" Version="2.5.1" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="QBitNinja.Client" Version="1.0.3.47" />
     <PackageReference Include="System.Data.SQLite" Version="1.0.109.2" />
   </ItemGroup>
 

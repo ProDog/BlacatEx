@@ -63,16 +63,25 @@ namespace CoinExchangeWatcher
             ExecuteSql(sbSql.ToString());
         }
 
-        public static List<TransResponse> GetBtcRspList(ref List<TransResponse> btcTransRspList)
+        public static List<TransResponse> GetRspList(ref List<TransResponse> TransRspList, int count, string type)
         {
-            var sql = "select ";
-            return btcTransRspList;
-        }
-
-        public static List<TransResponse> GetEthRspList(ref List<TransResponse> ethTransRspList)
-        {
-            var sql = "";
-            return ethTransRspList;
+            var sql = $"select CoinType,Height,Txid,Address,Value,ConfirmCount from TransData where CoinType = '{type}' and ConfirmCount < {count}";
+            var table = ExecuSqlToDataTable(sql);
+            if (table.Rows.Count > 0)
+            {
+                for (int i = 0; i < table.Rows.Count; i++)
+                {
+                    var trans = new TransResponse();
+                    trans.coinType = table.Rows[i]["CoinType"].ToString();
+                    trans.address = table.Rows[i]["Address"].ToString();
+                    trans.txid = table.Rows[i]["Txid"].ToString();
+                    trans.confirmcount = Convert.ToInt32(table.Rows[i]["ConfirmCount"]);
+                    trans.height = Convert.ToInt32(table.Rows[i]["Height"]);
+                    trans.value = Convert.ToDecimal(table.Rows[i]["Value"]);
+                    TransRspList.Add(trans);
+                }
+            }
+            return TransRspList;
         }
 
         public static List<string> GetBtcAddr()
