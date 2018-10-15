@@ -26,15 +26,15 @@ namespace CoinExchange
         private static List<string> btcAddrList = new List<string>(); //BTC监听地址列表
         private static List<string> ethAddrList = new List<string>();  //ETH监听地址列表
         private static Dictionary<string, int> confirmCountDic = new Dictionary<string, int>();  //各币种确认次数
-        private static string getAddrUrl = "http://127.0.0.1:7080/"; //接收新地址 url
+        private static string getAddrUrl = "http://xx.xx.xx.xx:xxxx/"; //接收新地址 url
         private static string sendTranUrl = "http://0.0.0.0:0000/send/"; //发送交易信息 url
-        private static List<TransResponse> btcTransRspList = new List<TransResponse>(); //BTC 交易列表
-        private static List<TransResponse> ethTransRspList = new List<TransResponse>(); //ETH 交易列表
-        private static string btcRpcUrl = "http://47.52.192.77:8332";  //BTC RPC url
-        private static string ethRpcUrl = "http://47.52.192.77:8545/";  //ETH RPC url
+        private static string btcRpcUrl = "http://xx.xx.xx.xx:xxxx";  //BTC RPC url
+        private static string ethRpcUrl = "http://xx.xx.xx.xx:xxxx/";  //ETH RPC url
         private static int btcIndex = 1; //BTC 监控高度
         private static int ethIndex = 1; //ETH监控高度
         private static string dbName = "MonitorData.db";  //Sqlite 数据库名
+        private static List<TransResponse> btcTransRspList = new List<TransResponse>(); //BTC 交易列表
+        private static List<TransResponse> ethTransRspList = new List<TransResponse>(); //ETH 交易列表
 
         static void Main(string[] args)
         {
@@ -45,8 +45,8 @@ namespace CoinExchange
             //程序启动时读取监控的地址、上一次解析的区块高度、上次确认数未达到设定数目的交易
             btcAddrList = DbHelper.GetBtcAddr();
             ethAddrList = DbHelper.GetEthAddr();
-            //btcIndex = DbHelper.GetBtcIndex() + 1;
-            //ethIndex = DbHelper.GetEthIndex() + 1;
+            btcIndex = DbHelper.GetBtcIndex() + 1;
+            ethIndex = DbHelper.GetEthIndex() + 1;
             DbHelper.GetRspList(ref btcTransRspList, confirmCountDic["btc"], "btc");
             DbHelper.GetRspList(ref ethTransRspList, confirmCountDic["eth"], "eth");
 
@@ -249,8 +249,6 @@ namespace CoinExchange
             }
         }
         
-
-
         /// <summary>
         /// 发送交易数据
         /// </summary>
@@ -324,7 +322,8 @@ namespace CoinExchange
                 var urlPara = requestContext.Request.RawUrl.Split('/');
                 var info = sr.ReadToEnd();
                 var json = Newtonsoft.Json.Linq.JObject.Parse(info);
-                var returnString = string.Empty;
+                byte[] buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new { msg = "null" }));
+
                 if (urlPara.Length > 1)
                 {
                     var method = urlPara[1];
@@ -351,12 +350,14 @@ namespace CoinExchange
                                 address = null;
                                 break;
                         }
-                        returnString = "{\"type\":\"" + coinType + "\",\"address\":\"" + address + "\"}";
+                        
+                        buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new {success = "true", type = coinType, address = address}));
                     }
                     if (method == "addr")
                     {
                         DbHelper.SaveAddress(json);
                         Console.WriteLine("Add a new " + json["type"].ToString() + " address: " + json["address"].ToString());
+                        buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new { success = "true" }));
                     }
                     if (method == "trans")
                     {
@@ -373,35 +374,13 @@ namespace CoinExchange
                             default:
                                 return;
                         }
-                    }
-
-                    if (method == "getbalance")
-                    {
-                        //获取余额时要传私钥进来、用Post吧
-                        var coinType = urlPara[2];
-                        var priKey = urlPara[3];
-                        decimal balance = 0;
-                        switch (coinType)
-                        {
-                            case "btc":
-                                var uri = new Uri(btcRpcUrl);
-
-                                var btcPriKey = new BitcoinSecret(json["prikey"].ToString());
-                                var network = btcPriKey.Network;
-                                var address = btcPriKey.GetAddress();
-                                var client = new QBitNinjaClient(uri, network);
-                                //balance = client.GetBalance();
-                                break;
-
-                        }
-                    }                    
+                        buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new { success = "true" }));
+                    }              
                 }
-
                 requestContext.Response.StatusCode = 200;
                 requestContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
                 requestContext.Response.ContentType = "application/json";
                 requestContext.Response.ContentEncoding = Encoding.UTF8;
-                byte[] buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new { success = "true", msg = "send success" }));
                 requestContext.Response.ContentLength64 = buffer.Length;
                 var output = requestContext.Response.OutputStream; output.Write(buffer, 0, buffer.Length);
                 output.Close();

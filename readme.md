@@ -40,7 +40,7 @@
 ```
 
 ### 创建钱包
-为用户创建各币种的钱包，调用接口：http://xx.xx.xx.xx:7080/getaccount/{type}，  参数 type 是币种简称，如 btc，eth 等，调用方式：GET，返回格式：
+为用户创建各币种的钱包，调用接口：http://xx.xx.xx.xx:xxxx/getaccount/{type}，  参数 type 是币种简称，如 btc，eth 等，调用方式：GET，返回格式：
 ```
 {
     "priKey":"Ky9hKMaG2cg6fMvDju91K5PUrnm8boQcRojQ84xGYid9KxCkrWu8",
@@ -49,7 +49,7 @@
 ```
 
 ### 获取余额
-获取用户账户下的币种余额，调用接口：http://xx.xx.xx.xx:7080/getbalance/{type}/{address}，  参数 type 是币种简称，如 btc，eth 等，调用方式：GET，返回格式：
+获取用户账户下的币种余额，调用接口：http://xx.xx.xx.xx:xxxx/getbalance/{type}/{address}，  参数 type 是币种简称，如 btc，eth 等，调用方式：GET，返回格式：
 ```
 {
        "balance": 23.15365
@@ -57,11 +57,12 @@
 ```
 
 ### 发送交易
-发送转账交易，调用接口：http://xx.xx.xx.xx:7080/trans/，  参数 type 是币种简称，如 btc，eth 等，调用方式：POST，发送数据格式：
+发送转账交易，调用接口：http://xx.xx.xx.xx:xxxx/trans/，  参数 type 是币种简称，如 btc，eth 等，txid 是充值 BTC 的 txid，调用方式：POST，发送数据格式：
 ```
 {
        "type": btc,
        "account": "1PweQ2GtDzregsXshCyU2Vj8QWMb8T5tmc",
+       "txid" : "73d82f176a2b357256138bd0a6aeddd2131829dadccdee18f98a65da19282228",
        "priKey": "Ky9hKMaG2cg6fMvDju91K5PUrnm8boQcRojQ84xGYid9KxCkrWu8",
        "to": "1CbPtXDSsVmSRKTCbhwMH9MEj7Hfmwt2LS",
        "amount": 23.256
@@ -70,12 +71,12 @@
 返回 txid
 ```
 {
-    "txid": "73d82f176a2b357256138bd0a6aeddd2131829dadccdee18f98a65da19282228"
+    "txid": "aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c"
 }
 ```
 
 ### 发送新地址
-当有用户创建了新地址时，发送给监控程序，url：http://xx.xx.xx.xx:7080/addr/，  发送方式：POST，type 是币种简称，如 btc，eth 等，发送数据格式：
+当有用户创建了新地址时，发送给监控程序，url：http://xx.xx.xx.xx:xxxx/addr/，  发送方式：POST，type 是币种简称，如 btc，eth 等，发送数据格式：
 ```
 {
     "type":"btc",
