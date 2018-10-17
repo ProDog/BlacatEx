@@ -1,7 +1,11 @@
 {
   "confirm_count": {
     "btc": 6,
-    "eth": 3,
+    "eth": 12,
     "xxc": 10
+  },
+  "miner_fee": {
+    "btc": 0.001,
+    "eth": 0.001 
   }
 }
