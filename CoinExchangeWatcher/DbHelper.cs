@@ -157,6 +157,8 @@ namespace CoinExchangeWatcher
             }
             catch (Exception ex)
             {
+                var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
+                Console.WriteLine(time + "DbError:" + ex.ToString());
                 File.WriteAllText("saveErrLog.txt", ex.ToString());
                 trans.Rollback();
             }
