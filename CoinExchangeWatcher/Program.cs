@@ -30,12 +30,12 @@ namespace CoinExchange
         private static List<string> ethAddrList = new List<string>();  //ETH监听地址列表
         private static Dictionary<string, int> confirmCountDic = new Dictionary<string, int>();  //各币种确认次数
         private static Dictionary<string, decimal> minerFeeDic = new Dictionary<string, decimal>();//矿工费
-        private static string httpUrl= "http://xx.xx.xx.xx:xxxx/"; //接收新地址 url
-        private static string sendTranUrl= "http://0.0.0.0:0000/send/"; //发送交易信息 url
+        private static string httpUrl = "http://xx.xx.xx.xx:xxxx/"; //接收新地址 url
+        private static string sendTranUrl = "http://0.0.0.0:0000/send/"; //发送交易信息 url
         private static string btcRpcUrl = "http://xx.xx.xx.xx:xxxx";  //BTC RPC url
         private static string ethRpcUrl = "http://xx.xx.xx.xx:xxxx/";  //ETH RPC url
         private static int btcIndex = 1438630; //BTC 监控高度
-        private static int ethIndex = 4259213; //ETH监控高度
+        private static int ethIndex = 3186400; //ETH监控高度
         private static string dbName = "MonitorData.db";  //Sqlite 数据库名
         private static List<TransResponse> btcTransRspList = new List<TransResponse>(); //BTC 交易列表
         private static List<TransResponse> ethTransRspList = new List<TransResponse>(); //ETH 交易列表
@@ -77,11 +77,11 @@ namespace CoinExchange
             while (true)
             {
                 var count = await rpcC.GetBlockCountAsync();
-                if (count > btcIndex)
+                if (count >= btcIndex)
                 {
                     for (int i = btcIndex; i <= count; i++)
                     {
-                        if (i % 10 == 0)
+                        if (i % 20 == 0)
                         {
                             var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
                             Console.WriteLine(time + "Parse BTC Height:" + i);
@@ -187,15 +187,14 @@ namespace CoinExchange
                 var sync = await web3.Eth.Syncing.SendRequestAsync();
                 if (sync.CurrentBlock == null)
                 {
-                    Thread.Sleep(1000);
                     continue;
                 }
 
-                if (sync.CurrentBlock.Value > ethIndex)
+                if (sync.CurrentBlock.Value >= ethIndex)
                 {
                     for (int i = ethIndex; i <= sync.CurrentBlock.Value; i++)
                     {
-                        if (ethIndex % 10 == 0)
+                        if (ethIndex % 200 == 0)
                         {
                             var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
                             Console.WriteLine(time + "Parse ETH Height:" + ethIndex);
@@ -293,8 +292,7 @@ namespace CoinExchange
                     byte[] dataBytes = new byte[meStream.Length];
                     meStream.Position = 0;
                     meStream.Read(dataBytes, 0, (int)meStream.Length);
-                    Encoding.UTF8.GetString(dataBytes);
-
+                    
                     HttpWebRequest req = (HttpWebRequest)WebRequest.Create(sendTranUrl);
                     req.Method = "POST";
                     req.ContentType = "application/x-www-form-urlencoded";
@@ -310,6 +308,7 @@ namespace CoinExchange
                     HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
                     Stream stream = resp.GetResponseStream();
 
+                    Console.WriteLine(Encoding.UTF8.GetString(dataBytes));
                     using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
                     {
                         var result = reader.ReadToEnd();
@@ -351,13 +350,12 @@ namespace CoinExchange
             {
                 httpPostRequest.Start();
                 HttpListenerContext requestContext = httpPostRequest.GetContext();
-                byte[] buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new
-                    {state = "false", msg = "request error,please check your url or post data!"}));
+                byte[] buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new {state = "false", msg = "request error,please check your url or post data!"}));
+                var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
                 try
                 {
                     StreamReader sr = new StreamReader(requestContext.Request.InputStream);
                     var urlPara = requestContext.Request.RawUrl.Split('/');
-
                     var json = new JObject();
                     if (requestContext.Request.HttpMethod == "POST")
                     {
@@ -392,22 +390,27 @@ namespace CoinExchange
                                     break;
                             }
 
-                            buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new
-                                {state = "true", type = coinType, address = address, priKey}));
+                            buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new {state = "true", type = coinType, address = address, priKey}));
                         }
 
                         if (method == "addr")
                         {
-                            DbHelper.SaveAddress(json);
-                            if (json["type"].ToString() == "btc")
-                                btcAddrList.Add(json["address"].ToString());
-                            if (json["type"].ToString() == "eth")
-                                ethAddrList.Add(json["address"].ToString());
-                            var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
-                            Console.WriteLine(time + "Add a new " + json["type"].ToString() + " address: " +
-                                              json["address"].ToString());
-                            buffer = System.Text.Encoding.UTF8.GetBytes(
-                                Newtonsoft.Json.JsonConvert.SerializeObject(new {state = "true"}));
+                            if (json.ContainsKey("type") && json.ContainsKey("address"))
+                            {
+                                if (json["type"].ToString() == "btc" && !btcAddrList.Contains(json["address"].ToString()))
+                                {
+                                    btcAddrList.Add(json["address"].ToString());
+                                    DbHelper.SaveAddress(json);
+                                }
+                                if (json["type"].ToString() == "eth" && !ethAddrList.Contains(json["address"].ToString()))
+                                {
+                                    ethAddrList.Add(json["address"].ToString());
+                                    DbHelper.SaveAddress(json);
+                                }
+
+                                Console.WriteLine(time + "Add a new " + json["type"].ToString() + " address: " + json["address"].ToString());
+                                buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new {state = "true"}));
+                            }
                         }
 
                         if (method == "trans")
@@ -425,20 +428,26 @@ namespace CoinExchange
                                     msg = ss.Result;
                                     break;
                                 default:
-                                    return;
+                                    msg = "Error: error coin type";
+                                    break;
                             }
 
-                            buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new {state = "true", txid = msg}));
+                            if (msg.Contains("Error"))
+                                buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new {state = "false", txid = msg}));
+                            else
+                            {
+                                buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new {state = "true", txid = msg}));
+                                Console.WriteLine("txid: " + msg);
+                            }
+
                         }
                     }
 
                 }
                 catch (Exception e)
                 {
-                    var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
                     Console.WriteLine(time + e.ToString());
                     buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new {state = "false", msg = e.ToString()}));
-                    //return;
                 }
                 finally
                 {
@@ -494,28 +503,17 @@ namespace CoinExchange
 
             transaction.Inputs[0].ScriptSig = btcPriKey.ScriptPubKey;
             transaction.Sign(btcPriKey, false);
-
-            //using (var node = Node.Connect(nettype)) //Connect to the node
-            //{
-            //    node.VersionHandshake(); //Say hello
-            //    //Advertize your transaction (send just the hash)
-            //    node.SendMessage(new InvPayload(InventoryType.MSG_TX, transaction.GetHash()));
-            //    //Send it
-            //    node.SendMessage(new TxPayload(transaction));
-            //    Thread.Sleep(500); //Wait a bit
-            //}
-
+            
             BroadcastResponse broadcastResponse = client.Broadcast(transaction).Result;
             if (!broadcastResponse.Success)
             {
-                result = "false, Error message: " + broadcastResponse.Error.Reason;
+                result = "Error message: " + broadcastResponse.Error.Reason;
             }
             else
             {
                 result = transaction.GetHash().ToString();
             }
 
-            Console.WriteLine(result);
             return result;
         }
 
@@ -526,9 +524,12 @@ namespace CoinExchange
             
             var balanceWei = await web3.Eth.GetBalance.SendRequestAsync(json["account"].ToString());
             var balanceEther = Web3.Convert.FromWei(balanceWei);
-            //var unlockResult = await web3.Personal.UnlockAccount.SendRequestAsync(json["account"].ToString(), json["priKey"].ToString(), 2 * 60);
-            var sendTxHash = await web3.Eth.TransactionManager.SendTransactionAsync(account.Address, json["to"].ToString(), new HexBigInteger(balanceWei));
+            var gasfee = (decimal) minerFeeDic["eth"];
+            var value = balanceEther - gasfee;
+            var sendValue = new HexBigInteger(Web3.Convert.ToWei(value));
+            var sendTxHash = await web3.Eth.TransactionManager.SendTransactionAsync(account.Address, json["to"].ToString(), sendValue);
             return sendTxHash;
         }
+       
     }
 }
