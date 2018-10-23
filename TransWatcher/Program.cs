@@ -31,10 +31,10 @@ namespace CoinExchange
         private static Dictionary<string, int> confirmCountDic = new Dictionary<string, int>();  //各币种确认次数
         private static Dictionary<string, decimal> minerFeeDic = new Dictionary<string, decimal>();//矿工费
         private static Dictionary<string, string> myAccountDic = new Dictionary<string, string>();//我的收款地址
-        private static string httpUrl = "http://xx.xx.xx.xx:xxxx/"; //http 服务 url
-        private static string sendTranUrl = "http://0.0.0.0:0000/send/"; //发送交易信息 url
-        private static string btcRpcUrl = "http://xx.xx.xx.xx:xxxx";  //BTC RPC url
-        private static string ethRpcUrl = "http://xx.xx.xx.xx:xxxx/";  //ETH RPC url
+        private static string httpUrl = "http://+:7080/"; //http 服务 url
+        private static string sendTranUrl = "http://blacat.9191wyx.com/apic/apic_wallet.php?cmd=wallet_monitor.callback"; //发送交易信息 url
+        private static string btcRpcUrl = "http://47.52.192.77:8332";  //BTC RPC url
+        private static string ethRpcUrl = "http://47.52.192.77:8545/";  //ETH RPC url
         private static int btcIndex = 1438630; //BTC 监控高度
         private static int ethIndex = 3186400; //ETH监控高度
         private static string dbName = "MonitorData.db";  //Sqlite 数据库名
@@ -44,8 +44,7 @@ namespace CoinExchange
         
         static void Main(string[] args)
         {
-            var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
-            Console.WriteLine(time + "Hello Boy!");
+            Console.WriteLine("{0:u} Hello Boy!",DateTime.Now);
             DbHelper.CreateDb(dbName);
             var configOj = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText("config.json").ToString());
             confirmCountDic = JsonConvert.DeserializeObject<Dictionary<string, int>>(configOj["confirm_count"].ToString());
@@ -85,8 +84,7 @@ namespace CoinExchange
                     {
                         if (i % 20 == 0)
                         {
-                            var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
-                            Console.WriteLine(time + "Parse BTC Height:" + i);
+                            Console.WriteLine("{0:u} Parse BTC Height:" + i, DateTime.Now);
                         }
 
                         await ParseBtcBlock(rpcC, i);
@@ -96,7 +94,7 @@ namespace CoinExchange
                 }
 
                 if (count == btcIndex)
-                    Thread.Sleep(10000);
+                    Thread.Sleep(5000);
             }
         }
 
@@ -133,8 +131,7 @@ namespace CoinExchange
                                 btcTrans.height = index;
                                 btcTrans.txid = tran.GetHash().ToString();
                                 btcTransRspList.Add(btcTrans);
-                                var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
-                                Console.WriteLine(time + index + " Have a btc transfer for:" + address + "; amount:" + vout.Value.ToDecimal(MoneyUnit.BTC));
+                                Console.WriteLine("{0:u} " + index + " Have a btc transfer for:" + address + "; amount:" + vout.Value.ToDecimal(MoneyUnit.BTC), DateTime.Now);
                             }
                         }
                     }
@@ -189,6 +186,7 @@ namespace CoinExchange
                 var sync = await web3.Eth.Syncing.SendRequestAsync();
                 if (sync.CurrentBlock == null)
                 {
+                    Thread.Sleep(1000);
                     continue;
                 }
 
@@ -198,8 +196,7 @@ namespace CoinExchange
                     {
                         if (ethIndex % 200 == 0)
                         {
-                            var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
-                            Console.WriteLine(time + "Parse ETH Height:" + ethIndex);
+                            Console.WriteLine("{0:u} Parse ETH Height:" + ethIndex, DateTime.Now);
                         }
 
                         await ParseEthBlock(web3, i);
@@ -208,7 +205,7 @@ namespace CoinExchange
                     }
                 }
                 if (sync.CurrentBlock.Value == ethIndex)
-                    Thread.Sleep(10000);
+                    Thread.Sleep(3000);
             }
         }
 
@@ -241,8 +238,9 @@ namespace CoinExchange
                             ethTrans.height = index;
                             ethTrans.txid = tran.TransactionHash;
                             ethTransRspList.Add(ethTrans);
-                            var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
-                            Console.WriteLine(time + index + " Have a eth transfer for:" + tran.To.ToString() + "; amount:" + value);
+                            Console.WriteLine(
+                                "{0:u}" + index + " Have a eth transfer for:" + tran.To.ToString() + "; amount:" +
+                                value, DateTime.Now);
                         }
                     }
                 }
@@ -309,20 +307,21 @@ namespace CoinExchange
 
                     HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
                     Stream stream = resp.GetResponseStream();
-
-                    Console.WriteLine(Encoding.UTF8.GetString(dataBytes));
                     using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
                     {
                         var result = reader.ReadToEnd();
-                        var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
-                        Console.WriteLine(time + result.ToString());
-
+                        var rjson = JObject.Parse(result);
+                        Console.WriteLine("{0:u}" + Encoding.UTF8.GetString(dataBytes) + " rsp: " + result.ToString(),DateTime.Now);
+                        if (Convert.ToInt32(rjson["r"]) == 0)
+                        {
+                            Thread.Sleep(1000);
+                            SendTransInfo(transRspList);
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
-                    Console.WriteLine(time + "senderror:" + ex.ToString());
+                    Console.WriteLine("{0:u}" + "send error:" + ex.ToString(),DateTime.Now);
                     File.WriteAllText("sendErrLog.txt", ex.ToString());
                     return;
                 }
@@ -406,8 +405,10 @@ namespace CoinExchange
                                     ethAddrList.Add(json["address"].ToString());
                                     DbHelper.SaveAddress(json);
                                 }
-                                var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
-                                Console.WriteLine(time + "Add a new " + json["type"].ToString() + " address: " + json["address"].ToString());
+
+                                Console.WriteLine(
+                                    "{0:u}" + "Add a new " + json["type"].ToString() + " address: " +
+                                    json["address"].ToString(), DateTime.Now);
                                 buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new {state = "true"}));
                             }
                         }
@@ -436,8 +437,9 @@ namespace CoinExchange
                             else
                             {
                                 buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new {state = "true", txid = msg}));
-                                Console.WriteLine("txid: " + msg);
                             }
+
+                            Console.WriteLine("{0:u}" + msg, DateTime.Now);
 
                         }
                     }
@@ -445,8 +447,7 @@ namespace CoinExchange
                 }
                 catch (Exception e)
                 {
-                    var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
-                    Console.WriteLine(time + e.ToString());
+                    Console.WriteLine("{0:u}" + e.ToString(),DateTime.Now);
                     buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new {state = "false", msg = e.ToString()}));
                 }
                 finally
