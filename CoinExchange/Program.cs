@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -13,11 +14,14 @@ namespace CoinExchange
     {
         private static string httpUrl = "http://127.0.0.1:7070/"; //http 服务 url
         private static string api = "https://api.nel.group/api/testnet"; //NEO api
+        private static string id_GAS = "0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7"; //gas
+        private static string nep5Btc = "07bc2c1398e1a472f3841a00e7e7e02029b8b38b";//BTC
         private static string wif = "";//管理员
         static void Main(string[] args)
         {
             Console.WriteLine("{0:u} Hello World!",DateTime.Now);
-            HttpServerStart();
+            //HttpServerStart();
+            Console.ReadKey();
         }
 
         private static HttpListener httpPostRequest = new HttpListener();
@@ -83,6 +87,7 @@ namespace CoinExchange
         private static string SendNep5Token(string type, JObject json)
         {
             byte[] script;
+            var prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(wif);
             using (var sb = new ThinNeo.ScriptBuilder())
             {
                 var array = new MyJson.JsonNode_Array();
@@ -91,19 +96,20 @@ namespace CoinExchange
                 sb.EmitParamJson(array); //参数倒序入
                 sb.EmitPushString("deploy"); //参数倒序入
                 if (type == "btc")
-                    sb.EmitAppCall(new Hash160("07bc2c1398e1a472f3841a00e7e7e02029b8b38b")); //nep5脚本
+                    sb.EmitAppCall(new Hash160(nep5Btc)); //nep5脚本
                 if (type == "eth")
                     sb.EmitAppCall(new Hash160(""));
                 script = sb.ToArray();
             }
 
-            return SendTransWithoutUtxo(script);
-
+            decimal gasfee = 0;
+            
+            //return SendTransWithoutUtxo(prikey, script);
+            return SendTransaction(prikey, script, gasfee);
         }
 
-        private static string SendTransWithoutUtxo(byte[] script)
+        private static string SendTransWithoutUtxo(byte[] prikey, byte[] script)
         {
-            var prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(wif);
             var pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
             var address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
 
@@ -131,61 +137,73 @@ namespace CoinExchange
             string rawdata = ThinNeo.Helper.Bytes2HexString(data);
 
             byte[] postdata;
-            var url = MakeRpcUrlPost(api, "sendrawtransaction", out postdata, new MyJson.JsonNode_ValueString(rawdata));
-            var result = HttpPost(url, postdata);
+            var url = Helper.MakeRpcUrlPost(api, "sendrawtransaction", out postdata, new MyJson.JsonNode_ValueString(rawdata));
+            var result = Helper.HttpPost(url, postdata);
             Console.WriteLine("{0:u} txid: " + txid, DateTime.Now);
             var json = Newtonsoft.Json.Linq.JObject.Parse(result);
             //Console.WriteLine("{0:u} rsp: " + result, DateTime.Now);
             return txid;
         }
 
-        public static string MakeRpcUrlPost(string url, string method, out byte[] data, params MyJson.IJsonNode[] _params)
+        private static string SendTransaction(byte[] prikey, byte[] script,decimal gasfee)
         {
-            //if (url.Last() != '/')
-            //    url = url + "/";
-            var json = new MyJson.JsonNode_Object();
-            json["id"] = new MyJson.JsonNode_ValueNumber(1);
-            json["jsonrpc"] = new MyJson.JsonNode_ValueString("2.0");
-            json["method"] = new MyJson.JsonNode_ValueString(method);
-            StringBuilder sb = new StringBuilder();
-            var array = new MyJson.JsonNode_Array();
-            for (var i = 0; i < _params.Length; i++)
+            byte[] pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
+            string address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
+
+            //获取地址的资产列表
+            Dictionary<string, List<Utxo>> dir = Helper.GetBalanceByAddress(api, address);
+            if (dir.ContainsKey(id_GAS) == false)
+            {
+                Console.WriteLine("no gas");
+                return null;
+            }
+            //MakeTran
+            ThinNeo.Transaction tran = null;
             {
 
-                array.Add(_params[i]);
+                byte[] data = script;
+                tran = Helper.makeTran(dir[id_GAS], null, new ThinNeo.Hash256(id_GAS), gasfee);
+                tran.type = ThinNeo.TransactionType.InvocationTransaction;
+                var idata = new ThinNeo.InvokeTransData();
+                tran.extdata = idata;
+                idata.script = data;
+                idata.gas = 0;
             }
-            json["params"] = array;
-            data = System.Text.Encoding.UTF8.GetBytes(json.ToString());
-            return url;
-        }
-        public static string MakeRpcUrl(string url, string method, params MyJson.IJsonNode[] _params)
-        {
-            StringBuilder sb = new StringBuilder();
-            if (url.Last() != '/')
-                url = url + "/";
 
-            sb.Append(url + "?jsonrpc=2.0&id=1&method=" + method + "&params=[");
-            for (var i = 0; i < _params.Length; i++)
-            {
-                _params[i].ConvertToString(sb);
-                if (i != _params.Length - 1)
-                    sb.Append(",");
-            }
-            sb.Append("]");
-            return sb.ToString();
+            //sign and broadcast
+            var signdata = ThinNeo.Helper.Sign(tran.GetMessage(), prikey);
+            tran.AddWitness(signdata, pubkey, address);
+            var trandata = tran.GetRawData();
+            var strtrandata = ThinNeo.Helper.Bytes2HexString(trandata);
+            byte[] postdata;
+            var url = Helper.MakeRpcUrlPost(api, "sendrawtransaction", out postdata, new MyJson.JsonNode_ValueString(strtrandata));
+            string txid = tran.GetHash().ToString();
+            Console.WriteLine("{0:u} txid: " + txid, DateTime.Now);
+            var result = Helper.HttpPost(url, postdata);
+            return txid;
         }
 
-        public static string HttpGet(string url)
+        
+    }
+
+    public class Utxo
+    {
+        //txid[n] 是utxo的属性
+        public ThinNeo.Hash256 txid;
+        public int n;
+
+        //asset资产、addr 属于谁，value数额，这都是查出来的
+        public string addr;
+        public string asset;
+        public decimal value;
+
+        public Utxo(string _addr, ThinNeo.Hash256 _txid, string _asset, decimal _value, int _n)
         {
-            WebClient wc = new WebClient();
-            return wc.DownloadString(url);
-        }
-        public static string HttpPost(string url, byte[] data)
-        {
-            WebClient wc = new WebClient();
-            wc.Headers["content-type"] = "text/plain;charset=UTF-8";
-            byte[] retdata = wc.UploadData(url, "POST", data);
-            return System.Text.Encoding.UTF8.GetString(retdata);
+            this.addr = _addr;
+            this.txid = _txid;
+            this.asset = _asset;
+            this.value = _value;
+            this.n = _n;
         }
     }
 }
