@@ -15,12 +15,13 @@ namespace CoinExchangeService
         private static string api = "https://api.nel.group/api/testnet"; //NEO api
         private static string id_GAS = "0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7"; //gas
         private static string nep5Btc = "07bc2c1398e1a472f3841a00e7e7e02029b8b38b";//BTC
-        private static string wif = "Ky3huwRwxgmZ5RtBTVgNMcPjGb39cSgPPUrzZAdtFiTnkcGNAhKJ";//管理员
-       
-        public static string SendNep5Token(string type, JObject json)
+        private static string btcwif = "*";//Nep5 BitCoin管理员
+        private static string nepwif = "*";//BCP 等资产管理员
+
+        public static string DeployNep5Token(string type, JObject json)
         {
             byte[] script;
-            var prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(wif);
+            var prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(btcwif);
             using (var sb = new ThinNeo.ScriptBuilder())
             {
                 var array = new MyJson.JsonNode_Array();
@@ -38,6 +39,28 @@ namespace CoinExchangeService
             decimal gasfee = 0;
             return SendTransWithoutUtxo(prikey, script);
             //return SendTransaction(prikey, script, gasfee);
+        }
+
+        public static object Exchange(JObject json)
+        {
+            byte[] prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(nepwif);
+            byte[] pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
+            string address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
+            byte[] script;
+            using (var sb = new ThinNeo.ScriptBuilder())
+            {
+                var array = new MyJson.JsonNode_Array();
+                array.AddArrayValue("(addr)" + address);//from
+                array.AddArrayValue("(addr)" + json["address"]);//to
+                array.AddArrayValue("(int)" + json["value"]);//value
+                sb.EmitParamJson(array);//参数倒序入
+                sb.EmitPushString("transfer");//参数倒序入
+                sb.EmitAppCall(new Hash160(json["token"].ToString()));
+                script = sb.ToArray();
+            }
+
+            decimal gasfee = 0;
+            return SendTransWithoutUtxo(prikey, script);
         }
 
         private static string SendTransWithoutUtxo(byte[] prikey, byte[] script)
@@ -113,8 +136,6 @@ namespace CoinExchangeService
             var result = Helper.HttpPost(url, postdata);
             return txid;
         }
-
-
     }
 
     public class Utxo

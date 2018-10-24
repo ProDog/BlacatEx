@@ -438,16 +438,23 @@ namespace CoinExchangeService
                                 buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new {state = "true", txid = msg}));
                             }
 
-                            Console.WriteLine(Time() + msg);
+                            Console.WriteLine(Time() + json["type"].ToString()+ " transaction,txid: " + msg);
 
                         }
 
                         if (method == "deploy")
                         {
                             var coinType = urlPara[2];
-                            var txid = CoinExchange.SendNep5Token(coinType, json);
+                            var txid = CoinExchange.DeployNep5Token(coinType, json);
                             buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new { state = "true", txid }));
                             Console.WriteLine(Time() + "Nep5 BTC Deployed,txid: " + txid);
+                        }
+
+                        if (method == "exchange")
+                        {
+                            var txid = CoinExchange.Exchange(json);
+                            buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new { state = "true", txid }));
+                            Console.WriteLine(Time() + "Exchange Nep5,txid: " + txid);
                         }
                     }
 
@@ -525,7 +532,7 @@ namespace CoinExchangeService
             return result;
         }
 
-        private static async System.Threading.Tasks.Task<string> SendEthTrans(JObject json)
+        private static async Task<string> SendEthTrans(JObject json)
         {
             var account = new Account(json["priKey"].ToString()); // or load it from your keystore file as you are doing.
             var web3 = new Web3(account, ethRpcUrl);
