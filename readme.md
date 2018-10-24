@@ -13,6 +13,7 @@
 ```
 [
     {
+        "netType":"testnet",
         "address":"3LpBqiC2cGbj1QHwyN81aYpUNakbxjk8xJ",
         "coinType":"btc",
         "confirmcount":5,
@@ -21,6 +22,7 @@
         "value":2.60891635
     },
     {
+        "netType":"testnet",
         "address":"1CbPtXDSsVmSRKTCbhwMH9MEj7Hfmwt2LS",
         "coinType":"btc",
         "confirmcount":4,
@@ -29,6 +31,7 @@
         "value":0.80051573
     },
     {
+        "netType":"testnet",
         "address":"3K2bY9qitYsSd2USgZ22fP7w7Cqyet2uMv",
         "coinType":"btc",
         "confirmcount":3,
@@ -48,29 +51,22 @@
 }
 ```
 
-### 获取余额
-获取用户账户下的币种余额，调用接口：http://xx.xx.xx.xx:xxxx/getbalance/{type}/{address}，  参数 type 是币种简称，如 btc，eth 等，调用方式：GET，返回格式：
-```
-{
-       "balance": 23.15365
-}
-```
-
 ### 发送交易
-发送转账交易，调用接口：http://xx.xx.xx.xx:xxxx/trans/，  参数 type 是币种简称，如 btc，eth 等，txid 是充值 BTC 的 txid，调用方式：POST，发送数据格式：
+发送转账交易，调用接口：http://xx.xx.xx.xx:xxxx/trans/，  参数 type 是币种简称，如 btc，eth 等，txid 是充值 BTC 的 txid，支持多个 txid，调用方式：POST，发送数据格式：
 ```
 {
-       "type": btc,
-       "account": "1PweQ2GtDzregsXshCyU2Vj8QWMb8T5tmc",
-       "txid" : "73d82f176a2b357256138bd0a6aeddd2131829dadccdee18f98a65da19282228",
-       "priKey": "Ky9hKMaG2cg6fMvDju91K5PUrnm8boQcRojQ84xGYid9KxCkrWu8",
-       "to": "1CbPtXDSsVmSRKTCbhwMH9MEj7Hfmwt2LS",
-       "amount": 23.256
+    "type": btc,
+    "account": "1PweQ2GtDzregsXshCyU2Vj8QWMb8T5tmc",
+    "txid" : "73d82f176a2b357256138bd0a6aeddd2131829dadccdee18f98a65da19282228","aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c"
+    "priKey": "Ky9hKMaG2cg6fMvDju91K5PUrnm8boQcRojQ84xGYid9KxCkrWu8",
+    "to": "1CbPtXDSsVmSRKTCbhwMH9MEj7Hfmwt2LS",
+    "amount": 23.256
 }
 ```
 返回 txid
 ```
 {
+    "state": "true",
     "txid": "aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c"
 }
 ```
@@ -84,3 +80,37 @@
 }
 ```
 
+### 发行 Nep5 BTC/ETH 代币
+钱包中使用 Nep5 Token 代替 BTC、ETH 进行交易兑换等操作，提高效率节省费用，收到 BTC ETH 后请求发行，发行请求：url：http://xx.xx.xx.xx:xxxx/deploy/{coinType}，coinType 是币种简称，如 btc，eth 等,发送数据格式：
+后台操作数字类型均为整数，所以 value 格式为：数量 * 精度，比如 0.3 个，则为：0.3 * 100000000 = 30000000
+```
+{
+    "address":"AUWYsHRi1xv584DswcQKkz1UXJf8G3se4Y",
+    "value":300550000
+}
+```
+返回 txid
+```
+{
+    "state": "true",
+    "txid": "aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c"
+}
+```
+
+### 兑换 Nep5 资产的转账接口
+钱包中将 BTC ETH 等兑换成 Nep5 资产，请求 url：http://xx.xx.xx.xx:xxxx/exchange，发送数据格式：
+后台操作数字类型均为整数，所以 value 格式为：数量 * 精度，比如 0.3 个，则为：0.3 * 100000000 = 30000000
+```
+{
+    "token":"04e31cee0443bb916534dad2adf508458920e66d",
+    "address":"AWN6jngST5ytpNnY1dhBQG7QHd7V8SqSCp",
+    "value":3600000000
+}
+```
+返回 txid
+```
+{
+    "state": "true",
+    "txid": "aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c"
+}
+```
