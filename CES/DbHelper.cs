@@ -6,7 +6,7 @@ using System.IO;
 using System.Text;
 using Newtonsoft.Json.Linq;
 
-namespace CoinExchangeWatcher
+namespace CoinExchangeService
 {
     public class DbHelper
     {

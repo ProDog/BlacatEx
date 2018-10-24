@@ -8,83 +8,16 @@ using System.Threading;
 using Newtonsoft.Json.Linq;
 using ThinNeo;
 
-namespace CoinExchange
+namespace CoinExchangeService
 {
-    public class Program
+    public class CoinExchange
     {
-        private static string httpUrl = "http://127.0.0.1:7070/"; //http 服务 url
         private static string api = "https://api.nel.group/api/testnet"; //NEO api
         private static string id_GAS = "0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7"; //gas
         private static string nep5Btc = "07bc2c1398e1a472f3841a00e7e7e02029b8b38b";//BTC
-        private static string wif = "";//管理员
-        static void Main(string[] args)
-        {
-            Console.WriteLine("{0:u} Hello World!",DateTime.Now);
-            //HttpServerStart();
-            Console.ReadKey();
-        }
-
-        private static HttpListener httpPostRequest = new HttpListener();
-
-        private static void HttpServerStart()
-        {
-            httpPostRequest.Prefixes.Add(httpUrl);
-            httpPostRequest.Start();
-            Thread ThrednHttpPostRequest = new Thread(new ThreadStart(httpPostRequestHandle));
-            ThrednHttpPostRequest.Start();
-        }
-
-        private static void httpPostRequestHandle()
-        {
-            while (true)
-            {
-                httpPostRequest.Start();
-                HttpListenerContext requestContext = httpPostRequest.GetContext();
-                byte[] buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new
-                    {state = "false", msg = "request error,please check your url or post data!"}));
-                try
-                {
-                    StreamReader sr = new StreamReader(requestContext.Request.InputStream);
-                    var urlPara = requestContext.Request.RawUrl.Split('/');
-                    var json = new JObject();
-                    if (requestContext.Request.HttpMethod == "POST")
-                    {
-                        var info = sr.ReadToEnd();
-                        json = Newtonsoft.Json.Linq.JObject.Parse(info);
-                    }
-
-                    if (urlPara.Length > 1)
-                    {
-                        var method = urlPara[1];
-                        if (method == "deploy")
-                        {
-                            var coinType = urlPara[2];
-                            var txid = SendNep5Token(coinType, json);
-                            buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new
-                                { state = "true", txid }));
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("{0:u} Error: " + e.ToString(), DateTime.Now);
-                    continue;
-                }
-                finally
-                {
-                    requestContext.Response.StatusCode = 200;
-                    requestContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                    requestContext.Response.ContentType = "application/json";
-                    requestContext.Response.ContentEncoding = Encoding.UTF8;
-                    requestContext.Response.ContentLength64 = buffer.Length;
-                    var output = requestContext.Response.OutputStream;
-                    output.Write(buffer, 0, buffer.Length);
-                    output.Close();
-                }
-            }
-        }
-
-        private static string SendNep5Token(string type, JObject json)
+        private static string wif = "Ky3huwRwxgmZ5RtBTVgNMcPjGb39cSgPPUrzZAdtFiTnkcGNAhKJ";//管理员
+       
+        public static string SendNep5Token(string type, JObject json)
         {
             byte[] script;
             var prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(wif);
@@ -103,9 +36,8 @@ namespace CoinExchange
             }
 
             decimal gasfee = 0;
-            
-            //return SendTransWithoutUtxo(prikey, script);
-            return SendTransaction(prikey, script, gasfee);
+            return SendTransWithoutUtxo(prikey, script);
+            //return SendTransaction(prikey, script, gasfee);
         }
 
         private static string SendTransWithoutUtxo(byte[] prikey, byte[] script)
@@ -139,13 +71,12 @@ namespace CoinExchange
             byte[] postdata;
             var url = Helper.MakeRpcUrlPost(api, "sendrawtransaction", out postdata, new MyJson.JsonNode_ValueString(rawdata));
             var result = Helper.HttpPost(url, postdata);
-            Console.WriteLine("{0:u} txid: " + txid, DateTime.Now);
             var json = Newtonsoft.Json.Linq.JObject.Parse(result);
             //Console.WriteLine("{0:u} rsp: " + result, DateTime.Now);
             return txid;
         }
 
-        private static string SendTransaction(byte[] prikey, byte[] script,decimal gasfee)
+        private static string SendTransaction(byte[] prikey, byte[] script, decimal gasfee)
         {
             byte[] pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
             string address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
@@ -183,7 +114,7 @@ namespace CoinExchange
             return txid;
         }
 
-        
+
     }
 
     public class Utxo

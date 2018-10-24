@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 
-namespace CoinExchange
+namespace CoinExchangeService
 {
     public class Helper
     {
