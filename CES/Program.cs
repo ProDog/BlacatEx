@@ -31,13 +31,13 @@ namespace CoinExchangeService
         private static string sendTranUrl = "http://0.0.0.0:0000/send/"; //发送交易信息 url
         private static string btcRpcUrl = "http://xx.xx.xx.xx:xxxx";  //BTC RPC url
         private static string ethRpcUrl = "http://xx.xx.xx.xx:xxxx/";  //ETH RPC url
-        private static int btcIndex = 1440052; //BTC 监控高度
+        private static int btcIndex = 1440069; //BTC 监控高度
         private static int ethIndex = 3186400; //ETH监控高度
         private static string dbName = "MonitorData.db";  //Sqlite 数据库名
         private static List<TransResponse> btcTransRspList = new List<TransResponse>(); //BTC 交易列表
         private static List<TransResponse> ethTransRspList = new List<TransResponse>(); //ETH 交易列表
         private static Network nettype = Network.TestNet;
-        
+
         static void Main(string[] args)
         {
             DbHelper.CreateDb(dbName);
@@ -48,7 +48,7 @@ namespace CoinExchangeService
             //程序启动时读取监控的地址、上一次解析的区块高度、上次确认数未达到设定数目的交易
             btcAddrList = DbHelper.GetBtcAddr();
             ethAddrList = DbHelper.GetEthAddr();
-            btcIndex = DbHelper.GetBtcIndex() + 1;
+            //btcIndex = DbHelper.GetBtcIndex() + 1;
             ethIndex = DbHelper.GetEthIndex() + 1;
             DbHelper.GetRspList(ref btcTransRspList, confirmCountDic["btc"], "btc");
             DbHelper.GetRspList(ref ethTransRspList, confirmCountDic["eth"], "eth");
@@ -313,9 +313,7 @@ namespace CoinExchangeService
                             Thread.Sleep(2000);
                             SendTransInfo(transRspList);
                         }
-
                     }
-
 
                 }
                 catch (Exception ex)
@@ -324,13 +322,11 @@ namespace CoinExchangeService
                     File.WriteAllText("sendErrLog.txt", ex.ToString());
                     return;
                 }
-
                 //保存交易信息
                 DbHelper.SaveTransInfo(transRspList);
             }
 
         }
-
 
         private static HttpListener httpPostRequest = new HttpListener();
         
@@ -343,13 +339,16 @@ namespace CoinExchangeService
             ThrednHttpPostRequest.Start();
         }
 
+        /// <summary>
+        /// Http 服务接口
+        /// </summary>
         private static void httpPostRequestHandle()
         {
             while (true)
             {
                 httpPostRequest.Start();
                 HttpListenerContext requestContext = httpPostRequest.GetContext();
-                byte[] buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new {state = "false", msg = "request error,please check your url or post data!"}));
+                byte[] buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "false", msg = "request error,please check your url or post data!"}));
                 try
                 {
                     StreamReader sr = new StreamReader(requestContext.Request.InputStream);
@@ -358,39 +357,13 @@ namespace CoinExchangeService
                     if (requestContext.Request.HttpMethod == "POST")
                     {
                         var info = sr.ReadToEnd();
-                        json = Newtonsoft.Json.Linq.JObject.Parse(info);
+                        json = JObject.Parse(info);
                     }
 
                     if (urlPara.Length > 1)
                     {
                         var method = urlPara[1];
-                        if (method == "getaccount")
-                        {
-                            var coinType = urlPara[2];
-                            string address = string.Empty;
-                            string priKey = string.Empty;
-                            switch (coinType)
-                            {
-                                case "btc":
-                                    var btcPrikey = new Key();
-                                    priKey = btcPrikey.GetWif(nettype).ToString();
-                                    address = btcPrikey.PubKey.GetAddress(nettype).ToString();
-                                    break;
-                                case "eth":
-                                    var ecKey = Nethereum.Signer.EthECKey.GenerateKey();
-                                    var ethPrikey = ecKey.GetPrivateKeyAsBytes().ToHex();
-                                    priKey = ethPrikey.ToString();
-                                    address = new Nethereum.Web3.Accounts.Account(ethPrikey).Address;
-                                    break;
-                                default:
-                                    priKey = null;
-                                    address = null;
-                                    break;
-                            }
-
-                            buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new {state = "true", type = coinType, address = address, priKey}));
-                        }
-
+                        
                         if (method == "addr")
                         {
                             if (json.ContainsKey("type") && json.ContainsKey("address"))
@@ -408,7 +381,7 @@ namespace CoinExchangeService
 
                                 Console.WriteLine(Time() + "Add a new " + json["type"].ToString() + " address: " +
                                     json["address"].ToString());
-                                buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new {state = "true"}));
+                                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "true"}));
                             }
                         }
 
@@ -432,29 +405,69 @@ namespace CoinExchangeService
                             }
 
                             if (msg.Contains("Error"))
-                                buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new {state = "false", txid = msg}));
+                                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "false", txid = msg}));
                             else
                             {
-                                buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new {state = "true", txid = msg}));
+                                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "true", txid = msg}));
                             }
 
                             Console.WriteLine(Time() + json["type"].ToString()+ " transaction,txid: " + msg);
 
                         }
 
-                        if (method == "deploy")
-                        {
-                            var coinType = urlPara[2];
-                            var txid = CoinExchange.DeployNep5Token(coinType, json);
-                            buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new { state = "true", txid }));
-                            Console.WriteLine(Time() + "Nep5 BTC Deployed,txid: " + txid);
-                        }
-
                         if (method == "exchange")
                         {
                             var txid = CoinExchange.Exchange(json);
-                            buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new { state = "true", txid }));
+                            buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid }));
                             Console.WriteLine(Time() + "Exchange Nep5,txid: " + txid);
+                        }
+
+                        if (urlPara.Length > 2)
+                        {
+                            var coinType = urlPara[2];
+                            if (method == "getaccount")
+                            {
+                                string address = string.Empty;
+                                string priKey = string.Empty;
+                                switch (coinType)
+                                {
+                                    case "btc":
+                                        var btcPrikey = new Key();
+                                        priKey = btcPrikey.GetWif(nettype).ToString();
+                                        address = btcPrikey.PubKey.GetAddress(nettype).ToString();
+                                        break;
+                                    case "eth":
+                                        var ecKey = Nethereum.Signer.EthECKey.GenerateKey();
+                                        var ethPrikey = ecKey.GetPrivateKeyAsBytes().ToHex();
+                                        priKey = ethPrikey.ToString();
+                                        address = new Account(ethPrikey).Address;
+                                        break;
+                                    default:
+                                        priKey = null;
+                                        address = null;
+                                        break;
+                                }
+
+                                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", type = coinType, address, priKey }));
+                            }
+
+                            if (method == "deploy")
+                            {
+                                DeployInfo deployInfo = DbHelper.GetDeployStateByTxid(coinType, json["txid"].ToString());
+                                if (string.IsNullOrEmpty(deployInfo.deployTime) && string.IsNullOrEmpty(deployInfo.deployTxid)) //没有发行NEP5 BTC/ETH
+                                {
+                                    var deployTxid = CoinExchange.DeployNep5Token(coinType, json);
+                                    DbHelper.SaveDeployInfo(deployInfo, deployTxid);
+                                    buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "true", txid = deployTxid}));
+                                    Console.WriteLine(Time() + "Nep5 BTC Deployed,txid: " + deployTxid);
+                                }
+                                else //已发行
+                                {
+                                    buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new
+                                        {state = "true", txid = deployInfo.deployTxid}));
+                                }
+
+                            }
                         }
                     }
 
@@ -462,7 +475,8 @@ namespace CoinExchangeService
                 catch (Exception e)
                 {
                     Console.WriteLine(Time() + e.ToString());
-                    buffer = System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new {state = "false", msg = e.ToString()}));
+                    buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "false", msg = e.ToString()}));
+                    continue;
                 }
                 finally
                 {
@@ -478,6 +492,11 @@ namespace CoinExchangeService
             }
         }
 
+        /// <summary>
+        /// 发送比特币交易
+        /// </summary>
+        /// <param name="json"></param>
+        /// <returns></returns>
         private static string SendBtcTrans(JObject json)
         {
             var result = string.Empty;
@@ -532,6 +551,11 @@ namespace CoinExchangeService
             return result;
         }
 
+        /// <summary>
+        /// 发送以太坊交易
+        /// </summary>
+        /// <param name="json"></param>
+        /// <returns></returns>
         private static async Task<string> SendEthTrans(JObject json)
         {
             var account = new Account(json["priKey"].ToString()); // or load it from your keystore file as you are doing.

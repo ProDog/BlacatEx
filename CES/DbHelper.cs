@@ -15,7 +15,7 @@ namespace CoinExchangeService
             if (File.Exists(dbName))
                 return;
             SQLiteConnection.CreateFile(dbName);
-            string sqlString = "CREATE TABLE TransData (CoinType TEXT NOT NULL,Height INTEGER NOT NULL,Txid TEXT NOT NULL,Address TEXT NOT NULL,Value REAL NOT NULL,ConfirmCount INTEGER NOT NULL,UpdateTime TEXT NOT NULL);" +
+            string sqlString = "CREATE TABLE TransData (CoinType TEXT NOT NULL,Height INTEGER NOT NULL,Txid TEXT NOT NULL,Address TEXT NOT NULL,Value REAL NOT NULL,ConfirmCount INTEGER NOT NULL,UpdateTime TEXT NOT NULL,DeployTime TEXT,DeployTxid TEXT,PRIMARY KEY (\"CoinType\", \"Txid\"));" +
                                "CREATE TABLE Address (CoinType TEXT NOT NULL,Address TEXT NOT NULL,DateTime TEXT NOT NULL);" +
                                "CREATE TABLE ParseIndex (CoinType TEXT PRIMARY KEY NOT NULL,Height INTEGER NOT NULL,DateTime TEXT NOT NULL)";
             SQLiteConnection conn = new SQLiteConnection();
@@ -48,17 +48,8 @@ namespace CoinExchangeService
             StringBuilder sbSql = new StringBuilder();
             foreach (var tran in transRspList)
             {
-                if (tran.confirmcount == 1)
-                {
-                    sbSql.Append(
-                        $"insert into TransData (CoinType,Height,Txid,Address,Value,ConfirmCount,UpdateTime) values ('{tran.coinType}',{tran.height},'{tran.txid}','{tran.address}',{tran.value},{tran.confirmcount},'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}');");
-                }
-                else
-                {
-                    sbSql.Append(
-                        $"update TransData set ConfirmCount={tran.confirmcount},UpdateTime='{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}' where Txid='{tran.txid}';");
-                }
-
+                sbSql.Append(
+                    $"Replace into TransData (CoinType,Height,Txid,Address,Value,ConfirmCount,UpdateTime) values ('{tran.coinType}',{tran.height},'{tran.txid}','{tran.address}',{tran.value},{tran.confirmcount},'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}');");
             }
             ExecuteSql(sbSql.ToString());
         }
@@ -118,8 +109,7 @@ namespace CoinExchangeService
 
         public static void SaveIndex(int i, string type)
         {
-            var sql =
-                $"Replace into ParseIndex (CoinType,Height,DateTime) values ('{type}',{i},'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}')";
+            var sql = $"Replace into ParseIndex (CoinType,Height,DateTime) values ('{type}',{i},'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}')";
             ExecuteSql(sql);
         }
 
@@ -139,6 +129,31 @@ namespace CoinExchangeService
             if (table.Rows.Count > 0 && !string.IsNullOrEmpty(table.Rows[0][0].ToString()))
                 return Convert.ToInt32(table.Rows[0][0]);
             return 1;
+        }
+
+        public static DeployInfo GetDeployStateByTxid(string coinType,string txid)
+        {
+            var sql = $"select CoinType,Txid,Address,Value,DeployTxid,DeployTime from TransData where CoinType='{coinType}' and txid='{txid}'";
+            var table = ExecuSqlToDataTable(sql);
+            var deployInfo = new DeployInfo();
+            if (table.Rows.Count > 0)
+            {
+                deployInfo.coinType = table.Rows[0]["CoinType"].ToString();
+                deployInfo.address = table.Rows[0]["Address"].ToString();
+                deployInfo.txid = table.Rows[0]["Txid"].ToString();
+                deployInfo.deployTime = table.Rows[0]["DeployTime"].ToString();
+                deployInfo.value = Convert.ToDecimal(table.Rows[0]["Value"]);
+                deployInfo.deployTxid = table.Rows[0]["DeployTxid"].ToString();
+            }
+            return deployInfo;
+        }
+
+        public static void SaveDeployInfo(DeployInfo deployInfo, string deployTxid)
+        {
+            var sql =
+                $"update TransData set DeployTime='{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}',DeployTxid='{deployTxid}' where Txid='{deployInfo.txid}' and CoinType='{deployInfo.coinType}';";
+            ExecuteSql(sql);
+
         }
 
         private static void ExecuteSql(string sql)
@@ -179,6 +194,7 @@ namespace CoinExchangeService
             conn.Close();
             return table;
            
-        }      
+        }
+
     }
 }

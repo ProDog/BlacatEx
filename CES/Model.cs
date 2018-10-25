@@ -15,4 +15,14 @@ namespace CoinExchangeService
         public decimal value;  //金额
         
     }
+
+    public class DeployInfo
+    {
+        public string coinType; //币种
+        public string address;  //收款地址
+        public string txid;  //txid
+        public decimal value;  //金额
+        public string deployTxid;//发行txid
+        public string deployTime; //发行时间
+    }
 }
