@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ThinNeo;
 
@@ -13,15 +10,20 @@ namespace CoinExchangeService
     public class CoinExchange
     {
         private static string api = "https://api.nel.group/api/testnet"; //NEO api
-        private static string id_GAS = "0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7"; //gas
-        private static string nep5Btc = "07bc2c1398e1a472f3841a00e7e7e02029b8b38b";//BTC
-        private static string btcwif = "*";//Nep5 BitCoin管理员
-        private static string nepwif = "*";//BCP 等资产管理员
+        private static Dictionary<string, string> adminWifDic = new Dictionary<string, string>();//管理员
+        private static Dictionary<string, string> tokenHashDic = new Dictionary<string, string>();//token类型
 
-        public static string DeployNep5Token(string type, JObject json)
+        public static void GetConfig()
+        {
+            var configOj = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText("config.json").ToString());
+            adminWifDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(configOj["admin"].ToString());
+            tokenHashDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(configOj["token"].ToString());
+        }
+
+        public static string DeployNep5Token(string type, JObject json, decimal gasfee)
         {
             byte[] script;
-            var prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(btcwif);
+            var prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(adminWifDic["btc"]);
             using (var sb = new ThinNeo.ScriptBuilder())
             {
                 var array = new MyJson.JsonNode_Array();
@@ -30,20 +32,19 @@ namespace CoinExchangeService
                 sb.EmitParamJson(array); //参数倒序入
                 sb.EmitPushString("deploy"); //参数倒序入
                 if (type == "btc")
-                    sb.EmitAppCall(new Hash160(nep5Btc)); //nep5脚本
+                    sb.EmitAppCall(new Hash160(tokenHashDic["btc"])); //nep5脚本
                 if (type == "eth")
-                    sb.EmitAppCall(new Hash160(""));
+                    sb.EmitAppCall(new Hash160(tokenHashDic["btc"]));
                 script = sb.ToArray();
             }
 
-            decimal gasfee = 0;
             return SendTransWithoutUtxo(prikey, script);
             //return SendTransaction(prikey, script, gasfee);
         }
 
-        public static object Exchange(JObject json)
+        public static string Exchange(JObject json, decimal gasfee)
         {
-            byte[] prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(nepwif);
+            byte[] prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(adminWifDic["bcp"]);
             byte[] pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
             string address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
             byte[] script;
@@ -55,11 +56,10 @@ namespace CoinExchangeService
                 array.AddArrayValue("(int)" + json["value"]);//value
                 sb.EmitParamJson(array);//参数倒序入
                 sb.EmitPushString("transfer");//参数倒序入
-                sb.EmitAppCall(new Hash160(json["token"].ToString()));
+                sb.EmitAppCall(new Hash160(tokenHashDic[json["type"].ToString()]));
                 script = sb.ToArray();
             }
 
-            decimal gasfee = 0;
             return SendTransWithoutUtxo(prikey, script);
         }
 
@@ -106,7 +106,7 @@ namespace CoinExchangeService
 
             //获取地址的资产列表
             Dictionary<string, List<Utxo>> dir = Helper.GetBalanceByAddress(api, address);
-            if (dir.ContainsKey(id_GAS) == false)
+            if (dir.ContainsKey(tokenHashDic["gas"]) == false)
             {
                 Console.WriteLine("no gas");
                 return null;
@@ -114,9 +114,8 @@ namespace CoinExchangeService
             //MakeTran
             ThinNeo.Transaction tran = null;
             {
-
                 byte[] data = script;
-                tran = Helper.makeTran(dir[id_GAS], null, new ThinNeo.Hash256(id_GAS), gasfee);
+                tran = Helper.makeTran(dir[tokenHashDic["gas"]], null, new ThinNeo.Hash256(tokenHashDic["gas"]), gasfee);
                 tran.type = ThinNeo.TransactionType.InvocationTransaction;
                 var idata = new ThinNeo.InvokeTransData();
                 tran.extdata = idata;
@@ -135,27 +134,6 @@ namespace CoinExchangeService
             Console.WriteLine("{0:u} txid: " + txid, DateTime.Now);
             var result = Helper.HttpPost(url, postdata);
             return txid;
-        }
-    }
-
-    public class Utxo
-    {
-        //txid[n] 是utxo的属性
-        public ThinNeo.Hash256 txid;
-        public int n;
-
-        //asset资产、addr 属于谁，value数额，这都是查出来的
-        public string addr;
-        public string asset;
-        public decimal value;
-
-        public Utxo(string _addr, ThinNeo.Hash256 _txid, string _asset, decimal _value, int _n)
-        {
-            this.addr = _addr;
-            this.txid = _txid;
-            this.asset = _asset;
-            this.value = _value;
-            this.n = _n;
         }
     }
 }

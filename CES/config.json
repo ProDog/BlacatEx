@@ -6,10 +6,29 @@
   },
   "miner_fee": {
     "btc": 0.0005,
-    "eth": 0.001
+    "eth": 0.001,
+    "gas_fee": 0.1
+  },
+  "api": {
+    "http": "http://+:7080/",
+    "btc": "http://xxxx",
+    "eth": "http://xxxx/",
+    "neo": "https://xxxx",
+    "blacat": "http://xxxx"
   },
   "my_account": {
-    "btc": "mvGdyB9y8idatejc9S26W9RQH2DjcQy8JM",
+    "btc": "2N3kbf2DYy4fetzKGqBqtFeeLA4nYA3XYqv",
     "eth": "0xAD8992d6F78D9cc597438eFBcCD8940D7c02Bc6d"
+  },
+  "admin": {
+    "btc": "xxxx",
+    "eth": "xxx",
+    "bcp": "xxx"
+  },
+  "token": {
+    "gas": "0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7",
+    "btc": "07bc2c1398e1a472f3841a00e7e7e02029b8b38b",
+    "bcp": "04e31cee0443bb916534dad2adf508458920e66d",
+    "bct": "40a80749ef62da6fc3d74dbf6fc7745148922372"
   }
 }

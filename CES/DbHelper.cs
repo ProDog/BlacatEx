@@ -17,7 +17,8 @@ namespace CoinExchangeService
             SQLiteConnection.CreateFile(dbName);
             string sqlString = "CREATE TABLE TransData (CoinType TEXT NOT NULL,Height INTEGER NOT NULL,Txid TEXT NOT NULL,Address TEXT NOT NULL,Value REAL NOT NULL,ConfirmCount INTEGER NOT NULL,UpdateTime TEXT NOT NULL,DeployTime TEXT,DeployTxid TEXT,PRIMARY KEY (\"CoinType\", \"Txid\"));" +
                                "CREATE TABLE Address (CoinType TEXT NOT NULL,Address TEXT NOT NULL,DateTime TEXT NOT NULL);" +
-                               "CREATE TABLE ParseIndex (CoinType TEXT PRIMARY KEY NOT NULL,Height INTEGER NOT NULL,DateTime TEXT NOT NULL)";
+                               "CREATE TABLE ParseIndex (CoinType TEXT PRIMARY KEY NOT NULL,Height INTEGER NOT NULL,DateTime TEXT NOT NULL);" +
+                               "CREATE TABLE ExchangeData (BTCTxid TEXT PRIMARY KEY NOT NULL,TransTxid TEXT NOT NULL,DateTime TEXT NOT NULL)";
             SQLiteConnection conn = new SQLiteConnection();
             conn.ConnectionString = "DataSource = " + dbName;
             conn.Open();           
@@ -154,6 +155,21 @@ namespace CoinExchangeService
                 $"update TransData set DeployTime='{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}',DeployTxid='{deployTxid}' where Txid='{deployInfo.txid}' and CoinType='{deployInfo.coinType}';";
             ExecuteSql(sql);
 
+        }
+
+        public static string AssetIsSend(string txid)
+        {
+            var sql = $"select TransTxid from ExchangeData where BTCTxid='{txid}'";
+            var table = ExecuSqlToDataTable(sql);
+            if (table.Rows.Count > 0)
+                return table.Rows[0]["TransTxid"].ToString();
+            return "";
+        }
+
+        public static void SaveExchangeInfo(JObject json, object txid)
+        {
+            var sql = $"insert into ExchangeData (BTCTxid,TransTxid,DateTime) values ('{json["txid"]}','{txid}','{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}')";
+            ExecuteSql(sql);
         }
 
         private static void ExecuteSql(string sql)
