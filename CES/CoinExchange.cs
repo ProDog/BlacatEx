@@ -12,12 +12,13 @@ namespace CoinExchangeService
         private static string api = "https://api.nel.group/api/testnet"; //NEO api
         private static Dictionary<string, string> adminWifDic = new Dictionary<string, string>();//管理员
         private static Dictionary<string, string> tokenHashDic = new Dictionary<string, string>();//token类型
-
+        private static Dictionary<string, ulong> factorDic = new Dictionary<string, ulong>();//精度
         public static void GetConfig()
         {
             var configOj = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText("config.json").ToString());
             adminWifDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(configOj["admin"].ToString());
             tokenHashDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(configOj["token"].ToString());
+            factorDic = JsonConvert.DeserializeObject<Dictionary<string, ulong>>(configOj["factor"].ToString());
         }
 
         public static string DeployNep5Token(string type, JObject json, decimal gasfee)
@@ -26,18 +27,15 @@ namespace CoinExchangeService
             var prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(adminWifDic["btc"]);
             using (var sb = new ThinNeo.ScriptBuilder())
             {
+                var amount = (ulong) json["value"] * factorDic[type];
                 var array = new MyJson.JsonNode_Array();
                 array.AddArrayValue("(addr)" + json["address"]);
-                array.AddArrayValue("(int)" + json["value"]); //value
+                array.AddArrayValue("(int)" + amount); //value
                 sb.EmitParamJson(array); //参数倒序入
                 sb.EmitPushString("deploy"); //参数倒序入
-                if (type == "btc")
-                    sb.EmitAppCall(new Hash160(tokenHashDic["btc"])); //nep5脚本
-                if (type == "eth")
-                    sb.EmitAppCall(new Hash160(tokenHashDic["btc"]));
+                sb.EmitAppCall(new Hash160(tokenHashDic[type])); //nep5脚本
                 script = sb.ToArray();
             }
-
             return SendTransWithoutUtxo(prikey, script);
             //return SendTransaction(prikey, script, null, gasfee);
         }
@@ -50,16 +48,18 @@ namespace CoinExchangeService
             byte[] script;
             if (json["type"].ToString() == "gas"|| json["type"].ToString() == "neo")
             {
-                return SendUtxoTrans(json["type"].ToString(), prikey, json["address"].ToString(), Convert.ToDecimal(json["value"]));
+                //return SendUtxoTrans(json["type"].ToString(), prikey, json["address"].ToString(), Convert.ToDecimal(json["value"]));
+                return null;
             }
             else
             {
                 using (var sb = new ThinNeo.ScriptBuilder())
                 {
+                    var amount = (ulong)json["value"] * factorDic[json["type"].ToString()];
                     var array = new MyJson.JsonNode_Array();
                     array.AddArrayValue("(addr)" + address); //from
                     array.AddArrayValue("(addr)" + json["address"]); //to
-                    array.AddArrayValue("(int)" + json["value"]); //value
+                    array.AddArrayValue("(int)" + amount); //value
                     sb.EmitParamJson(array); //参数倒序入
                     sb.EmitPushString("transfer"); //参数倒序入
                     sb.EmitAppCall(new Hash160(tokenHashDic[json["type"].ToString()]));

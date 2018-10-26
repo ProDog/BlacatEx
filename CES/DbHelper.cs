@@ -163,7 +163,7 @@ namespace CoinExchangeService
             var table = ExecuSqlToDataTable(sql);
             if (table.Rows.Count > 0)
                 return table.Rows[0]["TransTxid"].ToString();
-            return "";
+            return null;
         }
 
         public static void SaveExchangeInfo(JObject json, object txid)

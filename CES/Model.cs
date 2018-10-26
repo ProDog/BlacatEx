@@ -31,7 +31,6 @@ namespace CoinExchangeService
         //txid[n] 是utxo的属性
         public ThinNeo.Hash256 txid;
         public int n;
-
         //asset资产、addr 属于谁，value数额，这都是查出来的
         public string addr;
         public string asset;

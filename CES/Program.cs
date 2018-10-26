@@ -29,7 +29,7 @@ namespace CoinExchangeService
         private static Dictionary<string, string> myAccountDic = new Dictionary<string, string>();//我的收款地址
         private static Dictionary<string, string> apiDic = new Dictionary<string, string>();
         private static int btcIndex = 1440069; //BTC 监控高度
-        private static int ethIndex = 3186400; //ETH监控高度
+        private static int ethIndex = 3187000; //ETH监控高度
         private static string dbName = "MonitorData.db";  //Sqlite 数据库名
         private static List<TransResponse> btcTransRspList = new List<TransResponse>(); //BTC 交易列表
         private static List<TransResponse> ethTransRspList = new List<TransResponse>(); //ETH 交易列表
@@ -48,7 +48,7 @@ namespace CoinExchangeService
             btcAddrList = DbHelper.GetBtcAddr();
             ethAddrList = DbHelper.GetEthAddr();
             btcIndex = DbHelper.GetBtcIndex() + 1;
-            ethIndex = DbHelper.GetEthIndex() + 1;
+            //ethIndex = DbHelper.GetEthIndex() + 1;
             DbHelper.GetRspList(ref btcTransRspList, confirmCountDic["btc"], "btc");
             DbHelper.GetRspList(ref ethTransRspList, confirmCountDic["eth"], "eth");
 
@@ -77,7 +77,7 @@ namespace CoinExchangeService
                 {
                     for (int i = btcIndex; i <= count; i++)
                     {
-                        if (i % 1 == 0)
+                        if (i % 10 == 0)
                         {
                             Console.WriteLine(Time() + "Parse BTC Height:" + i);
                         }
@@ -189,7 +189,7 @@ namespace CoinExchangeService
                 {
                     for (int i = ethIndex; i <= sync.CurrentBlock.Value; i++)
                     {
-                        if (ethIndex % 200 == 0)
+                        if (ethIndex % 20 == 0)
                         {
                             Console.WriteLine(Time() + "Parse ETH Height:" + ethIndex);
                         }
@@ -334,7 +334,7 @@ namespace CoinExchangeService
         
         private static void HttpServerStart()
         {
-            Console.WriteLine(Time() + "HttpServer start!");
+            Console.WriteLine(Time() + "Http server start!");
             httpPostRequest.Prefixes.Add(apiDic["http"]);
             httpPostRequest.Start();
             Thread ThrednHttpPostRequest = new Thread(new ThreadStart(httpPostRequestHandle));
@@ -418,11 +418,12 @@ namespace CoinExchangeService
                         if (method == "exchange")
                         {
                             string txid = DbHelper.AssetIsSend(json["txid"].ToString());
-                            if (string.IsNullOrEmpty(txid))
+                            if (txid == null)
                             {
                                 txid = CoinExchange.Exchange(json, minerFeeDic["gas_fee"]);
                                 DbHelper.SaveExchangeInfo(json, txid);
-                                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "true", txid}));
+                                buffer = Encoding.UTF8.GetBytes(
+                                    JsonConvert.SerializeObject(new {state = "true", txid}));
                                 Console.WriteLine(Time() + "Exchange Nep5,txid: " + txid);
                             }
                             else
@@ -430,7 +431,6 @@ namespace CoinExchangeService
                                 buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid }));
                             }
 
-                            
                         }
 
                         if (urlPara.Length > 2)
@@ -514,38 +514,44 @@ namespace CoinExchangeService
 
             var btcPriKey = new BitcoinSecret(json["priKey"].ToString());
             var client = new QBitNinjaClient(nettype);
-            
-            var transactionId = uint256.Parse(json["txid"].ToString());
-            var transactionResponse = client.GetTransaction(transactionId).Result;
 
-            var receivedCoins = transactionResponse.ReceivedCoins;
-            OutPoint outPointToSpend = null;
-            foreach (var coin in receivedCoins)
-            {
-                if (coin.TxOut.ScriptPubKey == btcPriKey.ScriptPubKey)
-                {
-                    outPointToSpend = coin.Outpoint;
-                }
-            }
-            var txInAmount = (Money)receivedCoins[(int)outPointToSpend.N].Amount;
-
+            var txidArr = json["txid"].ToString().Split(',');
+           
+            var transaction = Transaction.Create(nettype);
+            var minerFee = minerFeeDic["btc"];
             //BitcoinPubKeyAddress pubKeyAddress = new BitcoinPubKeyAddress(json["to"].ToString());
             var receiveAddress = BitcoinAddress.Create(myAccountDic["btc"], nettype);
-            var transaction = Transaction.Create(nettype);
-            transaction.Inputs.Add(new TxIn()
-            {
-                PrevOut = outPointToSpend
-            });
+            var amount = Money.Zero;
 
-            var minerFee = minerFeeDic["btc"];
+            foreach (var txid in txidArr)
+            {
+                var transactionId = uint256.Parse(txid);
+                var transactionResponse = client.GetTransaction(transactionId).Result;
+                foreach (var rec in transactionResponse.ReceivedCoins)
+                {
+                    if (rec.TxOut.ScriptPubKey == btcPriKey.ScriptPubKey)
+                    {
+                        var txInAmount = (Money)transactionResponse.ReceivedCoins[(int)rec.Outpoint.N].Amount;
+                        transaction.Inputs.Add(new TxIn()
+                        {
+                            PrevOut = rec.Outpoint,
+                            ScriptSig= btcPriKey.ScriptPubKey
+                    });
+                        amount += txInAmount;
+                    }
+                }
+            }
 
             transaction.Outputs.Add(new TxOut()
             {
-                Value = Money.Coins(txInAmount.ToDecimal(MoneyUnit.BTC) - minerFee),
+                Value = Money.Coins(amount.ToDecimal(MoneyUnit.BTC) - minerFee),
                 ScriptPubKey = receiveAddress.ScriptPubKey
             });
-
-            transaction.Inputs[0].ScriptSig = btcPriKey.ScriptPubKey;
+            //foreach (var input in transaction.Inputs)
+            //{
+            //    input.ScriptSig = btcPriKey.ScriptPubKey;
+            //}
+            ////transaction.Inputs[0].ScriptSig = btcPriKey.ScriptPubKey;
             transaction.Sign(btcPriKey, false);
             
             BroadcastResponse broadcastResponse = client.Broadcast(transaction).Result;
