@@ -26,6 +26,7 @@
     "bcp": "xxx"
   },
   "token": {
+    "neo": "0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b",
     "gas": "0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7",
     "btc": "07bc2c1398e1a472f3841a00e7e7e02029b8b38b",
     "bcp": "04e31cee0443bb916534dad2adf508458920e66d",

@@ -39,7 +39,7 @@ namespace CoinExchangeService
             }
 
             return SendTransWithoutUtxo(prikey, script);
-            //return SendTransaction(prikey, script, gasfee);
+            //return SendTransaction(prikey, script, null, gasfee);
         }
 
         public static string Exchange(JObject json, decimal gasfee)
@@ -48,19 +48,26 @@ namespace CoinExchangeService
             byte[] pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
             string address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
             byte[] script;
-            using (var sb = new ThinNeo.ScriptBuilder())
+            if (json["type"].ToString() == "gas"|| json["type"].ToString() == "neo")
             {
-                var array = new MyJson.JsonNode_Array();
-                array.AddArrayValue("(addr)" + address);//from
-                array.AddArrayValue("(addr)" + json["address"]);//to
-                array.AddArrayValue("(int)" + json["value"]);//value
-                sb.EmitParamJson(array);//参数倒序入
-                sb.EmitPushString("transfer");//参数倒序入
-                sb.EmitAppCall(new Hash160(tokenHashDic[json["type"].ToString()]));
-                script = sb.ToArray();
+                return SendUtxoTrans(json["type"].ToString(), prikey, json["address"].ToString(), Convert.ToDecimal(json["value"]));
             }
+            else
+            {
+                using (var sb = new ThinNeo.ScriptBuilder())
+                {
+                    var array = new MyJson.JsonNode_Array();
+                    array.AddArrayValue("(addr)" + address); //from
+                    array.AddArrayValue("(addr)" + json["address"]); //to
+                    array.AddArrayValue("(int)" + json["value"]); //value
+                    sb.EmitParamJson(array); //参数倒序入
+                    sb.EmitPushString("transfer"); //参数倒序入
+                    sb.EmitAppCall(new Hash160(tokenHashDic[json["type"].ToString()]));
+                    script = sb.ToArray();
+                }
 
-            return SendTransWithoutUtxo(prikey, script);
+                return SendTransWithoutUtxo(prikey, script);
+            }
         }
 
         private static string SendTransWithoutUtxo(byte[] prikey, byte[] script)
@@ -99,7 +106,7 @@ namespace CoinExchangeService
             return txid;
         }
 
-        private static string SendTransaction(byte[] prikey, byte[] script, decimal gasfee)
+        private static string SendTransaction(byte[] prikey, byte[] script, string to, decimal gasfee)
         {
             byte[] pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
             string address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
@@ -115,7 +122,7 @@ namespace CoinExchangeService
             ThinNeo.Transaction tran = null;
             {
                 byte[] data = script;
-                tran = Helper.makeTran(dir[tokenHashDic["gas"]], null, new ThinNeo.Hash256(tokenHashDic["gas"]), gasfee);
+                tran = Helper.makeTran(dir[tokenHashDic["gas"]], to, new ThinNeo.Hash256(tokenHashDic["gas"]), gasfee);
                 tran.type = ThinNeo.TransactionType.InvocationTransaction;
                 var idata = new ThinNeo.InvokeTransData();
                 tran.extdata = idata;
@@ -133,6 +140,32 @@ namespace CoinExchangeService
             string txid = tran.GetHash().ToString();
             Console.WriteLine("{0:u} txid: " + txid, DateTime.Now);
             var result = Helper.HttpPost(url, postdata);
+            return txid;
+        }
+
+        private static string SendUtxoTrans(string type, byte[] prikey, string targetAddr, decimal sendCount)
+        {
+            byte[] pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
+            string address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
+            Dictionary<string, List<Utxo>> dic_UTXO = Helper.GetBalanceByAddress(api, address);
+            Transaction tran = Helper.makeTran(dic_UTXO[tokenHashDic[type]], targetAddr, new ThinNeo.Hash256(tokenHashDic[type]), sendCount);
+
+            tran.version = 0;
+            tran.attributes = new ThinNeo.Attribute[0];
+            tran.type = ThinNeo.TransactionType.ContractTransaction;
+
+            byte[] msg = tran.GetMessage();
+            string msgstr = ThinNeo.Helper.Bytes2HexString(msg);
+            byte[] signdata = ThinNeo.Helper.Sign(msg, prikey);
+            tran.AddWitness(signdata, pubkey, address);
+            string txid = tran.GetHash().ToString();
+            byte[] data = tran.GetRawData();
+            string rawdata = ThinNeo.Helper.Bytes2HexString(data);
+            byte[] postdata;
+
+            var url = Helper.MakeRpcUrlPost(api, "sendrawtransaction", out postdata, new MyJson.JsonNode_ValueString(rawdata));
+            var result = Helper.HttpPost(url, postdata);
+            MyJson.JsonNode_Object resJO = (MyJson.JsonNode_Object)MyJson.Parse(result);
             return txid;
         }
     }
