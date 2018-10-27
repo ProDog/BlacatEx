@@ -86,11 +86,12 @@
 
 ### 发行 Nep5 BTC/ETH 代币
 钱包中使用 Nep5 Token 代替 BTC、ETH 进行交易兑换等操作，提高效率节省费用，收到 BTC ETH 后请求发行，发行请求：url：http://xx.xx.xx.xx:xxxx/deploy/{coinType}，coinType 是币种简称，如 btc，eth 等,发送数据格式：
-后台操作数字类型均为整数，所以 value 格式为：数量 * 精度，比如 0.3 个，则为：0.3 * 100000000 = 30000000
+txid 为收到 BTC ETH 转账的 txid，用来判断是否已经发行过相应的 nep5 BTC ETH
 ```
 {
+    "txid":"74d63daa4df7b0791e6a6df816765f59018f6eab314e3e82b343299789153d9b",
     "address":"AUWYsHRi1xv584DswcQKkz1UXJf8G3se4Y",
-    "value":300550000
+    "value":0.3005
 }
 ```
 返回 txid
@@ -103,12 +104,13 @@
 
 ### 购买 Nep5 资产的转账接口
 钱包中将 BTC ETH 等兑换成 Nep5 资产，请求 url：http://xx.xx.xx.xx:xxxx/exchange，发送数据格式：
-后台操作数字类型均为整数，所以 value 格式为：数量 * 精度，比如 0.3 个，则为：0.3 * 100000000 = 30000000
+txid 为购买时 nep5 BTC ETH 付款的 txid，用来检测是否已经发放了购买的 token
 ```
 {
+    "txid": "aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c",
     "token":"04e31cee0443bb916534dad2adf508458920e66d",
     "address":"AWN6jngST5ytpNnY1dhBQG7QHd7V8SqSCp",
-    "value":3600000000
+    "value":360.23
 }
 ```
 返回 txid
