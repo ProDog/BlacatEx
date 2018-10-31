@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace CoinExchangeService
 {
     public class Helper
     {
         //获取地址的utxo来得出地址的资产  
-        public static Dictionary<string, List<Utxo>> GetBalanceByAddress(string api, string _addr)
+        public static async Task<Dictionary<string, List<Utxo>>> GetBalanceByAddressAsync(string api, string _addr)
         {
-            MyJson.JsonNode_Object response = (MyJson.JsonNode_Object)MyJson.Parse(Helper.HttpGet(api + "?method=getutxo&id=1&params=['" + _addr + "']"));
+            MyJson.JsonNode_Object response = (MyJson.JsonNode_Object)MyJson.Parse(await Helper.HttpGet(api + "?method=getutxo&id=1&params=['" + _addr + "']"));
             MyJson.JsonNode_Array resJA = (MyJson.JsonNode_Array)response["result"];
             Dictionary<string, List<Utxo>> _dir = new Dictionary<string, List<Utxo>>();
             foreach (MyJson.JsonNode_Object j in resJA)
@@ -37,8 +38,7 @@ namespace CoinExchangeService
             var tran = new ThinNeo.Transaction();
             tran.type = ThinNeo.TransactionType.ContractTransaction;
             tran.version = 0;//0 or 1
-            tran.extdata = null;
-
+            
             tran.attributes = new ThinNeo.Attribute[0];
             var scraddr = "";
             utxos.Sort((a, b) =>
@@ -135,17 +135,18 @@ namespace CoinExchangeService
             return sb.ToString();
         }
 
-        public static string HttpGet(string url)
+        public static async Task<string> HttpGet(string url)
         {
             WebClient wc = new WebClient();
-            return wc.DownloadString(url);
+            return await wc.DownloadStringTaskAsync(url);
         }
-        public static string HttpPost(string url, byte[] data)
+        public static async Task<string> HttpPost(string url, byte[] data)
         {
             WebClient wc = new WebClient();
             wc.Headers["content-type"] = "text/plain;charset=UTF-8";
-            byte[] retdata = wc.UploadData(url, "POST", data);
+            byte[] retdata = await wc.UploadDataTaskAsync(url, "POST", data);
             return System.Text.Encoding.UTF8.GetString(retdata);
         }
+
     }
 }

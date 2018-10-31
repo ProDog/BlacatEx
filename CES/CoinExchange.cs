@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ThinNeo;
@@ -12,65 +16,140 @@ namespace CoinExchangeService
         private static string api = "https://api.nel.group/api/testnet"; //NEO api
         private static Dictionary<string, string> adminWifDic = new Dictionary<string, string>();//管理员
         private static Dictionary<string, string> tokenHashDic = new Dictionary<string, string>();//token类型
-        private static Dictionary<string, ulong> factorDic = new Dictionary<string, ulong>();//精度
+        private static Dictionary<string, decimal> factorDic = new Dictionary<string, decimal>();//精度
+        private static List<string> utxoList;
+        private static int height;
+
         public static void GetConfig()
         {
             var configOj = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText("config.json").ToString());
             adminWifDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(configOj["admin"].ToString());
             tokenHashDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(configOj["token"].ToString());
-            factorDic = JsonConvert.DeserializeObject<Dictionary<string, ulong>>(configOj["factor"].ToString());
+            factorDic = JsonConvert.DeserializeObject<Dictionary<string, decimal>>(configOj["factor"].ToString());
+            utxoList = new List<string>();
+            height = GetHeight().Result;
         }
 
-        public static string DeployNep5Token(string type, JObject json, decimal gasfee)
+        public static async System.Threading.Tasks.Task<string> DeployNep5TokenAsync(string type, JObject json, decimal gasfee)
         {
             byte[] script;
-            var prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(adminWifDic["btc"]);
+            var prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(adminWifDic[type]);
             using (var sb = new ThinNeo.ScriptBuilder())
             {
-                var amount = (ulong) json["value"] * factorDic[type];
+                var amount = Math.Round((decimal) json["value"] * factorDic[type], 0);
                 var array = new MyJson.JsonNode_Array();
                 array.AddArrayValue("(addr)" + json["address"]);
                 array.AddArrayValue("(int)" + amount); //value
+                byte[] randomBytes = new byte[32];
+                using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
+                {
+                    rng.GetBytes(randomBytes);
+                }
+                BigInteger randomNum = new BigInteger(randomBytes);
+                sb.EmitPushNumber(randomNum);
+                sb.Emit(ThinNeo.VM.OpCode.DROP);
                 sb.EmitParamJson(array); //参数倒序入
                 sb.EmitPushString("deploy"); //参数倒序入
                 sb.EmitAppCall(new Hash160(tokenHashDic[type])); //nep5脚本
                 script = sb.ToArray();
             }
-            return SendTransWithoutUtxo(prikey, script);
-            //return SendTransaction(prikey, script, null, gasfee);
+            //return SendTransWithoutUtxo(prikey, script);
+            return await SendTransactionAsync(prikey, script, null, gasfee);
         }
 
-        public static string Exchange(JObject json, decimal gasfee)
+        public static async System.Threading.Tasks.Task<string> ExchangeAsync(string coinType, JObject json, decimal gasfee)
         {
-            byte[] prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(adminWifDic["bcp"]);
+            byte[] prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(adminWifDic[coinType]);
             byte[] pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
             string address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
             byte[] script;
-            if (json["type"].ToString() == "gas"|| json["type"].ToString() == "neo")
+            if (coinType == "gas"|| coinType == "neo")
             {
-                //return SendUtxoTrans(json["type"].ToString(), prikey, json["address"].ToString(), Convert.ToDecimal(json["value"]));
-                return null;
+                return await SendUtxoTransAsync(coinType, prikey, json["address"].ToString(), Convert.ToDecimal(json["value"]));
             }
             else
             {
                 using (var sb = new ThinNeo.ScriptBuilder())
                 {
-                    var amount = (ulong)json["value"] * factorDic[json["type"].ToString()];
+                    var amount = Math.Round((decimal)json["value"] * factorDic[coinType],0);
                     var array = new MyJson.JsonNode_Array();
                     array.AddArrayValue("(addr)" + address); //from
                     array.AddArrayValue("(addr)" + json["address"]); //to
                     array.AddArrayValue("(int)" + amount); //value
+                    byte[] randomBytes = new byte[32];
+                    using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
+                    {
+                        rng.GetBytes(randomBytes);
+                    }
+                    BigInteger randomNum = new BigInteger(randomBytes);
+                    sb.EmitPushNumber(randomNum);
+                    sb.Emit(ThinNeo.VM.OpCode.DROP);
                     sb.EmitParamJson(array); //参数倒序入
                     sb.EmitPushString("transfer"); //参数倒序入
-                    sb.EmitAppCall(new Hash160(tokenHashDic[json["type"].ToString()]));
+                    sb.EmitAppCall(new Hash160(tokenHashDic[coinType]));
                     script = sb.ToArray();
                 }
-
-                return SendTransWithoutUtxo(prikey, script);
+                //return await SendTransWithoutUtxoAsync(prikey, script);
+                return await SendTransactionAsync(prikey, script, null, gasfee);
             }
         }
 
-        private static string SendTransWithoutUtxo(byte[] prikey, byte[] script)
+        public static async System.Threading.Tasks.Task<decimal> GetBalanceAsync(string coinType)
+        {
+            byte[] prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(adminWifDic[coinType]);
+            byte[] pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
+            string address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
+            if (coinType == "gas" || coinType == "neo")
+            {
+                decimal balance = 0;
+                var url = api + "?method=getbalance&id=1&params=['" + address + "']";
+                var result = await Helper.HttpGet(url);
+                var res = Newtonsoft.Json.Linq.JObject.Parse(result)["result"] as Newtonsoft.Json.Linq.JArray;
+                if (res != null)
+                {
+                    for (int i = 0; i < res.Count; i++)
+                    {
+                        if (res[i]["asset"].ToString() == tokenHashDic[coinType])
+                            balance = (decimal) res[i]["balance"];
+                    }
+                }
+
+                return balance;
+            }
+
+            byte[] data = null;
+            using (ScriptBuilder sb = new ScriptBuilder())
+            {
+                MyJson.JsonNode_Array array = new MyJson.JsonNode_Array();
+                array.AddArrayValue("(addr)" + address);
+                sb.EmitParamJson(array);
+                sb.EmitPushString("balanceOf");
+                sb.EmitAppCall(new Hash160(tokenHashDic[coinType]));//合约脚本hash
+                data = sb.ToArray();
+            }
+
+            return await GetNep5BalancAsync(coinType, data);
+        }
+
+        private static async System.Threading.Tasks.Task<decimal> GetNep5BalancAsync(string coinType, byte[] data)
+        {
+            decimal balance = 0;
+            string script = ThinNeo.Helper.Bytes2HexString(data);
+            byte[] postdata;
+            var url = Helper.MakeRpcUrlPost(api, "invokescript", out postdata, new MyJson.JsonNode_ValueString(script));
+            var result = await Helper.HttpPost(url, postdata);
+            var res = Newtonsoft.Json.Linq.JObject.Parse(result)["result"] as Newtonsoft.Json.Linq.JArray;
+            if (res != null)
+            {
+                var stack = (res[0]["stack"] as Newtonsoft.Json.Linq.JArray)[0] as Newtonsoft.Json.Linq.JObject;
+                var vBanlance = new BigInteger(ThinNeo.Helper.HexString2Bytes((string) stack["value"]));
+                balance = (decimal) vBanlance / factorDic[coinType];
+            }
+
+            return balance;
+        }
+
+        private static async System.Threading.Tasks.Task<string> SendTransWithoutUtxoAsync(byte[] prikey, byte[] script)
         {
             var pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
             var address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
@@ -100,24 +179,43 @@ namespace CoinExchangeService
 
             byte[] postdata;
             var url = Helper.MakeRpcUrlPost(api, "sendrawtransaction", out postdata, new MyJson.JsonNode_ValueString(rawdata));
-            var result = Helper.HttpPost(url, postdata);
+            var result = await Helper.HttpPost(url, postdata);
             var json = Newtonsoft.Json.Linq.JObject.Parse(result);
-            //Console.WriteLine("{0:u} rsp: " + result, DateTime.Now);
+            Console.WriteLine(result);
             return txid;
         }
 
-        private static string SendTransaction(byte[] prikey, byte[] script, string to, decimal gasfee)
+        private static async System.Threading.Tasks.Task<string> SendTransactionAsync(byte[] prikey, byte[] script, string to, decimal gasfee)
         {
+            if (GetHeight().Result > height)
+            {
+                utxoList.Clear();
+                height = GetHeight().Result;
+            }
+
             byte[] pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
             string address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
 
             //获取地址的资产列表
-            Dictionary<string, List<Utxo>> dir = Helper.GetBalanceByAddress(api, address);
+            Dictionary<string, List<Utxo>> dir = await Helper.GetBalanceByAddressAsync(api, address);
             if (dir.ContainsKey(tokenHashDic["gas"]) == false)
             {
                 Console.WriteLine("no gas");
                 return null;
             }
+
+            for (int i = dir[tokenHashDic["gas"]].Count - 1; i > 0; i--)
+            {
+                if (utxoList.Contains(dir[tokenHashDic["gas"]][i].txid.ToString() + dir[tokenHashDic["gas"]][i].n))
+                    dir[tokenHashDic["gas"]].Remove(dir[tokenHashDic["gas"]][i]);
+            }
+
+            if (dir[tokenHashDic["gas"]].Count == 0)
+            {
+                Console.WriteLine("No available gas");
+                return null;
+            }
+
             //MakeTran
             ThinNeo.Transaction tran = null;
             {
@@ -138,22 +236,44 @@ namespace CoinExchangeService
             byte[] postdata;
             var url = Helper.MakeRpcUrlPost(api, "sendrawtransaction", out postdata, new MyJson.JsonNode_ValueString(strtrandata));
             string txid = tran.GetHash().ToString();
-            Console.WriteLine("{0:u} txid: " + txid, DateTime.Now);
-            var result = Helper.HttpPost(url, postdata);
+            var result = await Helper.HttpPost(url, postdata);
+            foreach (var input in tran.inputs)
+            {
+                utxoList.Add(input.hash.ToString() + input.index);
+            }
+            Console.WriteLine(result);
             return txid;
         }
 
-        private static string SendUtxoTrans(string type, byte[] prikey, string targetAddr, decimal sendCount)
+        private static async System.Threading.Tasks.Task<string> SendUtxoTransAsync(string type, byte[] prikey, string targetAddr, decimal sendCount)
         {
+            if (GetHeight().Result > height)
+            {
+                utxoList.Clear();
+                height = GetHeight().Result;
+            }
+
             byte[] pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
             string address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
-            Dictionary<string, List<Utxo>> dic_UTXO = Helper.GetBalanceByAddress(api, address);
+            Dictionary<string, List<Utxo>> dic_UTXO = await Helper.GetBalanceByAddressAsync(api, address);
+
+            for (int i = dic_UTXO[tokenHashDic[type]].Count - 1; i > 0; i--)
+            {
+                if (utxoList.Contains(dic_UTXO[tokenHashDic[type]][i].txid.ToString() + dic_UTXO[tokenHashDic[type]][i].n))
+                    dic_UTXO[tokenHashDic[type]].Remove(dic_UTXO[tokenHashDic[type]][i]);
+            }
+            if (dic_UTXO[tokenHashDic[type]].Count == 0)
+            {
+                Console.WriteLine("No available " + type);
+                return null;
+            }
+
             Transaction tran = Helper.makeTran(dic_UTXO[tokenHashDic[type]], targetAddr, new ThinNeo.Hash256(tokenHashDic[type]), sendCount);
 
-            tran.version = 0;
+            tran.version = 0; 
             tran.attributes = new ThinNeo.Attribute[0];
             tran.type = ThinNeo.TransactionType.ContractTransaction;
-
+            
             byte[] msg = tran.GetMessage();
             string msgstr = ThinNeo.Helper.Bytes2HexString(msg);
             byte[] signdata = ThinNeo.Helper.Sign(msg, prikey);
@@ -164,9 +284,25 @@ namespace CoinExchangeService
             byte[] postdata;
 
             var url = Helper.MakeRpcUrlPost(api, "sendrawtransaction", out postdata, new MyJson.JsonNode_ValueString(rawdata));
-            var result = Helper.HttpPost(url, postdata);
+            var result = await Helper.HttpPost(url, postdata);
+
+            foreach (var input in tran.inputs)
+            {
+                utxoList.Add(input.hash.ToString() + input.index);
+            }
+
+            Console.WriteLine(result);
             MyJson.JsonNode_Object resJO = (MyJson.JsonNode_Object)MyJson.Parse(result);
             return txid;
+        }
+
+        public static async Task<int> GetHeight()
+        {
+            var url = api + "?method=getblockcount&id=1&params=[]";
+            var result = await Helper.HttpGet(url);
+            var res = Newtonsoft.Json.Linq.JObject.Parse(result)["result"] as Newtonsoft.Json.Linq.JArray;
+            int height = (int) res[0]["blockcount"];
+            return height;
         }
     }
 }

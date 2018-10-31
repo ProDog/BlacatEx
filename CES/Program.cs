@@ -48,15 +48,15 @@ namespace CoinExchangeService
             btcAddrList = DbHelper.GetBtcAddr();
             ethAddrList = DbHelper.GetEthAddr();
             btcIndex = DbHelper.GetBtcIndex() + 1;
-            //ethIndex = DbHelper.GetEthIndex() + 1;
+            ethIndex = DbHelper.GetEthIndex() + 1;
             DbHelper.GetRspList(ref btcTransRspList, confirmCountDic["btc"], "btc");
             DbHelper.GetRspList(ref ethTransRspList, confirmCountDic["eth"], "eth");
 
             Thread BtcThread = new Thread(BtcWatcherStartAsync);
             Thread EthThread = new Thread(EthWatcherStartAsync);
             Thread HttpThread = new Thread(HttpServerStart);
-            BtcThread.Start();
-            EthThread.Start();
+            //BtcThread.Start();
+            //EthThread.Start();
             HttpThread.Start();
         }
 
@@ -420,11 +420,19 @@ namespace CoinExchangeService
                             string txid = DbHelper.AssetIsSend(json["txid"].ToString());
                             if (txid == null)
                             {
-                                txid = CoinExchange.Exchange(json, minerFeeDic["gas_fee"]);
-                                DbHelper.SaveExchangeInfo(json, txid);
-                                buffer = Encoding.UTF8.GetBytes(
-                                    JsonConvert.SerializeObject(new {state = "true", txid}));
-                                Console.WriteLine(Time() + "Exchange Nep5,txid: " + txid);
+                                var coinType = json["type"].ToString();
+                                txid = CoinExchange.ExchangeAsync(coinType, json, minerFeeDic["gas_fee"]).Result;
+                                if (txid != null)
+                                {
+                                    DbHelper.SaveExchangeInfo(json, txid);
+                                    buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "true", txid}));
+                                    Console.WriteLine(Time() + "Exchange " + coinType + ",txid: " + txid);
+                                }
+                                else
+                                {
+                                    buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", txid }));
+                                    Console.WriteLine(Time() + "Exchange " + coinType + ",txid: " + txid);
+                                }
                             }
                             else
                             {
@@ -436,6 +444,14 @@ namespace CoinExchangeService
                         if (urlPara.Length > 2)
                         {
                             var coinType = urlPara[2];
+
+                            if (method == "getbalance")
+                            {
+                                var balance = CoinExchange.GetBalanceAsync(coinType).Result;
+                                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", balance }));
+                                Console.WriteLine(Time() + "Get " + coinType + " Balance: " + balance);
+                            }
+
                             if (method == "getaccount")
                             {
                                 string address = string.Empty;
@@ -467,10 +483,10 @@ namespace CoinExchangeService
                                 DeployInfo deployInfo = DbHelper.GetDeployStateByTxid(coinType, json["txid"].ToString());
                                 if (string.IsNullOrEmpty(deployInfo.deployTime) && string.IsNullOrEmpty(deployInfo.deployTxid)) //没有发行NEP5 BTC/ETH
                                 {
-                                    var deployTxid = CoinExchange.DeployNep5Token(coinType, json, minerFeeDic["gas_fee"]);
+                                    var deployTxid = CoinExchange.DeployNep5TokenAsync(coinType, json, minerFeeDic["gas_fee"]).Result;
                                     DbHelper.SaveDeployInfo(deployInfo, deployTxid);
                                     buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "true", txid = deployTxid}));
-                                    Console.WriteLine(Time() + "Nep5 BTC Deployed,txid: " + deployTxid);
+                                    Console.WriteLine(Time() + "Nep5 " + coinType + " Deployed,txid: " + deployTxid);
                                 }
                                 else //已发行
                                 {
@@ -535,8 +551,8 @@ namespace CoinExchangeService
                         transaction.Inputs.Add(new TxIn()
                         {
                             PrevOut = rec.Outpoint,
-                            ScriptSig= btcPriKey.ScriptPubKey
-                    });
+                            ScriptSig = btcPriKey.ScriptPubKey
+                        });
                         amount += txInAmount;
                     }
                 }
