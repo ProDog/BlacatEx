@@ -83,13 +83,29 @@ namespace CoinExchangeService
                 var change = count - sendcount;
                 if (change > decimal.Zero)
                 {
-                    ThinNeo.TransactionOutput outputchange = new ThinNeo.TransactionOutput();
-                    outputchange.toAddress = ThinNeo.Helper.GetPublicKeyHashFromAddress(scraddr);
-                    outputchange.value = change;
-                    outputchange.assetId = assetid;
-                    list_outputs.Add(outputchange);
+                    var num = change;
+
+                    while (num > 3)
+                    {
+                        ThinNeo.TransactionOutput outputchange = new ThinNeo.TransactionOutput();
+                        outputchange.toAddress = ThinNeo.Helper.GetPublicKeyHashFromAddress(scraddr);
+                        outputchange.value = 3;
+                        outputchange.assetId = assetid;
+                        list_outputs.Add(outputchange);
+                        num -= 3;
+                    }
+
+                    if (num <= 3)
+                    {
+                        ThinNeo.TransactionOutput outputchange = new ThinNeo.TransactionOutput();
+                        outputchange.toAddress = ThinNeo.Helper.GetPublicKeyHashFromAddress(scraddr);
+                        outputchange.value = num;
+                        outputchange.assetId = assetid;
+                        list_outputs.Add(outputchange);
+                    }
 
                 }
+
                 tran.outputs = list_outputs.ToArray();
             }
             else
@@ -118,6 +134,7 @@ namespace CoinExchangeService
             data = System.Text.Encoding.UTF8.GetBytes(json.ToString());
             return url;
         }
+
         public static string MakeRpcUrl(string url, string method, params MyJson.IJsonNode[] _params)
         {
             StringBuilder sb = new StringBuilder();
@@ -140,6 +157,7 @@ namespace CoinExchangeService
             WebClient wc = new WebClient();
             return await wc.DownloadStringTaskAsync(url);
         }
+
         public static async Task<string> HttpPost(string url, byte[] data)
         {
             WebClient wc = new WebClient();

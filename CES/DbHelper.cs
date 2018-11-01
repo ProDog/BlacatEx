@@ -149,10 +149,10 @@ namespace CoinExchangeService
             return deployInfo;
         }
 
-        public static void SaveDeployInfo(DeployInfo deployInfo, string deployTxid)
+        public static void SaveDeployInfo(DeployInfo deployInfo )
         {
             var sql =
-                $"update TransData set DeployTime='{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}',DeployTxid='{deployTxid}' where Txid='{deployInfo.txid}' and CoinType='{deployInfo.coinType}';";
+                $"update TransData set DeployTime='{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}',DeployTxid='{deployInfo.deployTxid}' where Txid='{deployInfo.txid}' and CoinType='{deployInfo.coinType}';";
             ExecuteSql(sql);
 
         }
