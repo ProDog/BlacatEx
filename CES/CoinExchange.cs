@@ -17,7 +17,7 @@ namespace CoinExchangeService
         private static Dictionary<string, string> adminWifDic = new Dictionary<string, string>();//管理员
         private static Dictionary<string, string> tokenHashDic = new Dictionary<string, string>();//token类型
         private static Dictionary<string, decimal> factorDic = new Dictionary<string, decimal>();//精度
-        private static List<string> utxoList; //本区块内同一账户已使用的 UTXO 记录
+        private static List<string> usedUtxoList; //本区块内同一账户已使用的 UTXO 记录
 
         public static void GetConfig()
         {
@@ -25,7 +25,7 @@ namespace CoinExchangeService
             adminWifDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(configOj["admin"].ToString());
             tokenHashDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(configOj["token"].ToString());
             factorDic = JsonConvert.DeserializeObject<Dictionary<string, decimal>>(configOj["factor"].ToString());
-            utxoList = new List<string>();
+            usedUtxoList = new List<string>();
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace CoinExchangeService
         {
             if (clear)
             {
-                utxoList.Clear();
+                usedUtxoList.Clear();
             }
             byte[] script;
             var prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(adminWifDic[type]);
@@ -77,7 +77,7 @@ namespace CoinExchangeService
         {
             if (clear)
             {
-                utxoList.Clear();
+                usedUtxoList.Clear();
             }
             byte[] prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(adminWifDic[coinType]);
             byte[] pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
@@ -85,7 +85,7 @@ namespace CoinExchangeService
             byte[] script;
             if (coinType == "gas"|| coinType == "neo")
             {
-                return await SendUtxoTransAsync(coinType, prikey, json["address"].ToString(), Convert.ToDecimal(json["value"]));
+                return await SendUtxoTransAsync(coinType, prikey, json["address"].ToString(), Convert.ToDecimal(json["value"]), gasfee);
             }
             else
             {
@@ -242,22 +242,11 @@ namespace CoinExchangeService
                 return "No gas";
             }
 
-            for (int i = dir[tokenHashDic["gas"]].Count - 1; i >= 0; i--)
-            {
-                if (utxoList.Contains(dir[tokenHashDic["gas"]][i].txid.ToString() + dir[tokenHashDic["gas"]][i].n))
-                    dir[tokenHashDic["gas"]].Remove(dir[tokenHashDic["gas"]][i]);
-            }
-
-            if (dir[tokenHashDic["gas"]].Count == 0)
-            {
-                return "No available gas";
-            }
-
             //MakeTran
             ThinNeo.Transaction tran = null;
             {
                 byte[] data = script;
-                tran = Helper.makeTran(dir[tokenHashDic["gas"]], to, new ThinNeo.Hash256(tokenHashDic["gas"]), gasfee);
+                tran = Helper.makeTran(dir[tokenHashDic["gas"]], usedUtxoList, to, new ThinNeo.Hash256(tokenHashDic["gas"]), 0, gasfee);
                 tran.type = ThinNeo.TransactionType.InvocationTransaction;
                 var idata = new ThinNeo.InvokeTransData();
                 tran.extdata = idata;
@@ -276,7 +265,7 @@ namespace CoinExchangeService
             var result = await Helper.HttpPost(url, postdata);
             foreach (var input in tran.inputs)
             {
-                utxoList.Add(((Hash256)input.hash).ToString() + input.index);
+                usedUtxoList.Add(((Hash256)input.hash).ToString() + input.index);
             }
             return result;
         }
@@ -289,25 +278,18 @@ namespace CoinExchangeService
         /// <param name="targetAddr"></param>
         /// <param name="sendCount"></param>
         /// <returns></returns>
-        private static async System.Threading.Tasks.Task<string> SendUtxoTransAsync(string type, byte[] prikey, string targetAddr, decimal sendCount)
+        private static async System.Threading.Tasks.Task<string> SendUtxoTransAsync(string type, byte[] prikey, string targetAddr, decimal sendCount, decimal gasfee)
         {
             byte[] pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
             string address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
             Dictionary<string, List<Utxo>> dic_UTXO = await Helper.GetBalanceByAddressAsync(api, address);
-
-            for (int i = dic_UTXO[tokenHashDic[type]].Count - 1; i >= 0; i--)
+            if (dic_UTXO.ContainsKey(tokenHashDic[type]) == false)
             {
-                if (utxoList.Contains(dic_UTXO[tokenHashDic[type]][i].txid.ToString() + dic_UTXO[tokenHashDic[type]][i].n))
-                    dic_UTXO[tokenHashDic[type]].Remove(dic_UTXO[tokenHashDic[type]][i]);
-            }
-            if (dic_UTXO[tokenHashDic[type]].Count == 0)
-            {
-                Console.WriteLine("No available " + type);
-                return "No available " + type;
+                return "No " + type;
             }
 
-            Transaction tran = Helper.makeTran(dic_UTXO[tokenHashDic[type]], targetAddr, new ThinNeo.Hash256(tokenHashDic[type]), sendCount);
-
+            Transaction tran = Helper.makeTran(dic_UTXO[type], usedUtxoList, targetAddr, new ThinNeo.Hash256(tokenHashDic[type]), sendCount, gasfee);
+            
             tran.version = 0; 
             tran.attributes = new ThinNeo.Attribute[0];
             tran.type = ThinNeo.TransactionType.ContractTransaction;
@@ -326,7 +308,7 @@ namespace CoinExchangeService
 
             foreach (var input in tran.inputs)
             {
-                utxoList.Add(((Hash256)input.hash).ToString() + input.index);
+                usedUtxoList.Add(((Hash256)input.hash).ToString() + input.index);
             }
 
             MyJson.JsonNode_Object resJO = (MyJson.JsonNode_Object)MyJson.Parse(result);

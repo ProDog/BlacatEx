@@ -156,7 +156,7 @@ namespace CoinExchangeService
         {
             foreach (var btcTran in btcTransRspList)
             {
-                if (index > btcTran.height && index - btcTran.height < num)
+                if (index > btcTran.height)
                 {
                     var block = rpcC.GetBlock(btcTran.height);
                     //如果原区块中还包含该交易，则确认数 = 当前区块高度 - 交易所在区块高度 + 1，不包含该交易，确认数统一记为 0
@@ -190,7 +190,7 @@ namespace CoinExchangeService
                 {
                     for (int i = ethIndex; i <= sync.CurrentBlock.Value; i++)
                     {
-                        if (ethIndex % 20 == 0)
+                        if (ethIndex % 1 == 0)
                         {
                             Console.WriteLine(Time() + "Parse ETH Height:" + ethIndex);
                         }
@@ -263,7 +263,7 @@ namespace CoinExchangeService
         {
             foreach (var ethTran in ethTransRspList)
             {
-                if (index > ethTran.height && index - ethTran.height < num)
+                if (index > ethTran.height)
                 {
                     var block = await web3.Eth.Blocks.GetBlockWithTransactionsByNumber.SendRequestAsync(new HexBigInteger(ethTran.height));
 

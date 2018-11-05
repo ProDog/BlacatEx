@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using ThinNeo;
 
 namespace CoinExchangeService
 {
@@ -33,8 +34,14 @@ namespace CoinExchangeService
             return _dir;
         }
 
-        public static ThinNeo.Transaction makeTran(List<Utxo> utxos, string targetaddr, ThinNeo.Hash256 assetid, decimal sendcount)
+        public static ThinNeo.Transaction makeTran(List<Utxo> utxos, List<string> usedUtxoList, string targetaddr, ThinNeo.Hash256 assetid, decimal sendCount, decimal gasfee)
         {
+            if (sendCount == 0) //sendCount==0,说明是合约交易，gasfee做sendCount
+            {
+                sendCount = gasfee;
+                gasfee = 0;
+            }
+
             var tran = new ThinNeo.Transaction();
             tran.type = ThinNeo.TransactionType.ContractTransaction;
             tran.version = 0;//0 or 1
@@ -52,39 +59,44 @@ namespace CoinExchangeService
             });
             decimal count = decimal.Zero;
             List<ThinNeo.TransactionInput> list_inputs = new List<ThinNeo.TransactionInput>();
-            for (var i = 0; i < utxos.Count; i++)
+            for (var i = utxos.Count - 1; i >= 0; i--)
             {
+                if (usedUtxoList.Contains(utxos[i].txid.ToString() + utxos[i].n))
+                {
+                    utxos.Remove(utxos[i]);
+                    continue;
+                }
                 ThinNeo.TransactionInput input = new ThinNeo.TransactionInput();
                 input.hash = utxos[i].txid;
                 input.index = (ushort)utxos[i].n;
                 list_inputs.Add(input);
                 count += utxos[i].value;
                 scraddr = utxos[i].addr;
-                if (count >= sendcount)
+                if (count >= sendCount)
                 {
                     break;
                 }
             }
             tran.inputs = list_inputs.ToArray();
-            if (count >= sendcount)//输入大于等于输出
+            if (count >= sendCount)//输入大于等于输出
             {
                 List<ThinNeo.TransactionOutput> list_outputs = new List<ThinNeo.TransactionOutput>();
                 //输出
-                if (sendcount > decimal.Zero && targetaddr != null)
+                if (sendCount > decimal.Zero && targetaddr != null)
                 {
                     ThinNeo.TransactionOutput output = new ThinNeo.TransactionOutput();
                     output.assetId = assetid;
-                    output.value = sendcount;
+                    output.value = sendCount;
                     output.toAddress = ThinNeo.Helper.GetPublicKeyHashFromAddress(targetaddr);
                     list_outputs.Add(output);
                 }
 
                 //找零
-                var change = count - sendcount;
+                var change = count - sendCount - gasfee;
                 if (change > decimal.Zero)
                 {
                     var num = change;
-
+                    int i = 0;
                     while (num > 3)
                     {
                         ThinNeo.TransactionOutput outputchange = new ThinNeo.TransactionOutput();
@@ -93,9 +105,14 @@ namespace CoinExchangeService
                         outputchange.assetId = assetid;
                         list_outputs.Add(outputchange);
                         num -= 3;
+                        i += 1;
+                        if (i >= 10)
+                        {
+                            break;
+                        }
                     }
 
-                    if (num <= 3)
+                    if (num > 0)
                     {
                         ThinNeo.TransactionOutput outputchange = new ThinNeo.TransactionOutput();
                         outputchange.toAddress = ThinNeo.Helper.GetPublicKeyHashFromAddress(scraddr);
@@ -114,6 +131,107 @@ namespace CoinExchangeService
             }
             return tran;
         }
+
+        #region NEO 接口，有了 CNEO 后弃用
+
+        //public static Transaction makeUtxoTran(Dictionary<string, List<Utxo>> dic_UTXO, List<string> usedUtxoList, string targetAddr, Dictionary<string, string> tokenHashDic, string type, decimal sendCount, decimal gasfee)
+        //{
+        //    var tran = new ThinNeo.Transaction();
+        //    tran.type = ThinNeo.TransactionType.ContractTransaction;
+        //    tran.version = 0;//0 or 1
+        //    var assetid = new Hash256(tokenHashDic[type]);
+        //    var utxos = dic_UTXO[tokenHashDic[type]];
+
+        //    tran.attributes = new ThinNeo.Attribute[0];
+        //    var scraddr = "";
+        //    utxos.Sort((a, b) =>
+        //    {
+        //        if (a.value > b.value)
+        //            return 1;
+        //        else if (a.value < b.value)
+        //            return -1;
+        //        else
+        //            return 0;
+        //    });
+        //    decimal count = decimal.Zero;
+        //    List<ThinNeo.TransactionInput> list_inputs = new List<ThinNeo.TransactionInput>();
+        //    for (var i = utxos.Count - 1; i >= 0; i--)
+        //    {
+        //        if (usedUtxoList.Contains(utxos[i].txid.ToString() + utxos[i].n))
+        //        {
+        //            utxos.Remove(utxos[i]);
+        //            continue;
+        //        }
+
+        //        ThinNeo.TransactionInput input = new ThinNeo.TransactionInput();
+        //        input.hash = utxos[i].txid;
+        //        input.index = (ushort) utxos[i].n;
+        //        list_inputs.Add(input);
+        //        count += utxos[i].value;
+        //        scraddr = utxos[i].addr;
+        //        if (count >= sendCount)
+        //        {
+        //            break;
+        //        }
+        //    }
+
+        //    tran.inputs = list_inputs.ToArray();
+        //    if (count >= sendCount)//输入大于等于输出
+        //    {
+        //        List<ThinNeo.TransactionOutput> list_outputs = new List<ThinNeo.TransactionOutput>();
+        //        //输出
+        //        if (sendCount > decimal.Zero && targetAddr != null)
+        //        {
+        //            ThinNeo.TransactionOutput output = new ThinNeo.TransactionOutput();
+        //            output.assetId = assetid;
+        //            output.value = sendCount;
+        //            output.toAddress = ThinNeo.Helper.GetPublicKeyHashFromAddress(targetAddr);
+        //            list_outputs.Add(output);
+        //        }
+
+        //        //找零
+        //        var change = count - sendCount - gasfee;
+        //        if (change > decimal.Zero)
+        //        {
+
+        //            var num = change;
+        //            int i = 0;
+        //            while (num > 3)
+        //            {
+        //                ThinNeo.TransactionOutput outputchange = new ThinNeo.TransactionOutput();
+        //                outputchange.toAddress = ThinNeo.Helper.GetPublicKeyHashFromAddress(scraddr);
+        //                outputchange.value = 3;
+        //                outputchange.assetId = assetid;
+        //                list_outputs.Add(outputchange);
+        //                num -= 3;
+        //                i += 1;
+        //                if (i >= 10)
+        //                {
+        //                    break;
+        //                }
+        //            }
+
+        //            if (num > 0)
+        //            {
+        //                ThinNeo.TransactionOutput outputchange = new ThinNeo.TransactionOutput();
+        //                outputchange.toAddress = ThinNeo.Helper.GetPublicKeyHashFromAddress(scraddr);
+        //                outputchange.value = num;
+        //                outputchange.assetId = assetid;
+        //                list_outputs.Add(outputchange);
+        //            }
+
+        //        }
+
+        //        tran.outputs = list_outputs.ToArray();
+        //    }
+        //    else
+        //    {
+        //        throw new Exception("no enough money.");
+        //    }
+        //    return tran;
+        //}
+
+        #endregion
 
         public static string MakeRpcUrlPost(string url, string method, out byte[] data, params MyJson.IJsonNode[] _params)
         {
