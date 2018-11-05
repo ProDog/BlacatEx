@@ -61,10 +61,8 @@
 {
     "type": btc,
     "account": "1PweQ2GtDzregsXshCyU2Vj8QWMb8T5tmc",
-    "txid" : "73d82f176a2b357256138bd0a6aeddd2131829dadccdee18f98a65da19282228","aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c"
-    "priKey": "Ky9hKMaG2cg6fMvDju91K5PUrnm8boQcRojQ84xGYid9KxCkrWu8",
-    "to": "1CbPtXDSsVmSRKTCbhwMH9MEj7Hfmwt2LS",
-    "amount": 23.256
+    "txid" : "73d82f176a2b357256138bd0a6aeddd2131829dadccdee18f98a65da19282228","aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c",
+    "priKey": "Ky9hKMaG2cg6fMvDju91K5PUrnm8boQcRojQ84xGYid9KxCkrWu8"
 }
 ```
 返回 txid
@@ -108,7 +106,7 @@ txid 为购买时 nep5 BTC ETH 付款的 txid，用来检测是否已经发放�
 ```
 {
     "txid": "aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c",
-    "token":"04e31cee0443bb916534dad2adf508458920e66d",
+    "type":"gas",
     "address":"AWN6jngST5ytpNnY1dhBQG7QHd7V8SqSCp",
     "value":360.23
 }
