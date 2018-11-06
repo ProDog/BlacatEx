@@ -15,7 +15,7 @@ namespace CoinExchangeService
             if (File.Exists(dbName))
                 return;
             SQLiteConnection.CreateFile(dbName);
-            string sqlString = "CREATE TABLE TransData (CoinType TEXT NOT NULL,Height INTEGER NOT NULL,Txid TEXT NOT NULL,Address TEXT NOT NULL,Value REAL NOT NULL,ConfirmCount INTEGER NOT NULL,UpdateTime TEXT NOT NULL,DeployTime TEXT,DeployTxid TEXT,PRIMARY KEY (\"CoinType\", \"Txid\"));" +
+            string sqlString = "CREATE TABLE TransData (CoinType TEXT NOT NULL,Height INTEGER NOT NULL,Txid TEXT NOT NULL,Address TEXT NOT NULL,From TEXT,Value REAL NOT NULL,ConfirmCount INTEGER NOT NULL,UpdateTime TEXT NOT NULL,DeployTime TEXT,DeployTxid TEXT,PRIMARY KEY (\"CoinType\", \"Txid\"));" +
                                "CREATE TABLE Address (CoinType TEXT NOT NULL,Address TEXT NOT NULL,DateTime TEXT NOT NULL);" +
                                "CREATE TABLE ParseIndex (CoinType TEXT PRIMARY KEY NOT NULL,Height INTEGER NOT NULL,DateTime TEXT NOT NULL);" +
                                "CREATE TABLE ExchangeData (BTCTxid TEXT PRIMARY KEY NOT NULL,TransTxid TEXT NOT NULL,DateTime TEXT NOT NULL)";
@@ -126,6 +126,15 @@ namespace CoinExchangeService
         public static int GetEthIndex()
         {
             var sql = "select Height from ParseIndex where CoinType='eth' ";
+            var table = ExecuSqlToDataTable(sql);
+            if (table.Rows.Count > 0 && !string.IsNullOrEmpty(table.Rows[0][0].ToString()))
+                return Convert.ToInt32(table.Rows[0][0]);
+            return 1;
+        }
+
+        public static int GetNeoIndex()
+        {
+            var sql = "select Height from ParseIndex where CoinType='neo' ";
             var table = ExecuSqlToDataTable(sql);
             if (table.Rows.Count > 0 && !string.IsNullOrEmpty(table.Rows[0][0].ToString()))
                 return Convert.ToInt32(table.Rows[0][0]);

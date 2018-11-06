@@ -30,7 +30,7 @@ namespace CoinExchangeService
         private static Dictionary<string, string> apiDic = new Dictionary<string, string>();
         private static int btcIndex = 1440069; //BTC 监控高度
         private static int ethIndex = 3187000; //ETH 监控高度
-        private static int neoHeight = 0; //NEO 高度
+        private static int neoIndex = 1975847; //NEO 高度
         private static string dbName = "MonitorData.db";  //Sqlite 数据库名
         private static List<TransResponse> btcTransRspList = new List<TransResponse>(); //BTC 交易列表
         private static List<TransResponse> ethTransRspList = new List<TransResponse>(); //ETH 交易列表
@@ -44,12 +44,13 @@ namespace CoinExchangeService
             minerFeeDic = JsonConvert.DeserializeObject<Dictionary<string, decimal>>(configOj["miner_fee"].ToString());
             myAccountDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(configOj["my_account"].ToString());
             apiDic= JsonConvert.DeserializeObject<Dictionary<string, string>>(configOj["api"].ToString());
-            CoinExchange.GetConfig();
+            NeoHandler.GetConfig();
             //程序启动时读取监控的地址、上一次解析的区块高度、上次确认数未达到设定数目的交易
             btcAddrList = DbHelper.GetBtcAddr();
             ethAddrList = DbHelper.GetEthAddr();
             btcIndex = DbHelper.GetBtcIndex() + 1;
             ethIndex = DbHelper.GetEthIndex() + 1;
+            neoIndex = DbHelper.GetNeoIndex() + 1;
             DbHelper.GetRspList(ref btcTransRspList, confirmCountDic["btc"], "btc");
             DbHelper.GetRspList(ref ethTransRspList, confirmCountDic["eth"], "eth");
 
@@ -277,7 +278,42 @@ namespace CoinExchangeService
                 }
             }
         }
-        
+
+        /// <summary>
+        /// NEO 监听服务
+        /// </summary>
+        private static void NeoWatcherStart()
+        {
+            Console.WriteLine(Time() + "Neo watcher start!");
+            while (true)
+            {
+                var count = GetNeoHeight(apiDic["neo"]).Result;
+                if (count >= neoIndex)
+                {
+                    for (int i = neoIndex; i <= count; i++)
+                    {
+                        if (i % 1000 == 0)
+                        {
+                            Console.WriteLine(Time() + "Parse NEO Height:" + i);
+                        }
+
+                        ParseNeoBlock(i);
+                        DbHelper.SaveIndex(i, "neo");
+                        btcIndex = i + 1;
+                    }
+                }
+
+                if (count == btcIndex)
+                    Thread.Sleep(2000);
+            }
+        }
+
+        private static void ParseNeoBlock(int i)
+        {
+
+            NeoHandler.ParseNeoBlock(i, myAccountDic["cneo"]);
+        }
+
         /// <summary>
         /// 发送交易数据
         /// </summary>
@@ -358,10 +394,10 @@ namespace CoinExchangeService
             {
                 httpPostRequest.Start();
                 bool clear = false;
-                if (CoinExchange.GetHeight().Result > neoHeight + 1)
+                if (GetNeoHeight(apiDic["neo"]).Result > neoIndex + 1)
                 {
                     clear = true;
-                    neoHeight = CoinExchange.GetHeight().Result;
+                    neoIndex = GetNeoHeight(apiDic["neo"]).Result;
                 }
 
                 HttpListenerContext requestContext = httpPostRequest.GetContext();
@@ -436,7 +472,7 @@ namespace CoinExchangeService
                             if (txid == null)
                             {
                                 var coinType = json["type"].ToString();
-                                var result = CoinExchange.ExchangeAsync(coinType, json, minerFeeDic["gas_fee"], clear).Result;
+                                var result = NeoHandler.ExchangeAsync(coinType, json, minerFeeDic["gas_fee"], clear).Result;
                                 if (result != null && result.Contains("result"))
                                 {
                                     var res = JObject.Parse(result)["result"] as JArray;
@@ -468,7 +504,7 @@ namespace CoinExchangeService
 
                             if (method == "getbalance")
                             {
-                                var balance = CoinExchange.GetBalanceAsync(coinType).Result;
+                                var balance = NeoHandler.GetBalanceAsync(coinType).Result;
                                 buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", balance }));
                                 Console.WriteLine(Time() + "Get " + coinType + " Balance: " + balance);
                             }
@@ -504,7 +540,7 @@ namespace CoinExchangeService
                                 DeployInfo deployInfo = DbHelper.GetDeployStateByTxid(coinType, json["txid"].ToString());
                                 if (string.IsNullOrEmpty(deployInfo.deployTime) && string.IsNullOrEmpty(deployInfo.deployTxid)) //没有发行NEP5 BTC/ETH
                                 {
-                                    var deployResult = CoinExchange.DeployNep5TokenAsync(coinType, json, minerFeeDic["gas_fee"], clear).Result;
+                                    var deployResult = NeoHandler.DeployNep5TokenAsync(coinType, json, minerFeeDic["gas_fee"], clear).Result;
                                     if (deployResult != null && deployResult.Contains("result"))
                                     {
                                         var res = JObject.Parse(deployResult)["result"] as JArray;
@@ -636,6 +672,19 @@ namespace CoinExchangeService
             var sendValue = new HexBigInteger(Web3.Convert.ToWei(value));
             var sendTxHash = await web3.Eth.TransactionManager.SendTransactionAsync(account.Address, myAccountDic["eth"], sendValue);
             return sendTxHash;
+        }
+
+        /// <summary>
+        /// 获取区块高度
+        /// </summary>
+        /// <returns></returns>
+        public static async Task<int> GetNeoHeight(string api)
+        {
+            var url = api + "?method=getblockcount&id=1&params=[]";
+            var result = await Helper.HttpGet(url);
+            var res = Newtonsoft.Json.Linq.JObject.Parse(result)["result"] as Newtonsoft.Json.Linq.JArray;
+            int height = (int)res[0]["blockcount"];
+            return height;
         }
 
         private static string Time()
