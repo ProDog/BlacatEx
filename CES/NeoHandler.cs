@@ -316,8 +316,9 @@ namespace CoinExchangeService
             return result;
         }
 
-        public static void ParseNeoBlock(int i, string address)
+        public static List<TransResponse> ParseNeoBlock(int i, string address)
         {
+            var transRspList = new List<TransResponse>();
             var block = _getBlock(i);
             var txs = (JArray)block["tx"];
             foreach (JObject tx in txs)
@@ -341,7 +342,6 @@ namespace CoinExchangeService
                             var name = Encoding.UTF8.GetString(ThinNeo.Helper.HexString2Bytes((string)method["value"]));
 
                             if (name == "transfer")
-
                             {
                                 var to = (value["value"] as JArray)[2] as JObject;
                                 var to_address = ThinNeo.Helper.GetAddressFromScriptHash(ThinNeo.Helper.HexString2Bytes((string)to["value"]));
@@ -353,6 +353,14 @@ namespace CoinExchangeService
                                     var amount = (value["value"] as JArray)[3] as JObject;
                                     var transAmount =
                                         (decimal) new BigInteger(ThinNeo.Helper.HexString2Bytes((string) amount["value"])) / factorDic["neo"];
+                                    neoTrans.address = address;
+                                    neoTrans.coinType = "cneo";
+                                    neoTrans.confirmcount = 1;
+                                    neoTrans.@from = from_address;
+                                    neoTrans.height = i;
+                                    neoTrans.txid = txid;
+                                    neoTrans.value = transAmount;
+                                    transRspList.Add(neoTrans);
                                     Console.WriteLine("have a cneo transfer :" + from_address + " value:" + transAmount);
 
                                 }
@@ -361,6 +369,8 @@ namespace CoinExchangeService
                     }
                 }
             }
+
+            return transRspList;
 
         }
 

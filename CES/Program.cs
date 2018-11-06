@@ -48,17 +48,19 @@ namespace CoinExchangeService
             //程序启动时读取监控的地址、上一次解析的区块高度、上次确认数未达到设定数目的交易
             btcAddrList = DbHelper.GetBtcAddr();
             ethAddrList = DbHelper.GetEthAddr();
-            btcIndex = DbHelper.GetBtcIndex() + 1;
-            ethIndex = DbHelper.GetEthIndex() + 1;
-            neoIndex = DbHelper.GetNeoIndex() + 1;
+            //btcIndex = DbHelper.GetBtcIndex() + 1;
+            //ethIndex = DbHelper.GetEthIndex() + 1;
+            //neoIndex = DbHelper.GetNeoIndex() + 1;
             DbHelper.GetRspList(ref btcTransRspList, confirmCountDic["btc"], "btc");
             DbHelper.GetRspList(ref ethTransRspList, confirmCountDic["eth"], "eth");
 
             Thread BtcThread = new Thread(BtcWatcherStartAsync);
             Thread EthThread = new Thread(EthWatcherStartAsync);
             Thread HttpThread = new Thread(HttpServerStart);
+            Thread NeoThread=new Thread(NeoWatcherStart);
             BtcThread.Start();
             EthThread.Start();
+            NeoThread.Start();
             HttpThread.Start();
         }
 
@@ -74,24 +76,33 @@ namespace CoinExchangeService
 
             while (true)
             {
-                var count = await rpcC.GetBlockCountAsync();
-                if (count >= btcIndex)
+                try
                 {
-                    for (int i = btcIndex; i <= count; i++)
+                    var count = await rpcC.GetBlockCountAsync();
+                    if (count >= btcIndex)
                     {
-                        if (i % 10 == 0)
+                        for (int i = btcIndex; i <= count; i++)
                         {
-                            Console.WriteLine(Time() + "Parse BTC Height:" + i);
+                            if (i % 10 == 0)
+                            {
+                                Console.WriteLine(Time() + "Parse BTC Height:" + i);
+                            }
+
+                            await ParseBtcBlock(rpcC, i);
+                            DbHelper.SaveIndex(i, "btc");
+                            btcIndex = i + 1;
                         }
-
-                        await ParseBtcBlock(rpcC, i);
-                        DbHelper.SaveIndex(i, "btc");
-                        btcIndex = i + 1;
                     }
-                }
 
-                if (count == btcIndex)
-                    Thread.Sleep(5000);
+                    if (count == btcIndex)
+                        Thread.Sleep(5000);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    continue;
+                }
+                
             }
         }
 
@@ -180,29 +191,38 @@ namespace CoinExchangeService
             Web3Geth web3 = new Web3Geth(apiDic["eth"]);
             while (true)
             {
-                var sync = await web3.Eth.Syncing.SendRequestAsync();
-                if (sync.CurrentBlock == null)
+                try
                 {
-                    Thread.Sleep(1000);
+                    var sync = await web3.Eth.Syncing.SendRequestAsync();
+                    if (sync.CurrentBlock == null)
+                    {
+                        Thread.Sleep(1000);
+                        continue;
+                    }
+
+                    if (sync.CurrentBlock.Value >= ethIndex)
+                    {
+                        for (int i = ethIndex; i <= sync.CurrentBlock.Value; i++)
+                        {
+                            if (ethIndex % 1 == 0)
+                            {
+                                Console.WriteLine(Time() + "Parse ETH Height:" + ethIndex);
+                            }
+
+                            await ParseEthBlock(web3, i);
+                            DbHelper.SaveIndex(i, "eth");
+                            ethIndex = i + 1;
+                        }
+                    }
+                    if (sync.CurrentBlock.Value == ethIndex)
+                        Thread.Sleep(3000);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
                     continue;
                 }
-
-                if (sync.CurrentBlock.Value >= ethIndex)
-                {
-                    for (int i = ethIndex; i <= sync.CurrentBlock.Value; i++)
-                    {
-                        if (ethIndex % 1 == 0)
-                        {
-                            Console.WriteLine(Time() + "Parse ETH Height:" + ethIndex);
-                        }
-
-                        await ParseEthBlock(web3, i);
-                        DbHelper.SaveIndex(i, "eth");
-                        ethIndex = i + 1;
-                    }
-                }
-                if (sync.CurrentBlock.Value == ethIndex)
-                    Thread.Sleep(3000);
+               
             }
         }
 
@@ -287,31 +307,39 @@ namespace CoinExchangeService
             Console.WriteLine(Time() + "Neo watcher start!");
             while (true)
             {
-                var count = GetNeoHeight(apiDic["neo"]).Result;
-                if (count >= neoIndex)
+                try
                 {
-                    for (int i = neoIndex; i <= count; i++)
+                    var count = GetNeoHeight(apiDic["neo"]).Result;
+                    if (count >= neoIndex)
                     {
-                        if (i % 1000 == 0)
+                        for (int i = neoIndex; i <= count; i++)
                         {
-                            Console.WriteLine(Time() + "Parse NEO Height:" + i);
+                            if (i % 1 == 0)
+                            {
+                                Console.WriteLine(Time() + "Parse NEO Height:" + i);
+                            }
+
+                            ParseNeoBlock(i);
+                            DbHelper.SaveIndex(i, "neo");
+                            btcIndex = i + 1;
                         }
-
-                        ParseNeoBlock(i);
-                        DbHelper.SaveIndex(i, "neo");
-                        btcIndex = i + 1;
                     }
-                }
 
-                if (count == btcIndex)
-                    Thread.Sleep(2000);
+                    if (count == btcIndex)
+                        Thread.Sleep(2000);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    continue;
+                }
             }
         }
 
         private static void ParseNeoBlock(int i)
         {
-
-            NeoHandler.ParseNeoBlock(i, myAccountDic["cneo"]);
+            var transRspList = NeoHandler.ParseNeoBlock(i, myAccountDic["cneo"]);
+            SendTransInfo(transRspList);
         }
 
         /// <summary>
