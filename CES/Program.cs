@@ -30,7 +30,7 @@ namespace CoinExchangeService
         private static Dictionary<string, string> apiDic = new Dictionary<string, string>();
         private static int btcIndex = 1440069; //BTC 监控高度
         private static int ethIndex = 3187000; //ETH 监控高度
-        private static int neoIndex = 1975847; //NEO 高度
+        private static int neoIndex = 1977147; //NEO 高度
         private static string dbName = "MonitorData.db";  //Sqlite 数据库名
         private static List<TransResponse> btcTransRspList = new List<TransResponse>(); //BTC 交易列表
         private static List<TransResponse> ethTransRspList = new List<TransResponse>(); //ETH 交易列表
@@ -138,7 +138,8 @@ namespace CoinExchangeService
                                 btcTrans.confirmcount = 1;
                                 btcTrans.height = index;
                                 btcTrans.txid = tran.GetHash().ToString();
-                                btcTransRspList.Add(btcTrans);
+                                if (!btcTransRspList.Exists(x => x.txid == btcTrans.txid))
+                                    btcTransRspList.Add(btcTrans);
                                 Console.WriteLine(Time() + index + " Have a btc transfer for:" + address + "; amount:" + vout.Value.ToDecimal(MoneyUnit.BTC));
                             }
                         }
@@ -254,7 +255,8 @@ namespace CoinExchangeService
                             ethTrans.confirmcount = 1;
                             ethTrans.height = index;
                             ethTrans.txid = tran.TransactionHash;
-                            ethTransRspList.Add(ethTrans);
+                            if (!ethTransRspList.Exists(x => x.txid == ethTrans.txid))
+                                ethTransRspList.Add(ethTrans);
                             Console.WriteLine(Time() + index + " Have a eth transfer for:" + tran.To.ToString() + "; amount:" + value);
                         }
                     }
@@ -309,7 +311,7 @@ namespace CoinExchangeService
             {
                 try
                 {
-                    var count = GetNeoHeight(apiDic["neo"]).Result;
+                    var count = GetNeoHeight(apiDic["neo"]);
                     if (count >= neoIndex)
                     {
                         for (int i = neoIndex; i <= count; i++)
@@ -319,7 +321,8 @@ namespace CoinExchangeService
                                 Console.WriteLine(Time() + "Parse NEO Height:" + i);
                             }
 
-                            ParseNeoBlock(i);
+                            var transRspList = NeoHandler.ParseNeoBlock(i, myAccountDic["cneo"]);
+                            SendTransInfo(transRspList);
                             DbHelper.SaveIndex(i, "neo");
                             btcIndex = i + 1;
                         }
@@ -334,12 +337,6 @@ namespace CoinExchangeService
                     continue;
                 }
             }
-        }
-
-        private static void ParseNeoBlock(int i)
-        {
-            var transRspList = NeoHandler.ParseNeoBlock(i, myAccountDic["cneo"]);
-            SendTransInfo(transRspList);
         }
 
         /// <summary>
@@ -422,10 +419,10 @@ namespace CoinExchangeService
             {
                 httpPostRequest.Start();
                 bool clear = false;
-                if (GetNeoHeight(apiDic["neo"]).Result > neoIndex + 1)
+                if (GetNeoHeight(apiDic["neo"]) > neoIndex + 1)
                 {
                     clear = true;
-                    neoIndex = GetNeoHeight(apiDic["neo"]).Result;
+                    neoIndex = GetNeoHeight(apiDic["neo"]);
                 }
 
                 HttpListenerContext requestContext = httpPostRequest.GetContext();
@@ -706,10 +703,10 @@ namespace CoinExchangeService
         /// 获取区块高度
         /// </summary>
         /// <returns></returns>
-        public static async Task<int> GetNeoHeight(string api)
+        public static int GetNeoHeight(string api)
         {
             var url = api + "?method=getblockcount&id=1&params=[]";
-            var result = await Helper.HttpGet(url);
+            var result = Helper.HttpGet(url).Result;
             var res = Newtonsoft.Json.Linq.JObject.Parse(result)["result"] as Newtonsoft.Json.Linq.JArray;
             int height = (int)res[0]["blockcount"];
             return height;
