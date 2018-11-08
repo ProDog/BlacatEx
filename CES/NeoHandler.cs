@@ -289,7 +289,7 @@ namespace CoinExchangeService
                 return "No " + type;
             }
 
-            Transaction tran = Helper.makeTran(dic_UTXO[type], usedUtxoList, targetAddr, new ThinNeo.Hash256(tokenHashDic[type]), sendCount, gasfee);
+            Transaction tran = Helper.makeTran(dic_UTXO[tokenHashDic[type]], usedUtxoList, targetAddr, new ThinNeo.Hash256(tokenHashDic[type]), sendCount, gasfee);
             
             tran.version = 0; 
             tran.attributes = new ThinNeo.Attribute[0];
@@ -352,7 +352,7 @@ namespace CoinExchangeService
                                     var from_address = ThinNeo.Helper.GetAddressFromScriptHash(ThinNeo.Helper.HexString2Bytes((string)from["value"]));
                                     var amount = (value["value"] as JArray)[3] as JObject;
                                     var transAmount =
-                                        (decimal) new BigInteger(ThinNeo.Helper.HexString2Bytes((string) amount["value"])) / factorDic["neo"];
+                                        (decimal) new BigInteger(ThinNeo.Helper.HexString2Bytes((string) amount["value"])) / factorDic["cneo"];
                                     neoTrans.address = address;
                                     neoTrans.coinType = "cneo";
                                     neoTrans.confirmcount = 1;
@@ -361,7 +361,7 @@ namespace CoinExchangeService
                                     neoTrans.txid = txid;
                                     neoTrans.value = transAmount;
                                     transRspList.Add(neoTrans);
-                                    Console.WriteLine("have a cneo transfer :" + from_address + " value:" + transAmount);
+                                    Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " have a cneo transfer :" + from_address + " value:" + transAmount);
 
                                 }
                             }
