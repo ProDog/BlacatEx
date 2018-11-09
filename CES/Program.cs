@@ -29,7 +29,7 @@ namespace CoinExchangeService
         private static Dictionary<string, string> myAccountDic = new Dictionary<string, string>();//我的收款地址
         private static Dictionary<string, string> apiDic = new Dictionary<string, string>();
         private static int btcIndex = 1440069; //BTC 监控高度
-        private static int ethIndex = 3187000; //ETH 监控高度
+        private static int ethIndex = 3309077; //ETH 监控高度
         private static int neoIndex = 1979247; //NEO 高度
         private static string dbName = "MonitorData.db";  //Sqlite 数据库名
         private static List<TransResponse> btcTransRspList = new List<TransResponse>(); //BTC 交易列表
@@ -69,7 +69,7 @@ namespace CoinExchangeService
         /// </summary>
         private static async void BtcWatcherStartAsync()
         {
-            Console.WriteLine(Time() + "Btc watcher start!");
+            Console.WriteLine(Time() + "Btc Watcher Start!");
             var key = new System.Net.NetworkCredential("1","1");
             var uri = new Uri(apiDic["btc"]);
             NBitcoin.RPC.RPCClient rpcC = new NBitcoin.RPC.RPCClient(key, uri);
@@ -138,9 +138,12 @@ namespace CoinExchangeService
                                 btcTrans.confirmcount = 1;
                                 btcTrans.height = index;
                                 btcTrans.txid = tran.GetHash().ToString();
-                                if (!btcTransRspList.Exists(x => x.txid == btcTrans.txid))
-                                    btcTransRspList.Add(btcTrans);
-                                Console.WriteLine(Time() + index + " Have a btc transfer for:" + address + "; amount:" + vout.Value.ToDecimal(MoneyUnit.BTC));
+                                if (btcTransRspList.Exists(x => x.txid == btcTrans.txid))
+                                    continue;
+                                btcTransRspList.Add(btcTrans);
+                                Console.WriteLine(Time() + index + " Have A BTC Transaction To:" + address +
+                                                  "; Value:" + vout.Value.ToDecimal(MoneyUnit.BTC) + "; Txid:" +
+                                                  btcTrans.txid);
                             }
                         }
                     }
@@ -188,24 +191,20 @@ namespace CoinExchangeService
         /// </summary>
         private static async void EthWatcherStartAsync()
         {
-            Console.WriteLine(Time() + "Eth watcher start!");
+            Console.WriteLine(Time() + "Eth Watcher Start!");
             Web3Geth web3 = new Web3Geth(apiDic["eth"]);
             while (true)
             {
                 try
                 {
-                    var sync = await web3.Eth.Syncing.SendRequestAsync();
-                    if (sync.CurrentBlock == null)
+                    var aa=await web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
+                    var height = aa.Value;
+                    
+                    if (height >= ethIndex)
                     {
-                        Thread.Sleep(1000);
-                        continue;
-                    }
-
-                    if (sync.CurrentBlock.Value >= ethIndex)
-                    {
-                        for (int i = ethIndex; i <= sync.CurrentBlock.Value; i++)
+                        for (int i = ethIndex; i <= height; i++)
                         {
-                            if (ethIndex % 1 == 0)
+                            if (ethIndex % 100 == 0)
                             {
                                 Console.WriteLine(Time() + "Parse ETH Height:" + ethIndex);
                             }
@@ -215,7 +214,7 @@ namespace CoinExchangeService
                             ethIndex = i + 1;
                         }
                     }
-                    if (sync.CurrentBlock.Value == ethIndex)
+                    if (height == ethIndex)
                         Thread.Sleep(3000);
                 }
                 catch (Exception e)
@@ -255,9 +254,10 @@ namespace CoinExchangeService
                             ethTrans.confirmcount = 1;
                             ethTrans.height = index;
                             ethTrans.txid = tran.TransactionHash;
-                            if (!ethTransRspList.Exists(x => x.txid == ethTrans.txid))
-                                ethTransRspList.Add(ethTrans);
-                            Console.WriteLine(Time() + index + " Have a eth transfer for:" + tran.To.ToString() + "; amount:" + value);
+                            if (ethTransRspList.Exists(x => x.txid == ethTrans.txid))
+                                continue;
+                            ethTransRspList.Add(ethTrans);
+                            Console.WriteLine(Time() + index + " Have An ETH Transaction To:" + tran.To.ToString() + "; Value:" + value + "; Txid:"+ ethTrans.txid);
                         }
                     }
                 }
@@ -306,7 +306,7 @@ namespace CoinExchangeService
         /// </summary>
         private static void NeoWatcherStart()
         {
-            Console.WriteLine(Time() + "Neo watcher start!");
+            Console.WriteLine(Time() + "Neo Watcher Start!");
             while (true)
             {
                 try
@@ -316,7 +316,7 @@ namespace CoinExchangeService
                     {
                         for (int i = neoIndex; i < count; i++)
                         {
-                            if (i % 1 == 0)
+                            if (i % 100 == 0)
                             {
                                 Console.WriteLine(Time() + "Parse NEO Height:" + i);
                             }
@@ -366,7 +366,8 @@ namespace CoinExchangeService
                         reqStream.Write(data, 0, data.Length);
                         reqStream.Close();
                     }
-                    Console.WriteLine(Time() + Encoding.UTF8.GetString(data));
+
+                    Console.WriteLine(Time() + "SendTransInfo : " + Encoding.UTF8.GetString(data));
                     HttpWebResponse resp = (HttpWebResponse) req.GetResponse();
                     Stream stream = resp.GetResponseStream();
                     using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
@@ -404,7 +405,7 @@ namespace CoinExchangeService
         
         private static void HttpServerStart()
         {
-            Console.WriteLine(Time() + "Http server start!");
+            Console.WriteLine(Time() + "Http Server Start!");
             httpPostRequest.Prefixes.Add(apiDic["http"]);
             Thread ThrednHttpPostRequest = new Thread(new ThreadStart(httpPostRequestHandle));
             ThrednHttpPostRequest.Start();
@@ -427,38 +428,42 @@ namespace CoinExchangeService
 
                 HttpListenerContext requestContext = httpPostRequest.GetContext();
                 byte[] buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "false", msg = "request error,please check your url or post data!"}));
+                StreamReader sr = new StreamReader(requestContext.Request.InputStream);
+                var rawUrl = requestContext.Request.RawUrl;
+                var urlPara = rawUrl.Split('/');
+                var json = new JObject();
+                if (requestContext.Request.HttpMethod == "POST")
+                {
+                    var info = sr.ReadToEnd();
+                    json = JObject.Parse(info);
+                }
+
                 try
                 {
-                    StreamReader sr = new StreamReader(requestContext.Request.InputStream);
-                    var urlPara = requestContext.Request.RawUrl.Split('/');
-                    var json = new JObject();
-                    if (requestContext.Request.HttpMethod == "POST")
-                    {
-                        var info = sr.ReadToEnd();
-                        json = JObject.Parse(info);
-                    }
-
                     if (urlPara.Length > 1)
                     {
                         var method = urlPara[1];
-                        
+
                         if (method == "addr")
                         {
                             if (json.ContainsKey("type") && json.ContainsKey("address"))
                             {
-                                if (json["type"].ToString() == "btc" && !btcAddrList.Contains(json["address"].ToString()))
+                                if (json["type"].ToString() == "btc" &&
+                                    !btcAddrList.Contains(json["address"].ToString()))
                                 {
                                     btcAddrList.Add(json["address"].ToString());
                                     DbHelper.SaveAddress(json);
                                 }
-                                if (json["type"].ToString() == "eth" && !ethAddrList.Contains(json["address"].ToString()))
+
+                                if (json["type"].ToString() == "eth" &&
+                                    !ethAddrList.Contains(json["address"].ToString()))
                                 {
                                     ethAddrList.Add(json["address"].ToString());
                                     DbHelper.SaveAddress(json);
                                 }
 
                                 Console.WriteLine(Time() + "Add a new " + json["type"].ToString() + " address: " +
-                                    json["address"].ToString());
+                                                  json["address"].ToString());
                                 buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "true"}));
                             }
                         }
@@ -483,17 +488,50 @@ namespace CoinExchangeService
                             }
 
                             if (msg.Contains("Error"))
-                                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "false", txid = msg}));
+                                buffer = Encoding.UTF8.GetBytes(
+                                    JsonConvert.SerializeObject(new {state = "false", txid = msg}));
                             else
                             {
-                                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "true", txid = msg}));
+                                buffer = Encoding.UTF8.GetBytes(
+                                    JsonConvert.SerializeObject(new {state = "true", txid = msg}));
                             }
-                            Console.WriteLine(Time() + json["type"].ToString()+ " transaction,txid: " + msg);
+
+                            Console.WriteLine(Time() + "Url: " + rawUrl + "; json: " + json);
+                            Console.WriteLine(Time() + json["type"].ToString() + " transaction : " + msg);
                         }
 
                         if (method == "exchange")
                         {
-                            buffer = Exchange(clear, json);
+                            string txid = DbHelper.AssetIsSend(json["txid"].ToString());
+                            if (txid == null)
+                            {
+                                var coinType = json["type"].ToString();
+                                var result = NeoHandler.ExchangeAsync(coinType, json, minerFeeDic["gas_fee"], clear).Result;
+                                if (result != null && result.Contains("result"))
+                                {
+                                    var res = JObject.Parse(result)["result"] as JArray;
+                                    txid = (string)res[0]["txid"];
+                                }
+
+                                if (txid != null)
+                                {
+                                    DbHelper.SaveExchangeInfo(json, txid);
+                                    buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid }));
+                                    Console.WriteLine(Time() + "Url: " + rawUrl + "; json: " + json);
+                                    Console.WriteLine(Time() + "Exchange " + coinType + ",txid: " + txid);
+                                }
+                                else
+                                {
+                                    buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", txid = result }));
+                                    Console.WriteLine(Time() + "Url: " + rawUrl + "; json: " + json);
+                                    Console.WriteLine(Time() + "Exchange " + coinType + ",result: " + result);
+                                }
+                            }
+                            else
+                            {
+                                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid }));
+                            }
+
                         }
 
                         if (urlPara.Length > 2)
@@ -503,7 +541,9 @@ namespace CoinExchangeService
                             if (method == "getbalance")
                             {
                                 var balance = NeoHandler.GetBalanceAsync(coinType).Result;
-                                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", balance }));
+                                buffer = Encoding.UTF8.GetBytes(
+                                    JsonConvert.SerializeObject(new {state = "true", balance}));
+                                Console.WriteLine(Time() + "Url: " + rawUrl + "; json: " + json);
                                 Console.WriteLine(Time() + "Get " + coinType + " Balance: " + balance);
                             }
 
@@ -530,12 +570,41 @@ namespace CoinExchangeService
                                         break;
                                 }
 
-                                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", type = coinType, address, priKey }));
+                                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "true", type = coinType, address, priKey}));
                             }
 
                             if (method == "deploy")
                             {
-                                buffer = DeployBtcEth(clear, buffer, json, coinType);
+                                DeployInfo deployInfo = DbHelper.GetDeployStateByTxid(coinType, json["txid"].ToString());
+                                if (string.IsNullOrEmpty(deployInfo.deployTime) && string.IsNullOrEmpty(deployInfo.deployTxid)) //没有发行NEP5 BTC/ETH
+                                {
+                                    var deployResult = NeoHandler.DeployNep5TokenAsync(coinType, json, minerFeeDic["gas_fee"], clear).Result;
+                                    if (deployResult != null && deployResult.Contains("result"))
+                                    {
+                                        var res = JObject.Parse(deployResult)["result"] as JArray;
+                                        deployInfo.deployTxid = (string)res[0]["txid"];
+                                        if (!string.IsNullOrEmpty(deployInfo.deployTxid))
+                                        {
+                                            DbHelper.SaveDeployInfo(deployInfo);
+                                            buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid = deployInfo.deployTxid }));
+                                            Console.WriteLine(Time() + "Url: " + rawUrl + "; json: " + json);
+                                            Console.WriteLine(Time() + "Nep5 " + coinType + " Deployed,txid: " + deployInfo.deployTxid);
+                                        }
+                                    }
+
+                                    else
+                                    {
+                                        buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", txid = deployResult }));
+                                        Console.WriteLine(Time() + "Url: " + rawUrl + "; json: " + json);
+                                        Console.WriteLine(Time() + "Nep5 " + coinType + " Deployed, result: " + deployInfo.deployTxid);
+                                    }
+
+                                }
+                                else //已发行
+                                {
+                                    buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid = deployInfo.deployTxid }));
+                                }
+
                             }
                         }
                     }
@@ -543,8 +612,10 @@ namespace CoinExchangeService
                 }
                 catch (Exception e)
                 {
+                    Console.WriteLine(Time() + "Url: " + rawUrl + "; json: " + json);
                     Console.WriteLine(Time() + e.ToString());
-                    buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "false", msg = e.ToString()}));
+                    buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new
+                        {state = "false", msg = e.ToString()}));
                     continue;
                 }
                 finally
@@ -559,87 +630,6 @@ namespace CoinExchangeService
                     output.Close();
                 }
             }
-        }
-
-        /// <summary>
-        /// NEO 上交易接口
-        /// </summary>
-        /// <param name="clear">是否删除已使用utxo记录</param>
-        /// <param name="json"></param>
-        /// <returns></returns>
-        private static byte[] Exchange(bool clear, JObject json)
-        {
-            byte[] buffer;
-            string txid = DbHelper.AssetIsSend(json["txid"].ToString());
-            if (txid == null)
-            {
-                var coinType = json["type"].ToString();
-                var result = NeoHandler.ExchangeAsync(coinType, json, minerFeeDic["gas_fee"], clear).Result;
-                if (result != null && result.Contains("result"))
-                {
-                    var res = JObject.Parse(result)["result"] as JArray;
-                    txid = (string)res[0]["txid"];
-                }
-
-                if (txid != null)
-                {
-                    DbHelper.SaveExchangeInfo(json, txid);
-                    buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid }));
-                    Console.WriteLine(Time() + "Exchange " + coinType + ",txid: " + txid);
-                }
-                else
-                {
-                    buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", txid = result }));
-                    Console.WriteLine(Time() + "Exchange " + coinType + ",result: " + result);
-                }
-            }
-            else
-            {
-                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid }));
-            }
-
-            return buffer;
-        }
-
-        /// <summary>
-        /// 发行nep5 ETH BTC Token
-        /// </summary>
-        /// <param name="clear"></param>
-        /// <param name="buffer"></param>
-        /// <param name="json"></param>
-        /// <param name="coinType"></param>
-        /// <returns></returns>
-        private static byte[] DeployBtcEth(bool clear, byte[] buffer, JObject json, string coinType)
-        {
-            DeployInfo deployInfo = DbHelper.GetDeployStateByTxid(coinType, json["txid"].ToString());
-            if (string.IsNullOrEmpty(deployInfo.deployTime) && string.IsNullOrEmpty(deployInfo.deployTxid)) //没有发行NEP5 BTC/ETH
-            {
-                var deployResult = NeoHandler.DeployNep5TokenAsync(coinType, json, minerFeeDic["gas_fee"], clear).Result;
-                if (deployResult != null && deployResult.Contains("result"))
-                {
-                    var res = JObject.Parse(deployResult)["result"] as JArray;
-                    deployInfo.deployTxid = (string)res[0]["txid"];
-                    if (!string.IsNullOrEmpty(deployInfo.deployTxid))
-                    {
-                        DbHelper.SaveDeployInfo(deployInfo);
-                        buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid = deployInfo.deployTxid }));
-                        Console.WriteLine(Time() + "Nep5 " + coinType + " Deployed,txid: " + deployInfo.deployTxid);
-                    }
-                }
-                
-                else
-                {
-                    buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", txid = deployResult }));
-                    Console.WriteLine(Time() + "Nep5 " + coinType + " Deployed, result: " + deployInfo.deployTxid);
-                }
-
-            }
-            else //已发行
-            {
-                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid = deployInfo.deployTxid }));
-            }
-
-            return buffer;
         }
 
         /// <summary>

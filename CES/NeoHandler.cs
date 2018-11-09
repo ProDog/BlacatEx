@@ -361,7 +361,9 @@ namespace CoinExchangeService
                                     neoTrans.txid = txid;
                                     neoTrans.value = transAmount;
                                     transRspList.Add(neoTrans);
-                                    Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " have a cneo transfer :" + from_address + " value:" + transAmount);
+                                    Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + i +
+                                                      " Aave A Cneo Transaction From :" + from_address + "; Value:" +
+                                                      transAmount + "; Txid:" + txid);
 
                                 }
                             }
