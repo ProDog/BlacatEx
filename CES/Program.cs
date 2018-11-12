@@ -197,7 +197,7 @@ namespace CoinExchangeService
             {
                 try
                 {
-                    var aa=await web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
+                    var aa = await web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
                     var height = aa.Value;
                     
                     if (height >= ethIndex)
@@ -420,11 +420,6 @@ namespace CoinExchangeService
             {
                 httpPostRequest.Start();
                 bool clear = false;
-                if (GetNeoHeight(apiDic["neo"]) > neoIndex + 1)
-                {
-                    clear = true;
-                    neoIndex = GetNeoHeight(apiDic["neo"]);
-                }
 
                 HttpListenerContext requestContext = httpPostRequest.GetContext();
                 byte[] buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "false", msg = "request error,please check your url or post data!"}));
@@ -502,6 +497,11 @@ namespace CoinExchangeService
 
                         if (method == "exchange")
                         {
+                            if (GetNeoHeight(apiDic["neo"]) > neoIndex + 1)
+                            {
+                                clear = true;
+                                neoIndex = GetNeoHeight(apiDic["neo"]);
+                            }
                             string txid = DbHelper.AssetIsSend(json["txid"].ToString());
                             if (txid == null)
                             {
@@ -575,6 +575,11 @@ namespace CoinExchangeService
 
                             if (method == "deploy")
                             {
+                                if (GetNeoHeight(apiDic["neo"]) > neoIndex + 1)
+                                {
+                                    clear = true;
+                                    neoIndex = GetNeoHeight(apiDic["neo"]);
+                                }
                                 DeployInfo deployInfo = DbHelper.GetDeployStateByTxid(coinType, json["txid"].ToString());
                                 if (string.IsNullOrEmpty(deployInfo.deployTime) && string.IsNullOrEmpty(deployInfo.deployTxid)) //没有发行NEP5 BTC/ETH
                                 {
