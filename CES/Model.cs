@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace CoinExchangeService
+namespace CES
 {
     public class TransResponse
     {

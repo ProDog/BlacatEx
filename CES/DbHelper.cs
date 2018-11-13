@@ -6,7 +6,7 @@ using System.IO;
 using System.Text;
 using Newtonsoft.Json.Linq;
 
-namespace CoinExchangeService
+namespace CES
 {
     public class DbHelper
     {
@@ -15,10 +15,10 @@ namespace CoinExchangeService
             if (File.Exists(dbName))
                 return;
             SQLiteConnection.CreateFile(dbName);
-            string sqlString = "CREATE TABLE TransData (CoinType TEXT NOT NULL,Height INTEGER NOT NULL,Txid TEXT NOT NULL,Address TEXT NOT NULL,TxFrom TEXT,Value REAL NOT NULL,ConfirmCount INTEGER NOT NULL,UpdateTime TEXT NOT NULL,DeployTime TEXT,DeployTxid TEXT,PRIMARY KEY (\"CoinType\", \"Txid\"));" +
+            string sqlString = "CREATE TABLE Transactions (CoinType TEXT NOT NULL,Height INTEGER NOT NULL,Txid TEXT NOT NULL,Address TEXT NOT NULL,TxFrom TEXT,Value REAL NOT NULL,ConfirmCount INTEGER NOT NULL,UpdateTime TEXT NOT NULL,DeployTime TEXT,DeployTxid TEXT,PRIMARY KEY (\"CoinType\", \"Txid\"));" +
                                "CREATE TABLE Address (CoinType TEXT NOT NULL,Address TEXT NOT NULL,DateTime TEXT NOT NULL);" +
-                               "CREATE TABLE ParseIndex (CoinType TEXT PRIMARY KEY NOT NULL,Height INTEGER NOT NULL,DateTime TEXT NOT NULL);" +
-                               "CREATE TABLE ExchangeData (BTCTxid TEXT PRIMARY KEY NOT NULL,TransTxid TEXT NOT NULL,DateTime TEXT NOT NULL)";
+                               "CREATE TABLE ParseHeight (CoinType TEXT PRIMARY KEY NOT NULL,Height INTEGER NOT NULL,DateTime TEXT NOT NULL);" +
+                               "CREATE TABLE ExchangeData (RecTxid TEXT PRIMARY KEY NOT NULL,SendTxid TEXT NOT NULL,DateTime TEXT NOT NULL)";
             SQLiteConnection conn = new SQLiteConnection();
             conn.ConnectionString = "DataSource = " + dbName;
             conn.Open();           
@@ -34,9 +34,10 @@ namespace CoinExchangeService
         /// 保存监控地址
         /// </summary>
         /// <param name="json"></param>
-        public static void SaveAddress(JObject json)
+        public static void SaveAddress(string coinType, string address)
         {
-            var sql = $"insert into Address (CoinType,Address,DateTime) values ('{json["type"]}','{json["address"]}','{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}')";
+            var sql =
+                $"insert into Address (CoinType,Address,DateTime) values ('{coinType}','{address}','{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}')";
             ExecuteSql(sql);
         }
 
@@ -50,14 +51,14 @@ namespace CoinExchangeService
             foreach (var tran in transRspList)
             {
                 sbSql.Append(
-                    $"Replace into TransData (CoinType,Height,Txid,Address,TxFrom,Value,ConfirmCount,UpdateTime) values ('{tran.coinType}',{tran.height},'{tran.txid}','{tran.address}','{tran.@from}',{tran.value},{tran.confirmcount},'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}');");
+                    $"Replace into Transactions (CoinType,Height,Txid,Address,TxFrom,Value,ConfirmCount,UpdateTime) values ('{tran.coinType}',{tran.height},'{tran.txid}','{tran.address}','{tran.@from}',{tran.value},{tran.confirmcount},'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}');");
             }
             ExecuteSql(sbSql.ToString());
         }
 
         public static List<TransResponse> GetRspList(ref List<TransResponse> TransRspList, int count, string type)
         {
-            var sql = $"select CoinType,Height,Txid,Address,Value,ConfirmCount from TransData where CoinType = '{type}' and ConfirmCount < {count}";
+            var sql = $"select CoinType,Height,Txid,Address,Value,ConfirmCount from Transactions where CoinType = '{type}' and ConfirmCount < {count}";
             var table = ExecuSqlToDataTable(sql);
             if (table.Rows.Count > 0)
             {
@@ -110,13 +111,13 @@ namespace CoinExchangeService
 
         public static void SaveIndex(int i, string type)
         {
-            var sql = $"Replace into ParseIndex (CoinType,Height,DateTime) values ('{type}',{i},'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}')";
+            var sql = $"Replace into ParseHeight (CoinType,Height,DateTime) values ('{type}',{i},'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}')";
             ExecuteSql(sql);
         }
 
         public static int GetBtcIndex()
         {
-            var sql = "select Height from ParseIndex where CoinType='btc' ";
+            var sql = "select Height from ParseHeight where CoinType='btc' ";
             var table = ExecuSqlToDataTable(sql);
             if (table.Rows.Count > 0 && !string.IsNullOrEmpty(table.Rows[0][0].ToString()))
                 return Convert.ToInt32(table.Rows[0][0]);
@@ -125,7 +126,7 @@ namespace CoinExchangeService
 
         public static int GetEthIndex()
         {
-            var sql = "select Height from ParseIndex where CoinType='eth' ";
+            var sql = "select Height from ParseHeight where CoinType='eth' ";
             var table = ExecuSqlToDataTable(sql);
             if (table.Rows.Count > 0 && !string.IsNullOrEmpty(table.Rows[0][0].ToString()))
                 return Convert.ToInt32(table.Rows[0][0]);
@@ -134,7 +135,7 @@ namespace CoinExchangeService
 
         public static int GetNeoIndex()
         {
-            var sql = "select Height from ParseIndex where CoinType='neo' ";
+            var sql = "select Height from ParseHeight where CoinType='neo' ";
             var table = ExecuSqlToDataTable(sql);
             if (table.Rows.Count > 0 && !string.IsNullOrEmpty(table.Rows[0][0].ToString()))
                 return Convert.ToInt32(table.Rows[0][0]);
@@ -143,14 +144,14 @@ namespace CoinExchangeService
 
         public static DeployInfo GetDeployStateByTxid(string coinType,string txid)
         {
-            var sql = $"select CoinType,Txid,Address,Value,DeployTxid,DeployTime from TransData where CoinType='{coinType}' and txid='{txid}'";
+            var sql = $"select CoinType,Txid,Address,Value,DeployTxid,DeployTime from Transactions where CoinType='{coinType}' and txid='{txid}'";
             var table = ExecuSqlToDataTable(sql);
             var deployInfo = new DeployInfo();
             if (table.Rows.Count > 0)
             {
                 deployInfo.coinType = table.Rows[0]["CoinType"].ToString();
                 deployInfo.address = table.Rows[0]["Address"].ToString();
-                deployInfo.txid = table.Rows[0]["Txid"].ToString();
+                deployInfo.txid = txid;
                 deployInfo.deployTime = table.Rows[0]["DeployTime"].ToString();
                 deployInfo.value = Convert.ToDecimal(table.Rows[0]["Value"]);
                 deployInfo.deployTxid = table.Rows[0]["DeployTxid"].ToString();
@@ -161,23 +162,23 @@ namespace CoinExchangeService
         public static void SaveDeployInfo(DeployInfo deployInfo )
         {
             var sql =
-                $"update TransData set DeployTime='{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}',DeployTxid='{deployInfo.deployTxid}' where Txid='{deployInfo.txid}' and CoinType='{deployInfo.coinType}';";
+                $"update Transactions set DeployTime='{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}',DeployTxid='{deployInfo.deployTxid}' where Txid='{deployInfo.txid}' and CoinType='{deployInfo.coinType}';";
             ExecuteSql(sql);
 
         }
 
-        public static string AssetIsSend(string txid)
+        public static string GetSendTxid(string txid)
         {
-            var sql = $"select TransTxid from ExchangeData where BTCTxid='{txid}'";
+            var sql = $"select SendTxid from ExchangeData where RecTxid='{txid}'";
             var table = ExecuSqlToDataTable(sql);
             if (table.Rows.Count > 0)
-                return table.Rows[0]["TransTxid"].ToString();
+                return table.Rows[0]["SendTxid"].ToString();
             return null;
         }
 
-        public static void SaveExchangeInfo(JObject json, object txid)
+        public static void SaveExchangeInfo(string recTxid, string sendTxid)
         {
-            var sql = $"insert into ExchangeData (BTCTxid,TransTxid,DateTime) values ('{json["txid"]}','{txid}','{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}')";
+            var sql = $"insert into ExchangeData (RecTxid,SendTxid,DateTime) values ('{recTxid}','{sendTxid}','{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}')";
             ExecuteSql(sql);
         }
 

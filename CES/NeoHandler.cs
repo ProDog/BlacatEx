@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ThinNeo;
 
-namespace CoinExchangeService
+namespace CES
 {
     public class NeoHandler
     {

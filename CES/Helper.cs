@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using ThinNeo;
 
-namespace CoinExchangeService
+namespace CES
 {
     public class Helper
     {
