@@ -38,6 +38,11 @@ namespace CES
         /// <returns></returns>
         public static async System.Threading.Tasks.Task<string> DeployNep5TokenAsync(string type, JObject json, decimal gasfee, bool clear)
         {
+            if (type == "cneo" || type == "bct")
+            {
+                return await ExchangeAsync(type, json, gasfee, clear);
+            }
+
             if (clear)
             {
                 usedUtxoList.Clear();
@@ -344,6 +349,8 @@ namespace CES
                             if (name == "transfer")
                             {
                                 var to = (value["value"] as JArray)[2] as JObject;
+                                if (string.IsNullOrEmpty((string) to["value"]))
+                                    continue;
                                 var to_address = ThinNeo.Helper.GetAddressFromScriptHash(ThinNeo.Helper.HexString2Bytes((string)to["value"]));
                                 if (to_address == address)
                                 {

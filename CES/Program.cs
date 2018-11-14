@@ -69,7 +69,7 @@ namespace CES
         /// </summary>
         private static async void BtcWatcherStartAsync()
         {
-            Console.WriteLine(Time() + "Btc Watcher Start! Index" + btcIndex);
+            Console.WriteLine(Time() + "Btc Watcher Start! Index: " + btcIndex);
             var key = new System.Net.NetworkCredential("1","1");
             var uri = new Uri(apiDic["btc"]);
             NBitcoin.RPC.RPCClient rpcC = new NBitcoin.RPC.RPCClient(key, uri);
@@ -99,7 +99,7 @@ namespace CES
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    Console.WriteLine(Time() + e);
                     continue;
                 }
                 
@@ -191,7 +191,7 @@ namespace CES
         /// </summary>
         private static async void EthWatcherStartAsync()
         {
-            Console.WriteLine(Time() + "Eth Watcher Start! Index" + ethIndex);
+            Console.WriteLine(Time() + "Eth Watcher Start! Index: " + ethIndex);
             Web3Geth web3 = new Web3Geth(apiDic["eth"]);
             while (true)
             {
@@ -219,7 +219,7 @@ namespace CES
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    Console.WriteLine(Time() + e);
                     continue;
                 }
                
@@ -306,7 +306,7 @@ namespace CES
         /// </summary>
         private static void NeoWatcherStart()
         {
-            Console.WriteLine(Time() + "Neo Watcher Start! Index" + neoIndex);
+            Console.WriteLine(Time() + "Neo Watcher Start! Index: " + neoIndex);
             while (true)
             {
                 try
@@ -328,12 +328,12 @@ namespace CES
                         }
                     }
 
-                    if (count == btcIndex)
+                    if (count == neoIndex)
                         Thread.Sleep(2000);
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    Console.WriteLine(Time() + e);
                     Thread.Sleep(5000);
                     continue;
                 }
@@ -368,7 +368,7 @@ namespace CES
                         reqStream.Close();
                     }
 
-                    Console.WriteLine(Time() + "SendTransInfo : " + JObject.Parse(Encoding.UTF8.GetString(data)));
+                    Console.WriteLine(Time() + "SendTransInfo : " + Encoding.UTF8.GetString(data));
                     HttpWebResponse resp = (HttpWebResponse) req.GetResponse();
                     Stream stream = resp.GetResponseStream();
                     using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
@@ -487,7 +487,7 @@ namespace CES
                         if (method == "exchange")
                         {
                             clear = IsClear();
-                            string recTxid = json["txid"].ToString();
+                            string recTxid = json["txid1"].ToString();
                             string sendTxid = DbHelper.GetSendTxid(recTxid);
                             if (string.IsNullOrEmpty(sendTxid))
                             {
@@ -555,33 +555,47 @@ namespace CES
 
                             if (method == "deploy")
                             {
-                                clear = IsClear();
-                                DeployInfo deployInfo = DbHelper.GetDeployStateByTxid(coinType, json["txid"].ToString());
-                                if (string.IsNullOrEmpty(deployInfo.deployTime) && string.IsNullOrEmpty(deployInfo.deployTxid)) //没有发行NEP5 BTC/ETH
+                                if (coinType == "btc" || coinType == "eth" || coinType == "cneo" || coinType == "bct")
                                 {
-                                    var deployResult = NeoHandler.DeployNep5TokenAsync(coinType, json, minerFeeDic["gas_fee"], clear).Result;
-                                    if (deployResult != null && deployResult.Contains("result"))
+                                    clear = IsClear();
+                                    DeployInfo deployInfo =
+                                        DbHelper.GetDeployStateByTxid(coinType, json["txid"].ToString());
+                                    if (string.IsNullOrEmpty(deployInfo.deployTime) &&
+                                        string.IsNullOrEmpty(deployInfo.deployTxid)) //没有发行NEP5 BTC/ETH
                                     {
-                                        var res = JObject.Parse(deployResult)["result"] as JArray;
-                                        deployInfo.deployTxid = (string)res[0]["txid"];
-                                        if (!string.IsNullOrEmpty(deployInfo.deployTxid))
+                                        var deployResult = NeoHandler
+                                            .DeployNep5TokenAsync(coinType, json, minerFeeDic["gas_fee"], clear).Result;
+                                        if (deployResult != null && deployResult.Contains("result"))
                                         {
-                                            DbHelper.SaveDeployInfo(deployInfo);
-                                            buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid = deployInfo.deployTxid }));
-                                            Console.WriteLine(Time() + "Nep5 " + coinType + " Deployed,txid: " + deployInfo.deployTxid);
+                                            var res = JObject.Parse(deployResult)["result"] as JArray;
+                                            deployInfo.deployTxid = (string) res[0]["txid"];
+                                            if (!string.IsNullOrEmpty(deployInfo.deployTxid))
+                                            {
+                                                DbHelper.SaveDeployInfo(deployInfo);
+                                                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new
+                                                    {state = "true", txid = deployInfo.deployTxid}));
+                                                Console.WriteLine(Time() + "Nep5 " + coinType + " Deployed,txid: " +
+                                                                  deployInfo.deployTxid);
+                                            }
                                         }
-                                    }
 
-                                    else
+                                        else
+                                        {
+                                            buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "false", msg = deployResult}));
+                                            Console.WriteLine(Time() + "Nep5 " + coinType + " Deployed, result: " + deployInfo.deployTxid);
+                                        }
+
+                                    }
+                                    else //已发行
                                     {
-                                        buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", msg = deployResult }));
-                                        Console.WriteLine(Time() + "Nep5 " + coinType + " Deployed, result: " + deployInfo.deployTxid);
+                                        Console.WriteLine(Time() + "Already deployed!");
+                                        buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "true", txid = deployInfo.deployTxid}));
                                     }
-
                                 }
-                                else //已发行
+                                else
                                 {
-                                    buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid = deployInfo.deployTxid }));
+                                    buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new {state = "false", msg = "coinType error"}));
+                                    Console.WriteLine(Time() + "CoinType error! " + coinType);
                                 }
 
                             }
