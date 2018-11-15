@@ -15,7 +15,7 @@ namespace CES
             if (File.Exists(dbName))
                 return;
             SQLiteConnection.CreateFile(dbName);
-            string sqlString = "CREATE TABLE Transactions (CoinType TEXT NOT NULL,Height INTEGER NOT NULL,Txid TEXT NOT NULL,Address TEXT NOT NULL,TxFrom TEXT,Value REAL NOT NULL,ConfirmCount INTEGER NOT NULL,UpdateTime TEXT NOT NULL,DeployTime TEXT,DeployTxid TEXT,PRIMARY KEY (\"CoinType\", \"Txid\"));" +
+            string sqlString = "CREATE TABLE Transactions (CoinType TEXT NOT NULL,Height INTEGER,Txid TEXT NOT NULL,FromAddress TEXT,ToAddress TEXT,Value REAL NOT NULL,ConfirmCount INTEGER NOT NULL,UpdateTime TEXT NOT NULL,DeployTime TEXT,DeployTxid TEXT,PRIMARY KEY (\"CoinType\", \"Txid\"));" +
                                "CREATE TABLE Address (CoinType TEXT NOT NULL,Address TEXT NOT NULL,DateTime TEXT NOT NULL);" +
                                "CREATE TABLE ParseHeight (CoinType TEXT PRIMARY KEY NOT NULL,Height INTEGER NOT NULL,DateTime TEXT NOT NULL);" +
                                "CREATE TABLE ExchangeData (RecTxid TEXT PRIMARY KEY NOT NULL,SendTxid TEXT NOT NULL,DateTime TEXT NOT NULL)";
@@ -45,28 +45,28 @@ namespace CES
         /// 保存交易信息
         /// </summary>
         /// <param name="transRspList"></param>
-        public static void SaveTransInfo(List<TransResponse> transRspList)
+        public static void SaveTransInfo(List<TransactionInfo> transRspList)
         {
             StringBuilder sbSql = new StringBuilder();
             foreach (var tran in transRspList)
             {
                 sbSql.Append(
-                    $"Replace into Transactions (CoinType,Height,Txid,Address,TxFrom,Value,ConfirmCount,UpdateTime) values ('{tran.coinType}',{tran.height},'{tran.txid}','{tran.address}','{tran.@from}',{tran.value},{tran.confirmcount},'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}');");
+                    $"Replace into Transactions (CoinType,Height,Txid,FromAddress,ToAddress,Value,ConfirmCount,UpdateTime) values ('{tran.coinType}',{tran.height},'{tran.txid}','{tran.fromAddress}','{tran.toAddress}',{tran.value},{tran.confirmcount},'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}');");
             }
             ExecuteSql(sbSql.ToString());
         }
 
-        public static List<TransResponse> GetRspList(ref List<TransResponse> TransRspList, int count, string type)
+        public static List<TransactionInfo> GetRspList(ref List<TransactionInfo> TransRspList, int count, string type)
         {
-            var sql = $"select CoinType,Height,Txid,Address,Value,ConfirmCount from Transactions where CoinType = '{type}' and ConfirmCount < {count}";
+            var sql = $"select CoinType,Height,Txid, ToAddress,Value,ConfirmCount from Transactions where CoinType = '{type}' and ConfirmCount < {count}";
             var table = ExecuSqlToDataTable(sql);
             if (table.Rows.Count > 0)
             {
                 for (int i = 0; i < table.Rows.Count; i++)
                 {
-                    var trans = new TransResponse();
+                    var trans = new TransactionInfo();
                     trans.coinType = table.Rows[i]["CoinType"].ToString();
-                    trans.address = table.Rows[i]["Address"].ToString();
+                    trans.toAddress = table.Rows[i]["ToAddress"].ToString();
                     trans.txid = table.Rows[i]["Txid"].ToString();
                     trans.confirmcount = Convert.ToInt32(table.Rows[i]["ConfirmCount"]);
                     trans.height = Convert.ToInt32(table.Rows[i]["Height"]);
@@ -115,54 +115,41 @@ namespace CES
             ExecuteSql(sql);
         }
 
-        public static int GetBtcIndex()
+        public static int GetIndex(string coinType)
         {
-            var sql = "select Height from ParseHeight where CoinType='btc' ";
+            var sql = $"select Height from ParseHeight where CoinType='{coinType}' ";
             var table = ExecuSqlToDataTable(sql);
             if (table.Rows.Count > 0 && !string.IsNullOrEmpty(table.Rows[0][0].ToString()))
                 return Convert.ToInt32(table.Rows[0][0]);
             return 1;
         }
-
-        public static int GetEthIndex()
+     
+        public static string GetDeployStateByTxid(string coinType,string txid)
         {
-            var sql = "select Height from ParseHeight where CoinType='eth' ";
+            var sql = $"select DeployTxid,DeployTime from Transactions where CoinType='{coinType}' and txid='{txid}'";
             var table = ExecuSqlToDataTable(sql);
-            if (table.Rows.Count > 0 && !string.IsNullOrEmpty(table.Rows[0][0].ToString()))
-                return Convert.ToInt32(table.Rows[0][0]);
-            return 1;
-        }
-
-        public static int GetNeoIndex()
-        {
-            var sql = "select Height from ParseHeight where CoinType='neo' ";
-            var table = ExecuSqlToDataTable(sql);
-            if (table.Rows.Count > 0 && !string.IsNullOrEmpty(table.Rows[0][0].ToString()))
-                return Convert.ToInt32(table.Rows[0][0]);
-            return 1;
-        }
-
-        public static DeployInfo GetDeployStateByTxid(string coinType,string txid)
-        {
-            var sql = $"select CoinType,Txid,Address,Value,DeployTxid,DeployTime from Transactions where CoinType='{coinType}' and txid='{txid}'";
-            var table = ExecuSqlToDataTable(sql);
-            var deployInfo = new DeployInfo();
+            var deployTxid = string.Empty;
             if (table.Rows.Count > 0)
             {
-                deployInfo.coinType = table.Rows[0]["CoinType"].ToString();
-                deployInfo.address = table.Rows[0]["Address"].ToString();
-                deployInfo.txid = txid;
-                deployInfo.deployTime = table.Rows[0]["DeployTime"].ToString();
-                deployInfo.value = Convert.ToDecimal(table.Rows[0]["Value"]);
-                deployInfo.deployTxid = table.Rows[0]["DeployTxid"].ToString();
+                deployTxid = table.Rows[0]["DeployTxid"].ToString();
             }
-            return deployInfo;
+            return deployTxid;
         }
 
-        public static void SaveDeployInfo(DeployInfo deployInfo )
+        //bct cneo
+        public static void SaveDeployInfo(TransactionInfo transInfo)
+        {
+            var sql=
+                $"Insert into Transactions (CoinType,Height,Txid,ToAddress,Value,ConfirmCount,UpdateTime,DeployTxid,DeployTime) values ('{transInfo.coinType}',{transInfo.height},'{transInfo.txid}','{transInfo.toAddress}',{transInfo.value},{transInfo.confirmcount},'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}','{transInfo.deployTxid}','{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}');";
+            ExecuteSql(sql);
+
+        }
+
+        //btc eth
+        public static void SaveDeployInfo(string deployTxid,string txid,string coinType)
         {
             var sql =
-                $"update Transactions set DeployTime='{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}',DeployTxid='{deployInfo.deployTxid}' where Txid='{deployInfo.txid}' and CoinType='{deployInfo.coinType}';";
+                $"update Transactions set DeployTime='{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}',DeployTxid='{deployTxid}' where Txid='{txid}' and CoinType='{coinType}';";
             ExecuteSql(sql);
 
         }
@@ -200,7 +187,7 @@ namespace CES
             {
                 var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
                 Console.WriteLine(time + "DbError:" + ex.ToString());
-                File.WriteAllText("saveErrLog.txt", ex.ToString());
+                File.WriteAllText("saveErrLog.txt", time + ex.ToString());
                 trans.Rollback();
             }
             finally

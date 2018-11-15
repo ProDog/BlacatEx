@@ -321,9 +321,9 @@ namespace CES
             return result;
         }
 
-        public static List<TransResponse> ParseNeoBlock(int i, string address)
+        public static List<TransactionInfo> ParseNeoBlock(int i, string address)
         {
-            var transRspList = new List<TransResponse>();
+            var transRspList = new List<TransactionInfo>();
             var block = _getBlock(i);
             var txs = (JArray)block["tx"];
             foreach (JObject tx in txs)
@@ -354,16 +354,16 @@ namespace CES
                                 var to_address = ThinNeo.Helper.GetAddressFromScriptHash(ThinNeo.Helper.HexString2Bytes((string)to["value"]));
                                 if (to_address == address)
                                 {
-                                    var neoTrans = new TransResponse();
+                                    var neoTrans = new TransactionInfo();
                                     var from = (value["value"] as JArray)[1] as JObject;
                                     var from_address = ThinNeo.Helper.GetAddressFromScriptHash(ThinNeo.Helper.HexString2Bytes((string)from["value"]));
                                     var amount = (value["value"] as JArray)[3] as JObject;
                                     var transAmount =
                                         (decimal) new BigInteger(ThinNeo.Helper.HexString2Bytes((string) amount["value"])) / factorDic["cneo"];
-                                    neoTrans.address = address;
+                                    neoTrans.toAddress = address;
                                     neoTrans.coinType = "cneo";
                                     neoTrans.confirmcount = 1;
-                                    neoTrans.@from = from_address;
+                                    neoTrans.fromAddress = from_address;
                                     neoTrans.height = i;
                                     neoTrans.txid = txid;
                                     neoTrans.value = transAmount;
