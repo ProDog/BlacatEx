@@ -379,10 +379,10 @@ namespace CES
                         if (Convert.ToInt32(rjson["r"]) == 0)
                         {
                             Thread.Sleep(5000);
-                            SendTransInfo(transRspList);
+                            //SendTransInfo(transRspList);
                         }
 
-                        if (Convert.ToInt32(rjson["r"]) == 1)
+                        if (Convert.ToInt32(rjson["r"]) == 0)
                         {
                             //保存交易信息
                             DbHelper.SaveTransInfo(transRspList);
@@ -406,10 +406,10 @@ namespace CES
         
         private static void HttpServerStart()
         {
-            Console.WriteLine(Time() + "Http Server Start!");
             httpPostRequest.Prefixes.Add(apiDic["http"]);
             Thread ThrednHttpPostRequest = new Thread(new ThreadStart(httpPostRequestHandle));
             ThrednHttpPostRequest.Start();
+            Console.WriteLine(Time() + "Http Server Start!");
         }
 
         /// <summary>
