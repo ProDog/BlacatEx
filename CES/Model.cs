@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CES
+﻿namespace CES
 {
     public class TransactionInfo
     {
-        public string netType = "testnet";//网络  testnet  mainnet
+        public string netType = "mainnet";//网络  testnet  mainnet
         public string coinType; //币种
         public int confirmcount;  //确认次数
         public int height; //高度

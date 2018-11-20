@@ -5,8 +5,6 @@ using System.Net;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ThinNeo;
 
@@ -14,21 +12,9 @@ namespace CES
 {
     public class NeoHandler
     {
-        private static string api = "https://api.nel.group/api/testnet"; //NEO api
-        private static Dictionary<string, string> adminWifDic = new Dictionary<string, string>();//管理员
-        private static Dictionary<string, string> tokenHashDic = new Dictionary<string, string>();//token类型
-        private static Dictionary<string, decimal> factorDic = new Dictionary<string, decimal>();//精度
-        private static List<string> usedUtxoList; //本区块内同一账户已使用的 UTXO 记录
 
-        public static void GetConfig()
-        {
-            var configOj = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText("config.json").ToString());
-            adminWifDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(configOj["admin"].ToString());
-            tokenHashDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(configOj["token"].ToString());
-            factorDic = JsonConvert.DeserializeObject<Dictionary<string, decimal>>(configOj["factor"].ToString());
-            usedUtxoList = new List<string>();
-        }
-
+        private static List<string> usedUtxoList = new List<string>(); //本区块内同一账户已使用的 UTXO 记录
+        
         /// <summary>
         /// 发行 Nep5 BTC ETH 资产
         /// </summary>
@@ -48,13 +34,13 @@ namespace CES
                 usedUtxoList.Clear();
             }
             byte[] script;
-            var prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(adminWifDic[type]);
+            var prikey = Helper_NEO.GetPrivateKeyFromWIF(Config.adminWifDic[type]);
             using (var sb = new ThinNeo.ScriptBuilder())
             {
-                var amount = Math.Round((decimal) json["value"] * factorDic[type], 0);
-                var array = new MyJson.JsonNode_Array();
-                array.AddArrayValue("(addr)" + json["address"]);
-                array.AddArrayValue("(int)" + amount); //value
+                var amount = Math.Round((decimal) json["value"] * Config.factorDic[type], 0);
+                var array = new JArray();
+                array.Add("(addr)" + json["address"]);
+                array.Add("(int)" + amount); //value
                 byte[] randomBytes = new byte[32];
                 using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
                 {
@@ -65,7 +51,7 @@ namespace CES
                 sb.Emit(ThinNeo.VM.OpCode.DROP);
                 sb.EmitParamJson(array); //参数倒序入
                 sb.EmitPushString("deploy"); //参数倒序入
-                sb.EmitAppCall(new Hash160(tokenHashDic[type])); //nep5脚本
+                sb.EmitAppCall(new Hash160(Config.tokenHashDic[type])); //nep5脚本
                 script = sb.ToArray();
             }
             //return SendTransWithoutUtxo(prikey, script);
@@ -85,9 +71,9 @@ namespace CES
             {
                 usedUtxoList.Clear();
             }
-            byte[] prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(adminWifDic[coinType]);
-            byte[] pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
-            string address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
+            byte[] prikey = Helper_NEO.GetPrivateKeyFromWIF(Config.adminWifDic[coinType]);
+            byte[] pubkey = Helper_NEO.GetPublicKey_FromPrivateKey(prikey);
+            string address = Helper_NEO.GetAddress_FromPublicKey(pubkey);
             byte[] script;
             if (coinType == "gas"|| coinType == "neo")
             {
@@ -97,11 +83,11 @@ namespace CES
             {
                 using (var sb = new ThinNeo.ScriptBuilder())
                 {
-                    var amount = Math.Round((decimal)json["value"] * factorDic[coinType],0);
-                    var array = new MyJson.JsonNode_Array();
-                    array.AddArrayValue("(addr)" + address); //from
-                    array.AddArrayValue("(addr)" + json["address"]); //to
-                    array.AddArrayValue("(int)" + amount); //value
+                    var amount = Math.Round((decimal)json["value"] * Config.factorDic[coinType],0);
+                    var array = new JArray();
+                    array.Add("(addr)" + address); //from
+                    array.Add("(addr)" + json["address"]); //to
+                    array.Add("(int)" + amount); //value
                     byte[] randomBytes = new byte[32];
                     using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
                     {
@@ -112,7 +98,7 @@ namespace CES
                     sb.Emit(ThinNeo.VM.OpCode.DROP);
                     sb.EmitParamJson(array); //参数倒序入
                     sb.EmitPushString("transfer"); //参数倒序入
-                    sb.EmitAppCall(new Hash160(tokenHashDic[coinType]));
+                    sb.EmitAppCall(new Hash160(Config.tokenHashDic[coinType]));
                     script = sb.ToArray();
                 }
                 //return await SendTransWithoutUtxoAsync(prikey, script);
@@ -127,20 +113,20 @@ namespace CES
         /// <returns></returns>
         public static async System.Threading.Tasks.Task<decimal> GetBalanceAsync(string coinType)
         {
-            byte[] prikey = ThinNeo.Helper.GetPrivateKeyFromWIF(adminWifDic[coinType]);
-            byte[] pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
-            string address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
+            byte[] prikey = Helper_NEO.GetPrivateKeyFromWIF(Config.adminWifDic[coinType]);
+            byte[] pubkey = Helper_NEO.GetPublicKey_FromPrivateKey(prikey);
+            string address = Helper_NEO.GetAddress_FromPublicKey(pubkey);
             if (coinType == "gas" || coinType == "neo")
             {
                 decimal balance = 0;
-                var url = api + "?method=getbalance&id=1&params=['" + address + "']";
-                var result = await Helper.HttpGet(url);
+                var url = Config.apiDic["neo"] + "?method=getbalance&id=1&params=['" + address + "']";
+                var result = await MyHelper.HttpGet(url);
                 var res = Newtonsoft.Json.Linq.JObject.Parse(result)["result"] as Newtonsoft.Json.Linq.JArray;
                 if (res != null)
                 {
                     for (int i = 0; i < res.Count; i++)
                     {
-                        if (res[i]["asset"].ToString() == tokenHashDic[coinType])
+                        if (res[i]["asset"].ToString() == Config.tokenHashDic[coinType])
                             balance = (decimal) res[i]["balance"];
                     }
                 }
@@ -151,11 +137,11 @@ namespace CES
             byte[] data = null;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                MyJson.JsonNode_Array array = new MyJson.JsonNode_Array();
-                array.AddArrayValue("(addr)" + address);
+                JArray array = new JArray();
+                array.Add("(addr)" + address);
                 sb.EmitParamJson(array);
                 sb.EmitPushString("balanceOf");
-                sb.EmitAppCall(new Hash160(tokenHashDic[coinType]));//合约脚本hash
+                sb.EmitAppCall(new Hash160(Config.tokenHashDic[coinType]));//合约脚本hash
                 data = sb.ToArray();
             }
 
@@ -172,15 +158,14 @@ namespace CES
         {
             decimal balance = 0;
             string script = ThinNeo.Helper.Bytes2HexString(data);
-            byte[] postdata;
-            var url = Helper.MakeRpcUrlPost(api, "invokescript", out postdata, new MyJson.JsonNode_ValueString(script));
-            var result = await Helper.HttpPost(url, postdata);
+            var result =
+                await MyHelper.HttpGet($"{Config.apiDic["neo"]}?method=invokescript&id=1&params=[\"{script}\"]");
             var res = Newtonsoft.Json.Linq.JObject.Parse(result)["result"] as Newtonsoft.Json.Linq.JArray;
             if (res != null)
             {
                 var stack = (res[0]["stack"] as Newtonsoft.Json.Linq.JArray)[0] as Newtonsoft.Json.Linq.JObject;
                 var vBanlance = new BigInteger(ThinNeo.Helper.HexString2Bytes((string) stack["value"]));
-                balance = (decimal) vBanlance / factorDic[coinType];
+                balance = (decimal) vBanlance / Config.factorDic[coinType];
             }
 
             return balance;
@@ -194,8 +179,8 @@ namespace CES
         /// <returns></returns>
         private static async System.Threading.Tasks.Task<string> SendTransWithoutUtxoAsync(byte[] prikey, byte[] script)
         {
-            var pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
-            var address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
+            byte[] pubkey = Helper_NEO.GetPublicKey_FromPrivateKey(prikey);
+            string address = Helper_NEO.GetAddress_FromPublicKey(pubkey);
 
             ThinNeo.Transaction tran = new Transaction();
             tran.inputs = new ThinNeo.TransactionInput[0];
@@ -203,7 +188,7 @@ namespace CES
             tran.attributes = new ThinNeo.Attribute[1];
             tran.attributes[0] = new ThinNeo.Attribute();
             tran.attributes[0].usage = TransactionAttributeUsage.Script;
-            tran.attributes[0].data = ThinNeo.Helper.GetPublicKeyHashFromAddress(address);
+            tran.attributes[0].data = pubkey;
             tran.version = 1;
             tran.type = ThinNeo.TransactionType.InvocationTransaction;
 
@@ -214,15 +199,13 @@ namespace CES
 
             byte[] msg = tran.GetMessage();
             string msgstr = ThinNeo.Helper.Bytes2HexString(msg);
-            byte[] signdata = ThinNeo.Helper.Sign(msg, prikey);
+            byte[] signdata = Helper_NEO.Sign(msg, prikey);
             tran.AddWitness(signdata, pubkey, address);
             string txid = tran.GetHash().ToString();
             byte[] data = tran.GetRawData();
             string rawdata = ThinNeo.Helper.Bytes2HexString(data);
-
-            byte[] postdata;
-            var url = Helper.MakeRpcUrlPost(api, "sendrawtransaction", out postdata, new MyJson.JsonNode_ValueString(rawdata));
-            var result = await Helper.HttpPost(url, postdata);
+            var result =
+                await MyHelper.HttpGet($"{Config.apiDic["neo"]}?method=invokescript&id=1&params=[\"{rawdata}\"]");
             var json = Newtonsoft.Json.Linq.JObject.Parse(result);
             Console.WriteLine(result);
             return result;
@@ -238,12 +221,12 @@ namespace CES
         /// <returns></returns>
         private static async System.Threading.Tasks.Task<string> SendTransactionAsync(byte[] prikey, byte[] script, string to, decimal gasfee)
         {
-            byte[] pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
-            string address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
+            byte[] pubkey = Helper_NEO.GetPublicKey_FromPrivateKey(prikey);
+            string address = Helper_NEO.GetAddress_FromPublicKey(pubkey);
 
             //获取地址的资产列表
-            Dictionary<string, List<Utxo>> dir = await Helper.GetBalanceByAddressAsync(api, address);
-            if (dir.ContainsKey(tokenHashDic["gas"]) == false)
+            Dictionary<string, List<Utxo>> dir = await MyHelper.GetBalanceByAddressAsync(Config.apiDic["neo"], address);
+            if (dir.ContainsKey(Config.tokenHashDic["gas"]) == false)
             {
                 return "No gas";
             }
@@ -252,7 +235,7 @@ namespace CES
             ThinNeo.Transaction tran = null;
             {
                 byte[] data = script;
-                tran = Helper.makeTran(dir[tokenHashDic["gas"]], usedUtxoList, to, new ThinNeo.Hash256(tokenHashDic["gas"]), 0, gasfee);
+                tran = MyHelper.makeTran(dir[Config.tokenHashDic["gas"]], usedUtxoList, to, new ThinNeo.Hash256(Config.tokenHashDic["gas"]), 0, gasfee);
                 tran.type = ThinNeo.TransactionType.InvocationTransaction;
                 var idata = new ThinNeo.InvokeTransData();
                 tran.extdata = idata;
@@ -261,14 +244,13 @@ namespace CES
             }
 
             //sign and broadcast
-            var signdata = ThinNeo.Helper.Sign(tran.GetMessage(), prikey);
+            var signdata = Helper_NEO.Sign(tran.GetMessage(), prikey);
             tran.AddWitness(signdata, pubkey, address);
             var trandata = tran.GetRawData();
             var strtrandata = ThinNeo.Helper.Bytes2HexString(trandata);
-            byte[] postdata;
-            var url = Helper.MakeRpcUrlPost(api, "sendrawtransaction", out postdata, new MyJson.JsonNode_ValueString(strtrandata));
             string txid = tran.GetHash().ToString();
-            var result = await Helper.HttpPost(url, postdata);
+            var result =
+                await MyHelper.HttpGet($"{Config.apiDic["neo"]}?method=invokescript&id=1&params=[\"{strtrandata}\"]");
             foreach (var input in tran.inputs)
             {
                 usedUtxoList.Add(((Hash256)input.hash).ToString() + input.index);
@@ -286,15 +268,15 @@ namespace CES
         /// <returns></returns>
         private static async System.Threading.Tasks.Task<string> SendUtxoTransAsync(string type, byte[] prikey, string targetAddr, decimal sendCount, decimal gasfee)
         {
-            byte[] pubkey = ThinNeo.Helper.GetPublicKeyFromPrivateKey(prikey);
-            string address = ThinNeo.Helper.GetAddressFromPublicKey(pubkey);
-            Dictionary<string, List<Utxo>> dic_UTXO = await Helper.GetBalanceByAddressAsync(api, address);
-            if (dic_UTXO.ContainsKey(tokenHashDic[type]) == false)
+            byte[] pubkey = Helper_NEO.GetPublicKey_FromPrivateKey(prikey);
+            string address = Helper_NEO.GetAddress_FromPublicKey(pubkey);
+            Dictionary<string, List<Utxo>> dic_UTXO = await MyHelper.GetBalanceByAddressAsync(Config.apiDic["neo"], address);
+            if (dic_UTXO.ContainsKey(Config.tokenHashDic[type]) == false)
             {
                 return "No " + type;
             }
 
-            Transaction tran = Helper.makeTran(dic_UTXO[tokenHashDic[type]], usedUtxoList, targetAddr, new ThinNeo.Hash256(tokenHashDic[type]), sendCount, gasfee);
+            Transaction tran = MyHelper.makeTran(dic_UTXO[Config.tokenHashDic[type]], usedUtxoList, targetAddr, new ThinNeo.Hash256(Config.tokenHashDic[type]), sendCount, gasfee);
             
             tran.version = 0; 
             tran.attributes = new ThinNeo.Attribute[0];
@@ -302,22 +284,20 @@ namespace CES
             
             byte[] msg = tran.GetMessage();
             string msgstr = ThinNeo.Helper.Bytes2HexString(msg);
-            byte[] signdata = ThinNeo.Helper.Sign(msg, prikey);
+            byte[] signdata = Helper_NEO.Sign(msg, prikey);
             tran.AddWitness(signdata, pubkey, address);
             string txid = tran.GetHash().ToString();
             byte[] data = tran.GetRawData();
             string rawdata = ThinNeo.Helper.Bytes2HexString(data);
-            byte[] postdata;
-
-            var url = Helper.MakeRpcUrlPost(api, "sendrawtransaction", out postdata, new MyJson.JsonNode_ValueString(rawdata));
-            var result = await Helper.HttpPost(url, postdata);
-
+            
+            var result =
+                await MyHelper.HttpGet($"{Config.apiDic["neo"]}?method=invokescript&id=1&params=[\"{rawdata}\"]");
             foreach (var input in tran.inputs)
             {
                 usedUtxoList.Add(((Hash256)input.hash).ToString() + input.index);
             }
 
-            MyJson.JsonNode_Object resJO = (MyJson.JsonNode_Object)MyJson.Parse(result);
+            JObject resJO = JObject.Parse(result);
             return result;
         }
 
@@ -339,7 +319,7 @@ namespace CES
                         {
                             //过滤 事件太多，只监视关注的合约
                             var contract = (string)n["contract"];
-                            if (contract != "0x" + tokenHashDic["cneo"])
+                            if (contract != "0x" + Config.tokenHashDic["cneo"])
                                 continue;
 
                             var value = n["state"] as JObject;
@@ -351,15 +331,15 @@ namespace CES
                                 var to = (value["value"] as JArray)[2] as JObject;
                                 if (string.IsNullOrEmpty((string) to["value"]))
                                     continue;
-                                var to_address = ThinNeo.Helper.GetAddressFromScriptHash(ThinNeo.Helper.HexString2Bytes((string)to["value"]));
+                                var to_address = Helper_NEO.GetAddress_FromScriptHash(Helper.HexString2Bytes((string)to["value"]));
                                 if (to_address == address)
                                 {
                                     var neoTrans = new TransactionInfo();
                                     var from = (value["value"] as JArray)[1] as JObject;
-                                    var from_address = ThinNeo.Helper.GetAddressFromScriptHash(ThinNeo.Helper.HexString2Bytes((string)from["value"]));
+                                    var from_address = Helper_NEO.GetAddress_FromScriptHash(Helper.HexString2Bytes((string)from["value"]));
                                     var amount = (value["value"] as JArray)[3] as JObject;
                                     var transAmount =
-                                        (decimal) new BigInteger(ThinNeo.Helper.HexString2Bytes((string) amount["value"])) / factorDic["cneo"];
+                                        (decimal) new BigInteger(ThinNeo.Helper.HexString2Bytes((string) amount["value"])) / Config.factorDic["cneo"];
                                     neoTrans.toAddress = address;
                                     neoTrans.coinType = "cneo";
                                     neoTrans.confirmcount = 1;
@@ -386,7 +366,7 @@ namespace CES
         static JObject _getBlock(int block)
         {
             WebClient wc = new WebClient();
-            var getcounturl = api + "?jsonrpc=2.0&id=1&method=getblock&params=[" + block + ",1]";
+            var getcounturl = Config.apiDic["neo"] + "?jsonrpc=2.0&id=1&method=getblock&params=[" + block + ",1]";
             var info = wc.DownloadString(getcounturl);
             var json = Newtonsoft.Json.Linq.JObject.Parse(info);
             if (info.Contains("result") == false)
@@ -398,7 +378,7 @@ namespace CES
         {
             WebClient wc = new WebClient();
             
-            var getcounturl = api + "?jsonrpc=2.0&id=1&method=getnotify&params=[\"" + txid + "\"]";
+            var getcounturl = Config.apiDic["neo"] + "?jsonrpc=2.0&id=1&method=getnotify&params=[\"" + txid + "\"]";
             var info = wc.DownloadString(getcounturl);
             var json = Newtonsoft.Json.Linq.JObject.Parse(info);
             if (json.ContainsKey("result") == false)

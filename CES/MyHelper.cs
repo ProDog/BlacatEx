@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -10,15 +9,15 @@ using ThinNeo;
 
 namespace CES
 {
-    public class Helper
+    public class MyHelper
     {
         //获取地址的utxo来得出地址的资产  
         public static async Task<Dictionary<string, List<Utxo>>> GetBalanceByAddressAsync(string api, string _addr)
         {
-            MyJson.JsonNode_Object response = (MyJson.JsonNode_Object)MyJson.Parse(await Helper.HttpGet(api + "?method=getutxo&id=1&params=['" + _addr + "']"));
-            MyJson.JsonNode_Array resJA = (MyJson.JsonNode_Array)response["result"];
+            JObject response = JObject.Parse(await MyHelper.HttpGet(api + "?method=getutxo&id=1&params=['" + _addr + "']"));
+            JArray resJA = (JArray)response["result"];
             Dictionary<string, List<Utxo>> _dir = new Dictionary<string, List<Utxo>>();
-            foreach (MyJson.JsonNode_Object j in resJA)
+            foreach (JObject j in resJA)
             {
                 Utxo utxo = new Utxo(j["addr"].ToString(), new ThinNeo.Hash256(j["txid"].ToString()), j["asset"].ToString(), decimal.Parse(j["value"].ToString()), int.Parse(j["n"].ToString()));
                 if (_dir.ContainsKey(j["asset"].ToString()))
@@ -89,7 +88,7 @@ namespace CES
                     ThinNeo.TransactionOutput output = new ThinNeo.TransactionOutput();
                     output.assetId = assetid;
                     output.value = sendCount;
-                    output.toAddress = ThinNeo.Helper.GetPublicKeyHashFromAddress(targetaddr);
+                    output.toAddress = Helper_NEO.GetScriptHash_FromAddress(targetaddr);
                     list_outputs.Add(output);
                 }
 
@@ -102,7 +101,7 @@ namespace CES
                     while (num > 3)
                     {
                         ThinNeo.TransactionOutput outputchange = new ThinNeo.TransactionOutput();
-                        outputchange.toAddress = ThinNeo.Helper.GetPublicKeyHashFromAddress(scraddr);
+                        outputchange.toAddress = Helper_NEO.GetScriptHash_FromAddress(scraddr);
                         outputchange.value = 3;
                         outputchange.assetId = assetid;
                         list_outputs.Add(outputchange);
@@ -117,7 +116,7 @@ namespace CES
                     if (num > 0)
                     {
                         ThinNeo.TransactionOutput outputchange = new ThinNeo.TransactionOutput();
-                        outputchange.toAddress = ThinNeo.Helper.GetPublicKeyHashFromAddress(scraddr);
+                        outputchange.toAddress = Helper_NEO.GetScriptHash_FromAddress(scraddr);
                         outputchange.value = num;
                         outputchange.assetId = assetid;
                         list_outputs.Add(outputchange);
@@ -235,42 +234,42 @@ namespace CES
 
         #endregion
 
-        public static string MakeRpcUrlPost(string url, string method, out byte[] data, params MyJson.IJsonNode[] _params)
-        {
-            //if (url.Last() != '/')
-            //    url = url + "/";
-            var json = new MyJson.JsonNode_Object();
-            json["id"] = new MyJson.JsonNode_ValueNumber(1);
-            json["jsonrpc"] = new MyJson.JsonNode_ValueString("2.0");
-            json["method"] = new MyJson.JsonNode_ValueString(method);
-            StringBuilder sb = new StringBuilder();
-            var array = new MyJson.JsonNode_Array();
-            for (var i = 0; i < _params.Length; i++)
-            {
+        //public static string MakeRpcUrlPost(string url, string method, out byte[] data, params MyJson.IJsonNode[] _params)
+        //{
+        //    //if (url.Last() != '/')
+        //    //    url = url + "/";
+        //    var json = new MyJson.JsonNode_Object();
+        //    json["id"] = new MyJson.JsonNode_ValueNumber(1);
+        //    json["jsonrpc"] = new MyJson.JsonNode_ValueString("2.0");
+        //    json["method"] = new MyJson.JsonNode_ValueString(method);
+        //    StringBuilder sb = new StringBuilder();
+        //    var array = new MyJson.JsonNode_Array();
+        //    for (var i = 0; i < _params.Length; i++)
+        //    {
 
-                array.Add(_params[i]);
-            }
-            json["params"] = array;
-            data = System.Text.Encoding.UTF8.GetBytes(json.ToString());
-            return url;
-        }
+        //        array.Add(_params[i]);
+        //    }
+        //    json["params"] = array;
+        //    data = System.Text.Encoding.UTF8.GetBytes(json.ToString());
+        //    return url;
+        //}
 
-        public static string MakeRpcUrl(string url, string method, params MyJson.IJsonNode[] _params)
-        {
-            StringBuilder sb = new StringBuilder();
-            if (url.Last() != '/')
-                url = url + "/";
+        //public static string MakeRpcUrl(string url, string method, params MyJson.IJsonNode[] _params)
+        //{
+        //    StringBuilder sb = new StringBuilder();
+        //    if (url.Last() != '/')
+        //        url = url + "/";
 
-            sb.Append(url + "?jsonrpc=2.0&id=1&method=" + method + "&params=[");
-            for (var i = 0; i < _params.Length; i++)
-            {
-                _params[i].ConvertToString(sb);
-                if (i != _params.Length - 1)
-                    sb.Append(",");
-            }
-            sb.Append("]");
-            return sb.ToString();
-        }
+        //    sb.Append(url + "?jsonrpc=2.0&id=1&method=" + method + "&params=[");
+        //    for (var i = 0; i < _params.Length; i++)
+        //    {
+        //        _params[i].ConvertToString(sb);
+        //        if (i != _params.Length - 1)
+        //            sb.Append(",");
+        //    }
+        //    sb.Append("]");
+        //    return sb.ToString();
+        //}
 
         public static async Task<string> HttpGet(string url)
         {
