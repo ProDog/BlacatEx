@@ -24,15 +24,16 @@ namespace CES
         /// <returns></returns>
         public static async System.Threading.Tasks.Task<string> DeployNep5TokenAsync(string type, JObject json, decimal gasfee, bool clear)
         {
+            if (clear)
+            {
+                usedUtxoList.Clear();
+            }
+
             if (type == "cneo" || type == "bct")
             {
                 return await ExchangeAsync(type, json, gasfee, clear);
             }
 
-            if (clear)
-            {
-                usedUtxoList.Clear();
-            }
             byte[] script;
             var prikey = Helper_NEO.GetPrivateKeyFromWIF(Config.adminWifDic[type]);
             using (var sb = new ThinNeo.ScriptBuilder())
@@ -101,7 +102,6 @@ namespace CES
                     sb.EmitAppCall(new Hash160(Config.tokenHashDic[coinType]));
                     script = sb.ToArray();
                 }
-                //return await SendTransWithoutUtxoAsync(prikey, script);
                 return await SendTransactionAsync(prikey, script, null, gasfee);
             }
         }
@@ -113,9 +113,7 @@ namespace CES
         /// <returns></returns>
         public static async System.Threading.Tasks.Task<decimal> GetBalanceAsync(string coinType)
         {
-            byte[] prikey = Helper_NEO.GetPrivateKeyFromWIF(Config.adminWifDic[coinType]);
-            byte[] pubkey = Helper_NEO.GetPublicKey_FromPrivateKey(prikey);
-            string address = Helper_NEO.GetAddress_FromPublicKey(pubkey);
+            string address = getAddressFromWif(Config.adminWifDic[coinType]);
             if (coinType == "gas" || coinType == "neo")
             {
                 decimal balance = 0;
@@ -205,9 +203,9 @@ namespace CES
             byte[] data = tran.GetRawData();
             string rawdata = ThinNeo.Helper.Bytes2HexString(data);
             var result =
-                await MyHelper.HttpGet($"{Config.apiDic["neo"]}?method=invokescript&id=1&params=[\"{rawdata}\"]");
+                await MyHelper.HttpGet($"{Config.apiDic["neo"]}?method=sendrawtransaction&id=1&params=[\"{rawdata}\"]");
             var json = Newtonsoft.Json.Linq.JObject.Parse(result);
-            Console.WriteLine(result);
+            //Program.logger.Log(result);
             return result;
         }
 
@@ -250,7 +248,7 @@ namespace CES
             var strtrandata = ThinNeo.Helper.Bytes2HexString(trandata);
             string txid = tran.GetHash().ToString();
             var result =
-                await MyHelper.HttpGet($"{Config.apiDic["neo"]}?method=invokescript&id=1&params=[\"{strtrandata}\"]");
+                await MyHelper.HttpGet($"{Config.apiDic["neo"]}?method=sendrawtransaction&id=1&params=[\"{strtrandata}\"]");
             foreach (var input in tran.inputs)
             {
                 usedUtxoList.Add(((Hash256)input.hash).ToString() + input.index);
@@ -291,7 +289,7 @@ namespace CES
             string rawdata = ThinNeo.Helper.Bytes2HexString(data);
             
             var result =
-                await MyHelper.HttpGet($"{Config.apiDic["neo"]}?method=invokescript&id=1&params=[\"{rawdata}\"]");
+                await MyHelper.HttpGet($"{Config.apiDic["neo"]}?method=sendrawtransaction&id=1&params=[\"{rawdata}\"]");
             foreach (var input in tran.inputs)
             {
                 usedUtxoList.Add(((Hash256)input.hash).ToString() + input.index);
@@ -348,8 +346,7 @@ namespace CES
                                     neoTrans.txid = txid;
                                     neoTrans.value = transAmount;
                                     transRspList.Add(neoTrans);
-                                    Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " " + i +
-                                                      " Aave A Cneo Transaction From :" + from_address + "; Value:" +
+                                    Program.logger.Log(i + " Aave A Cneo Transaction From :" + from_address + "; Value:" +
                                                       transAmount + "; Txid:" + txid);
 
                                 }
@@ -388,6 +385,13 @@ namespace CES
 
             return executions["notifications"] as JArray;
 
+        }
+
+        private static string getAddressFromWif(string strWif)
+        {
+            byte[] prikey = Helper_NEO.GetPrivateKeyFromWIF(strWif);
+            byte[] pubkey = Helper_NEO.GetPublicKey_FromPrivateKey(prikey);
+            return Helper_NEO.GetAddress_FromPublicKey(pubkey);
         }
     }
 }

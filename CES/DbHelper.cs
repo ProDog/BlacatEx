@@ -120,7 +120,7 @@ namespace CES
             var table = ExecuSqlToDataTable(sql);
             if (table.Rows.Count > 0 && !string.IsNullOrEmpty(table.Rows[0][0].ToString()))
                 return Convert.ToInt32(table.Rows[0][0]);
-            return 1;
+            return 0;
         }
      
         public static string GetDeployStateByTxid(string coinType,string txid)
@@ -185,8 +185,7 @@ namespace CES
             catch (Exception ex)
             {
                 var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
-                Console.WriteLine(time + "DbError:" + ex.ToString());
-                File.WriteAllText("saveErrLog.txt", time + ex.ToString());
+                Program.logger.Log("DbError:" + ex.ToString());
                 trans.Rollback();
             }
             finally

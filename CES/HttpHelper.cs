@@ -25,7 +25,7 @@ namespace CES
             httpPostRequest.Prefixes.Add(Config.apiDic["http"]);
             Thread ThrednHttpPostRequest = new Thread(new ThreadStart(httpPostRequestHandle));
             ThrednHttpPostRequest.Start();
-            Console.WriteLine(Config.Time() + "Http Server Start!");
+            Program.logger.Log("Http Server Start!");
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace CES
         /// </summary>
         private static void httpPostRequestHandle()
         {
-            while (true)
+            while (Program.runnig)
             {
                 httpPostRequest.Start();
                 bool clear = false;
@@ -53,7 +53,7 @@ namespace CES
                     }
                     if (urlPara.Length > 1)
                     {
-                        Console.WriteLine(Config.Time() + "Url: " + rawUrl + "; json: " + json);
+                        Program.logger.Log("Url: " + rawUrl + "; json: " + json);
                         var method = urlPara[1];
                         if (method == "addr")
                         {
@@ -71,7 +71,7 @@ namespace CES
                                 DbHelper.SaveAddress(coinType, address);
                             }
 
-                            Console.WriteLine(Config.Time() + "Add a new " + coinType + " address: " + address);
+                            Program.logger.Log("Add a new " + coinType + " address: " + address);
                             buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true" }));
 
                         }
@@ -96,7 +96,7 @@ namespace CES
                                 buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", msg = msg }));
                             else
                                 buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid = msg }));
-                            Console.WriteLine(Config.Time() + json["type"].ToString() + " transaction : " + msg);
+                            Program.logger.Log(json["type"].ToString() + " transaction : " + msg);
                         }
 
                         if (method == "exchange")
@@ -118,12 +118,12 @@ namespace CES
                                 {
                                     DbHelper.SaveExchangeInfo(recTxid, sendTxid);
                                     buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid = sendTxid }));
-                                    Console.WriteLine(Config.Time() + "Exchange " + coinType + ",txid: " + sendTxid);
+                                    Program.logger.Log("Exchange " + coinType + ",txid: " + sendTxid);
                                 }
                                 else
                                 {
                                     buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", msg = result }));
-                                    Console.WriteLine(Config.Time() + "Exchange " + coinType + ",result: " + result);
+                                    Program.logger.Log("Exchange " + coinType + ",result: " + result);
                                 }
                             }
                             else
@@ -141,7 +141,7 @@ namespace CES
                                 var balance = NeoHandler.GetBalanceAsync(coinType).Result;
                                 buffer = Encoding.UTF8.GetBytes(
                                     JsonConvert.SerializeObject(new { state = "true", balance }));
-                                Console.WriteLine(Config.Time() + "Get " + coinType + " Balance: " + balance);
+                                Program.logger.Log("Get " + coinType + " Balance: " + balance);
                             }
 
                             if (method == "getaccount")
@@ -193,8 +193,8 @@ namespace CES
                                                 transInfo.confirmcount = 1;
                                                 transInfo.value = (decimal)json["value"];
                                                 transInfo.toAddress = json["address"].ToString();
-                                                transInfo.height = Config.GetNeoHeight();
-                                                transInfo.deployTime = Config.Time();
+                                                transInfo.height = Config.GetNeoHeightAsync().Result;
+                                                transInfo.deployTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                                                 DbHelper.SaveDeployInfo(transInfo);
                                             }
                                             else
@@ -204,15 +204,14 @@ namespace CES
 
                                             buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new
                                             { state = "true", txid = res[0]["txid"] }));
-                                            Console.WriteLine(
-                                                Config.Time() + "Nep5 " + coinType + " Deployed,txid: " + res[0]["txid"]);
+                                            Program.logger.Log("Nep5 " + coinType + " Deployed,txid: " + res[0]["txid"]);
                                         }
 
                                         else //转账出错
                                         {
                                             buffer = Encoding.UTF8.GetBytes(
                                                 JsonConvert.SerializeObject(new { state = "false", msg = deployResult }));
-                                            Console.WriteLine(Config.Time() + "Nep5 " + coinType + " Deployed, result: " +
+                                            Program.logger.Log("Nep5 " + coinType + " Deployed, result: " +
                                                               deployResult);
                                         }
                                     }
@@ -220,7 +219,7 @@ namespace CES
                                 }
                                 else //已发行
                                 {
-                                    Console.WriteLine(Config.Time() + "Already deployed! txid: " + deployTxid);
+                                    Program.logger.Log("Already deployed! txid: " + deployTxid);
                                     buffer = Encoding.UTF8.GetBytes(
                                         JsonConvert.SerializeObject(new { state = "true", txid = deployTxid }));
                                 }
@@ -231,8 +230,8 @@ namespace CES
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(Config.Time() + "Url: " + rawUrl + "; json: " + json);
-                    Console.WriteLine(Config.Time() + e.ToString());
+                    Program.logger.Log("Url: " + rawUrl + "; json: " + json);
+                    Program.logger.Log(e.ToString());
                     buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", msg = e.ToString() }));
                     continue;
                 }
@@ -332,10 +331,5 @@ namespace CES
             var sendTxHash = await web3.Eth.TransactionManager.SendTransactionAsync(account.Address, Config.myAccountDic["eth"], sendValue);
             return sendTxHash;
         }
-
-
-
-
-
     }
 }

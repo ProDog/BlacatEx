@@ -26,7 +26,7 @@ namespace CES
         public static List<string> btcAddrList = new List<string>(); //BTC 监听地址列表
         public static List<string> ethAddrList = new List<string>();  //ETH 监听地址列表
 
-        public static Network nettype = Network.Main;
+        public static Network nettype = Network.TestNet;
 
         public static void Init(string configPath)
         {
@@ -43,7 +43,7 @@ namespace CES
             tokenHashDic = getStringDic("token");
             factorDic = getDecimalDic("factor");
 
-            neoTransHeight = GetNeoHeight();
+            neoTransHeight = GetNeoHeightAsync().Result;
 
             btcAddrList = DbHelper.GetBtcAddr();
             ethAddrList = DbHelper.GetEthAddr();
@@ -71,26 +71,21 @@ namespace CES
 
         private static int getIndex(string name)
         {
-            return DbHelper.GetIndex(name) + 1;
+            return DbHelper.GetIndex(name);
         }
 
-        public static int GetNeoHeight()
+        public static async System.Threading.Tasks.Task<int> GetNeoHeightAsync()
         {
             var url = apiDic["neo"] + "?method=getblockcount&id=1&params=[]";
-            var result = MyHelper.HttpGet(url).Result;
+            var result = await MyHelper.HttpGet(url);
             var res = Newtonsoft.Json.Linq.JObject.Parse(result)["result"] as Newtonsoft.Json.Linq.JArray;
             int height = (int)res[0]["blockcount"];
             return height;
         }
 
-        public static string Time()
-        {
-            return DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
-        }
-
         public static bool IsClear()
         {
-            var v = Config.GetNeoHeight();
+            var v = Config.GetNeoHeightAsync().Result;
             if (v > Config.neoTransHeight + 1)
             {
                 Config.neoTransHeight = v;

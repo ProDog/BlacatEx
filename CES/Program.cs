@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading;
@@ -18,23 +19,38 @@ namespace CES
     {
         private static List<TransactionInfo> btcTransRspList = new List<TransactionInfo>(); //BTC 交易列表
         private static List<TransactionInfo> ethTransRspList = new List<TransactionInfo>(); //ETH 交易列表
+        public static Logger logger;
+        public static bool runnig = true;
         
         static void Main(string[] args)
         {
             DbHelper.CreateDb("MonitorData.db");
             Config.Init("config.json");
-            
+            string filename = $"{DateTime.Now:yyyy-MM-dd}.log";
+            logger = new Logger(filename);
             DbHelper.GetRspList(ref btcTransRspList, Config.confirmCountDic["btc"], "btc");
             DbHelper.GetRspList(ref ethTransRspList, Config.confirmCountDic["eth"], "eth");
-
+            AppStart();
+            
+            if (Console.ReadLine() == "exit")
+            {
+                runnig = false;
+                Thread.Sleep(10000);
+                logger.Dispose();
+            }
+        }
+        
+        private static void AppStart()
+        {
             Thread BtcThread = new Thread(BtcWatcherStartAsync);
             Thread EthThread = new Thread(EthWatcherStartAsync);
+            Thread NeoThread = new Thread(NeoWatcherStart);
             Thread HttpThread = new Thread(HttpHelper.HttpServerStart);
-            Thread NeoThread=new Thread(NeoWatcherStart);
             BtcThread.Start();
             EthThread.Start();
             NeoThread.Start();
             HttpThread.Start();
+
         }
 
         /// <summary>
@@ -42,13 +58,12 @@ namespace CES
         /// </summary>
         private static async void BtcWatcherStartAsync()
         {
-            
-            Console.WriteLine(Config.Time() + "Btc Watcher Start! Index: " + Config.btcIndex);
+            logger.Log("Btc Watcher Start! Index: " + Config.btcIndex);
             var key = new System.Net.NetworkCredential("1","1");
             var uri = new Uri(Config.apiDic["btc"]);
             NBitcoin.RPC.RPCClient rpcC = new NBitcoin.RPC.RPCClient(key, uri);
 
-            while (true)
+            while (runnig)
             {
                 try
                 {
@@ -57,9 +72,9 @@ namespace CES
                     {
                         for (int i = Config.btcIndex; i <= count; i++)
                         {
-                            if (i % 10 == 0)
+                            if (i % 1 == 0)
                             {
-                                Console.WriteLine(Config.Time() + "Parse BTC Height:" + i);
+                                logger.Log("Parse BTC Height:" + i);
                             }
 
                             await ParseBtcBlock(rpcC, i);
@@ -73,7 +88,15 @@ namespace CES
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(Config.Time() + e);
+                    if (e.Source == "System.Net.Requests")
+                    {
+                        logger.Log("Waiting for next btc block.");
+                    }
+                    else
+                    {
+                        logger.Log(e.ToString());
+                    }
+
                     Thread.Sleep(10000);
                     continue;
                 }
@@ -116,9 +139,7 @@ namespace CES
                                 if (btcTransRspList.Exists(x => x.txid == btcTrans.txid))
                                     continue;
                                 btcTransRspList.Add(btcTrans);
-                                Console.WriteLine(Config.Time() + index + " Have A BTC Transaction To:" + address +
-                                                  "; Value:" + vout.Value.ToDecimal(MoneyUnit.BTC) + "; Txid:" +
-                                                  btcTrans.txid);
+                                logger.Log(index + " Have A BTC Transaction To:" + address + "; Value:" + vout.Value.ToDecimal(MoneyUnit.BTC) + "; Txid:" + btcTrans.txid);
                             }
                         }
                     }
@@ -166,9 +187,9 @@ namespace CES
         /// </summary>
         private static async void EthWatcherStartAsync()
         {
-            Console.WriteLine(Config.Time() + "Eth Watcher Start! Index: " + Config.ethIndex);
+            logger.Log("Eth Watcher Start! Index: " + Config.ethIndex);
             Web3Geth web3 = new Web3Geth(Config.apiDic["eth"]);
-            while (true)
+            while (runnig)
             {
                 try
                 {
@@ -179,9 +200,9 @@ namespace CES
                     {
                         for (int i = Config.ethIndex; i <= height; i++)
                         {
-                            if (Config.ethIndex % 100 == 0)
+                            if (Config.ethIndex % 1 == 0)
                             {
-                                Console.WriteLine(Config.Time() + "Parse ETH Height:" + Config.ethIndex);
+                                logger.Log("Parse ETH Height:" + Config.ethIndex);
                             }
 
                             await ParseEthBlock(web3, i);
@@ -194,7 +215,7 @@ namespace CES
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(Config.Time() + e);
+                    logger.Log(e.ToString());
                     continue;
                 }
                
@@ -232,7 +253,7 @@ namespace CES
                             if (ethTransRspList.Exists(x => x.txid == ethTrans.txid))
                                 continue;
                             ethTransRspList.Add(ethTrans);
-                            Console.WriteLine(Config.Time() + index + " Have An ETH Transaction To:" + tran.To.ToString() + "; Value:" + value + "; Txid:"+ ethTrans.txid);
+                            logger.Log(index + " Have An ETH Transaction To:" + tran.To.ToString() + "; Value:" + value + "; Txid:"+ ethTrans.txid);
                         }
                     }
                 }
@@ -281,19 +302,19 @@ namespace CES
         /// </summary>
         private static void NeoWatcherStart()
         {
-            Console.WriteLine(Config.Time() + "Neo Watcher Start! Index: " + Config.neoIndex);
-            while (true)
+            logger.Log("Neo Watcher Start! Index: " + Config.neoIndex);
+            while (runnig)
             {
                 try
                 {
-                    var count = Config.GetNeoHeight();
+                    var count = Config.GetNeoHeightAsync().Result;
                     if (count >= Config.neoIndex)
                     {
                         for (int i = Config.neoIndex; i < count; i++)
                         {
-                            if (i % 100 == 0)
+                            if (i % 1 == 0)
                             {
-                                Console.WriteLine(Config.Time() + "Parse NEO Height:" + i);
+                                logger.Log("Parse NEO Height:" + i);
                             }
 
                             var transRspList = NeoHandler.ParseNeoBlock(i, Config.myAccountDic["cneo"]);
@@ -308,7 +329,7 @@ namespace CES
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(Config.Time() + e);
+                    logger.Log(e.ToString());
                     Thread.Sleep(5000);
                     continue;
                 }
@@ -343,14 +364,14 @@ namespace CES
                         reqStream.Close();
                     }
 
-                    Console.WriteLine(Config.Time() + "SendTransInfo : " + Encoding.UTF8.GetString(data));
+                    logger.Log("SendTransInfo : " + Encoding.UTF8.GetString(data));
                     HttpWebResponse resp = (HttpWebResponse) req.GetResponse();
                     Stream stream = resp.GetResponseStream();
                     using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
                     {
                         var result = reader.ReadToEnd();
                         var rjson = JObject.Parse(result);
-                        Console.WriteLine(Config.Time() + "rsp: " + result);
+                        logger.Log("rsp: " + result);
                         if (Convert.ToInt32(rjson["r"]) == 0)
                         {
                             Thread.Sleep(5000);
@@ -368,8 +389,7 @@ namespace CES
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(Config.Time() + "send error:" + ex.ToString());
-                    File.WriteAllText("sendErrLog.txt", Config.Time() + ex.ToString());
+                    logger.Log("send error:" + ex.ToString());
                     return;
                 }
                 
