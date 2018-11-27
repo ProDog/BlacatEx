@@ -82,17 +82,7 @@ namespace CES
             int height = (int)res[0]["blockcount"];
             return height;
         }
-
-        public static bool IsClear()
-        {
-            var v = Config.GetNeoHeightAsync().Result;
-            if (v > Config.neoTransHeight + 1)
-            {
-                Config.neoTransHeight = v;
-                return true;
-            }
-            return false;
-        }
+        
 
     }
 }

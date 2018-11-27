@@ -35,7 +35,7 @@ namespace CES
             return _dir;
         }
 
-        public static ThinNeo.Transaction makeTran(List<Utxo> utxos, List<string> usedUtxoList, string targetaddr, ThinNeo.Hash256 assetid, decimal sendCount, decimal gasfee)
+        public static ThinNeo.Transaction makeTran(List<Utxo> utxos, ref List<string> usedUtxoList, string targetaddr, ThinNeo.Hash256 assetid, decimal sendCount, decimal gasfee)
         {
             if (sendCount == 0) //sendCount==0,说明是合约交易，gasfee做sendCount
             {
@@ -60,11 +60,10 @@ namespace CES
             });
             decimal count = decimal.Zero;
             List<ThinNeo.TransactionInput> list_inputs = new List<ThinNeo.TransactionInput>();
-            for (var i = utxos.Count - 1; i >= 0; i--)
+            for (var i = 0; i < utxos.Count; i++)
             {
                 if (usedUtxoList.Contains(utxos[i].txid.ToString() + utxos[i].n))
                 {
-                    utxos.Remove(utxos[i]);
                     continue;
                 }
                 ThinNeo.TransactionInput input = new ThinNeo.TransactionInput();
@@ -73,6 +72,7 @@ namespace CES
                 list_inputs.Add(input);
                 count += utxos[i].value;
                 scraddr = utxos[i].addr;
+                usedUtxoList.Add(utxos[i].txid.ToString() + utxos[i].n);
                 if (count >= sendCount)
                 {
                     break;
@@ -98,16 +98,17 @@ namespace CES
                 {
                     var num = change;
                     int i = 0;
-                    while (num > 3)
+                    decimal splitvalue = 3;
+                    while (num > splitvalue && utxos.Count - usedUtxoList.Count < 100)
                     {
                         ThinNeo.TransactionOutput outputchange = new ThinNeo.TransactionOutput();
                         outputchange.toAddress = Helper_NEO.GetScriptHash_FromAddress(scraddr);
-                        outputchange.value = 3;
+                        outputchange.value = splitvalue;
                         outputchange.assetId = assetid;
                         list_outputs.Add(outputchange);
-                        num -= 3;
+                        num -= splitvalue;
                         i += 1;
-                        if (i >= 10)
+                        if (i >= 100)
                         {
                             break;
                         }

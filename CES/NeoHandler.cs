@@ -14,7 +14,8 @@ namespace CES
     {
 
         private static List<string> usedUtxoList = new List<string>(); //本区块内同一账户已使用的 UTXO 记录
-        
+        private static int neoTransHeight;
+        private static Dictionary<string, List<Utxo>> dic_UTXO = new Dictionary<string, List<Utxo>>();
         /// <summary>
         /// 发行 Nep5 BTC ETH 资产
         /// </summary>
@@ -22,16 +23,11 @@ namespace CES
         /// <param name="json">参数</param>
         /// <param name="gasfee">交易费</param>
         /// <returns></returns>
-        public static async System.Threading.Tasks.Task<string> DeployNep5TokenAsync(string type, JObject json, decimal gasfee, bool clear)
+        public static async System.Threading.Tasks.Task<string> DeployNep5TokenAsync(string type, JObject json, decimal gasfee)
         {
-            if (clear)
-            {
-                usedUtxoList.Clear();
-            }
-
             if (type == "cneo" || type == "bct")
             {
-                return await ExchangeAsync(type, json, gasfee, clear);
+                return await ExchangeAsync(type, json, gasfee);
             }
 
             byte[] script;
@@ -66,12 +62,8 @@ namespace CES
         /// <param name="json">参数</param>
         /// <param name="gasfee">交易费</param>
         /// <returns></returns>
-        public static async System.Threading.Tasks.Task<string> ExchangeAsync(string coinType, JObject json, decimal gasfee, bool clear)
+        public static async System.Threading.Tasks.Task<string> ExchangeAsync(string coinType, JObject json, decimal gasfee)
         {
-            if (clear)
-            {
-                usedUtxoList.Clear();
-            }
             byte[] prikey = Helper_NEO.GetPrivateKeyFromWIF(Config.adminWifDic[coinType]);
             byte[] pubkey = Helper_NEO.GetPublicKey_FromPrivateKey(prikey);
             string address = Helper_NEO.GetAddress_FromPublicKey(pubkey);
@@ -222,9 +214,17 @@ namespace CES
             byte[] pubkey = Helper_NEO.GetPublicKey_FromPrivateKey(prikey);
             string address = Helper_NEO.GetAddress_FromPublicKey(pubkey);
 
-            //获取地址的资产列表
-            Dictionary<string, List<Utxo>> dir = await MyHelper.GetBalanceByAddressAsync(Config.apiDic["neo"], address);
-            if (dir.ContainsKey(Config.tokenHashDic["gas"]) == false)
+            var res = MyHelper.HttpGet(Config.apiDic["neo"] + "?method=getblockcount&id=1&params=[]").Result;
+            var ress = Newtonsoft.Json.Linq.JObject.Parse(res)["result"] as Newtonsoft.Json.Linq.JArray;
+            int height = (int)ress[0]["blockcount"];
+            if (height > neoTransHeight + 1)
+            {
+                neoTransHeight = height;
+                usedUtxoList.Clear();
+                dic_UTXO = await MyHelper.GetBalanceByAddressAsync(Config.apiDic["neo"], address);
+            }
+            
+            if (dic_UTXO.ContainsKey(Config.tokenHashDic["gas"]) == false)
             {
                 return "No gas";
             }
@@ -233,7 +233,7 @@ namespace CES
             ThinNeo.Transaction tran = null;
             {
                 byte[] data = script;
-                tran = MyHelper.makeTran(dir[Config.tokenHashDic["gas"]], usedUtxoList, to, new ThinNeo.Hash256(Config.tokenHashDic["gas"]), 0, gasfee);
+                tran = MyHelper.makeTran(dic_UTXO[Config.tokenHashDic["gas"]], ref usedUtxoList, to, new ThinNeo.Hash256(Config.tokenHashDic["gas"]), 0, gasfee);
                 tran.type = ThinNeo.TransactionType.InvocationTransaction;
                 var idata = new ThinNeo.InvokeTransData();
                 tran.extdata = idata;
@@ -247,12 +247,7 @@ namespace CES
             var trandata = tran.GetRawData();
             var strtrandata = ThinNeo.Helper.Bytes2HexString(trandata);
             string txid = tran.GetHash().ToString();
-            var result =
-                await MyHelper.HttpGet($"{Config.apiDic["neo"]}?method=sendrawtransaction&id=1&params=[\"{strtrandata}\"]");
-            foreach (var input in tran.inputs)
-            {
-                usedUtxoList.Add(((Hash256)input.hash).ToString() + input.index);
-            }
+            var result = await MyHelper.HttpGet($"{Config.apiDic["neo"]}?method=sendrawtransaction&id=1&params=[\"{strtrandata}\"]");
             return result;
         }
 
@@ -274,7 +269,7 @@ namespace CES
                 return "No " + type;
             }
 
-            Transaction tran = MyHelper.makeTran(dic_UTXO[Config.tokenHashDic[type]], usedUtxoList, targetAddr, new ThinNeo.Hash256(Config.tokenHashDic[type]), sendCount, gasfee);
+            Transaction tran = MyHelper.makeTran(dic_UTXO[Config.tokenHashDic[type]], ref usedUtxoList, targetAddr, new ThinNeo.Hash256(Config.tokenHashDic[type]), sendCount, gasfee);
             
             tran.version = 0; 
             tran.attributes = new ThinNeo.Attribute[0];

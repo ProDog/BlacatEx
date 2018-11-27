@@ -36,8 +36,6 @@ namespace CES
             while (Program.runnig)
             {
                 httpPostRequest.Start();
-                bool clear = false;
-
                 HttpListenerContext requestContext = httpPostRequest.GetContext();
                 byte[] buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", msg = "request error,please check your url or post data!" }));
                 StreamReader sr = new StreamReader(requestContext.Request.InputStream);
@@ -101,13 +99,12 @@ namespace CES
 
                         if (method == "exchange")
                         {
-                            clear = Config.IsClear();
                             string recTxid = json["txid"].ToString();
                             string sendTxid = DbHelper.GetSendTxid(recTxid);
                             if (string.IsNullOrEmpty(sendTxid))
                             {
                                 var coinType = json["type"].ToString();
-                                var result = NeoHandler.ExchangeAsync(coinType, json, Config.minerFeeDic["gas_fee"], clear).Result;
+                                var result = NeoHandler.ExchangeAsync(coinType, json, Config.minerFeeDic["gas_fee"]).Result;
                                 if (result != null && result.Contains("result"))
                                 {
                                     var res = JObject.Parse(result)["result"] as JArray;
@@ -172,12 +169,11 @@ namespace CES
                             {
                                 if (coinType != "btc" && coinType != "eth" && coinType != "cneo" && coinType != "bct")
                                     continue;
-                                clear = Config.IsClear();
                                 string deployTxid = DbHelper.GetDeployStateByTxid(coinType, json["txid"].ToString());
                                 if (string.IsNullOrEmpty(deployTxid)) //没有发行NEP5 BTC/ETH
                                 {
                                     var deployResult = NeoHandler
-                                        .DeployNep5TokenAsync(coinType, json, Config.minerFeeDic["gas_fee"], clear).Result;
+                                        .DeployNep5TokenAsync(coinType, json, Config.minerFeeDic["gas_fee"]).Result;
                                     if (deployResult != null && deployResult.Contains("result"))
                                     {
                                         var res = JObject.Parse(deployResult)["result"] as JArray;
