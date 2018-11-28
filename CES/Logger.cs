@@ -5,7 +5,7 @@ using System.Text;
 
 namespace CES
 {
-    internal sealed class Logger : IDisposable
+    public class Logger : IDisposable
     {
         private FileStream stream;
         private StreamWriter writer;

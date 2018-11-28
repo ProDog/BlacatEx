@@ -19,13 +19,14 @@ namespace CES
     public class HttpHelper
     {
         private static HttpListener httpPostRequest = new HttpListener();
-
+        private static Logger httpLogger;
         public static void HttpServerStart()
         {
+            httpLogger = new Logger($"{DateTime.Now:yyyy-MM-dd}_http.log");
             httpPostRequest.Prefixes.Add(Config.apiDic["http"]);
             Thread ThrednHttpPostRequest = new Thread(new ThreadStart(httpPostRequestHandle));
             ThrednHttpPostRequest.Start();
-            Program.logger.Log("Http Server Start!");
+            httpLogger.Log("Http Server Start!");
         }
 
         /// <summary>
@@ -33,7 +34,7 @@ namespace CES
         /// </summary>
         private static void httpPostRequestHandle()
         {
-            while (Program.runnig)
+            while (true)
             {
                 httpPostRequest.Start();
                 HttpListenerContext requestContext = httpPostRequest.GetContext();
@@ -51,7 +52,7 @@ namespace CES
                     }
                     if (urlPara.Length > 1)
                     {
-                        Program.logger.Log("Url: " + rawUrl + "; json: " + json);
+                        httpLogger.Log("Url: " + rawUrl + "; json: " + json);
                         var method = urlPara[1];
                         if (method == "addr")
                         {
@@ -69,7 +70,7 @@ namespace CES
                                 DbHelper.SaveAddress(coinType, address);
                             }
 
-                            Program.logger.Log("Add a new " + coinType + " address: " + address);
+                            httpLogger.Log("Add a new " + coinType + " address: " + address);
                             buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true" }));
 
                         }
@@ -94,33 +95,33 @@ namespace CES
                                 buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", msg = msg }));
                             else
                                 buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid = msg }));
-                            Program.logger.Log(json["type"].ToString() + " transaction : " + msg);
+                            httpLogger.Log(json["type"].ToString() + " transaction : " + msg);
                         }
 
                         if (method == "exchange")
                         {
                             string recTxid = json["txid"].ToString();
+                            var coinType = json["type"].ToString();
                             string sendTxid = DbHelper.GetSendTxid(recTxid);
                             if (string.IsNullOrEmpty(sendTxid))
                             {
-                                var coinType = json["type"].ToString();
-                                var result = NeoHandler.ExchangeAsync(coinType, json, Config.minerFeeDic["gas_fee"]).Result;
+                                var result = ZoroTrans.ExchangeAsync(coinType, json, Config.minerFeeDic["gas_fee"]).Result;
                                 if (result != null && result.Contains("result"))
                                 {
                                     var res = JObject.Parse(result)["result"] as JArray;
                                     sendTxid = (string)res[0]["txid"];
                                 }
 
-                                if (sendTxid != null)
+                                if (!string.IsNullOrEmpty(sendTxid))
                                 {
                                     DbHelper.SaveExchangeInfo(recTxid, sendTxid);
                                     buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid = sendTxid }));
-                                    Program.logger.Log("Exchange " + coinType + ",txid: " + sendTxid);
+                                    httpLogger.Log("Exchange " + coinType + ",txid: " + sendTxid);
                                 }
                                 else
                                 {
                                     buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", msg = result }));
-                                    Program.logger.Log("Exchange " + coinType + ",result: " + result);
+                                    httpLogger.Log("Exchange " + coinType + ",result: " + result);
                                 }
                             }
                             else
@@ -135,10 +136,10 @@ namespace CES
                             var coinType = urlPara[2];
                             if (method == "getbalance")
                             {
-                                var balance = NeoHandler.GetBalanceAsync(coinType).Result;
+                                var balance = ZoroTrans.GetBalanceAsync(coinType).Result;
                                 buffer = Encoding.UTF8.GetBytes(
                                     JsonConvert.SerializeObject(new { state = "true", balance }));
-                                Program.logger.Log("Get " + coinType + " Balance: " + balance);
+                                httpLogger.Log("Get " + coinType + " Balance: " + balance);
                             }
 
                             if (method == "getaccount")
@@ -172,7 +173,7 @@ namespace CES
                                 string deployTxid = DbHelper.GetDeployStateByTxid(coinType, json["txid"].ToString());
                                 if (string.IsNullOrEmpty(deployTxid)) //没有发行NEP5 BTC/ETH
                                 {
-                                    var deployResult = NeoHandler
+                                    var deployResult = ZoroTrans
                                         .DeployNep5TokenAsync(coinType, json, Config.minerFeeDic["gas_fee"]).Result;
                                     if (deployResult != null && deployResult.Contains("result"))
                                     {
@@ -200,14 +201,14 @@ namespace CES
 
                                             buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new
                                             { state = "true", txid = res[0]["txid"] }));
-                                            Program.logger.Log("Nep5 " + coinType + " Deployed,txid: " + res[0]["txid"]);
+                                            httpLogger.Log("Nep5 " + coinType + " Deployed,txid: " + res[0]["txid"]);
                                         }
 
                                         else //转账出错
                                         {
                                             buffer = Encoding.UTF8.GetBytes(
                                                 JsonConvert.SerializeObject(new { state = "false", msg = deployResult }));
-                                            Program.logger.Log("Nep5 " + coinType + " Deployed, result: " +
+                                            httpLogger.Log("Nep5 " + coinType + " Deployed, result: " +
                                                               deployResult);
                                         }
                                     }
@@ -215,7 +216,7 @@ namespace CES
                                 }
                                 else //已发行
                                 {
-                                    Program.logger.Log("Already deployed! txid: " + deployTxid);
+                                    httpLogger.Log("Already deployed! txid: " + deployTxid);
                                     buffer = Encoding.UTF8.GetBytes(
                                         JsonConvert.SerializeObject(new { state = "true", txid = deployTxid }));
                                 }
@@ -226,8 +227,8 @@ namespace CES
                 }
                 catch (Exception e)
                 {
-                    Program.logger.Log("Url: " + rawUrl + "; json: " + json);
-                    Program.logger.Log(e.ToString());
+                    httpLogger.Log("Url: " + rawUrl + "; json: " + json);
+                    httpLogger.Log(e.ToString());
                     buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", msg = e.ToString() }));
                     continue;
                 }

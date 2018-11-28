@@ -184,8 +184,7 @@ namespace CES
             }
             catch (Exception ex)
             {
-                var time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ";
-                Program.logger.Log("DbError:" + ex.ToString());
+                Console.WriteLine(ex);
                 trans.Rollback();
             }
             finally

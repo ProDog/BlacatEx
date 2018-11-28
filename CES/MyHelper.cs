@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.Serialization.Json;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using ThinNeo;
@@ -284,6 +287,67 @@ namespace CES
             wc.Headers["content-type"] = "text/plain;charset=UTF-8";
             byte[] retdata = await wc.UploadDataTaskAsync(url, "POST", data);
             return System.Text.Encoding.UTF8.GetString(retdata);
+        }
+
+        /// <summary>
+        /// 发送交易数据
+        /// </summary>
+        /// <param name="transRspList">交易数据列表</param>
+        public static void SendTransInfo(List<TransactionInfo> transRspList, Logger logger)
+        {
+            if (transRspList.Count > 0)
+            {
+                try
+                {
+                    DataContractJsonSerializer serializer = new DataContractJsonSerializer(transRspList.GetType());
+                    MemoryStream meStream = new MemoryStream();
+                    serializer.WriteObject(meStream, transRspList);
+                    byte[] dataBytes = new byte[meStream.Length];
+                    meStream.Position = 0;
+                    meStream.Read(dataBytes, 0, (int)meStream.Length);
+                    HttpWebRequest req = (HttpWebRequest)WebRequest.Create(Config.apiDic["blacat"]);
+                    req.Method = "POST";
+                    req.ContentType = "application/x-www-form-urlencoded";
+
+                    byte[] data = dataBytes;
+                    req.ContentLength = data.Length;
+                    using (Stream reqStream = req.GetRequestStream())
+                    {
+                        reqStream.Write(data, 0, data.Length);
+                        reqStream.Close();
+                    }
+
+                    logger.Log("SendTransInfo : " + Encoding.UTF8.GetString(data));
+                    HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
+                    Stream stream = resp.GetResponseStream();
+                    using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+                    {
+                        var result = reader.ReadToEnd();
+                        var rjson = JObject.Parse(result);
+                        logger.Log("rsp: " + result);
+                        if (Convert.ToInt32(rjson["r"]) == 0)
+                        {
+                            Thread.Sleep(5000);
+                            SendTransInfo(transRspList, logger);
+                        }
+
+                        if (Convert.ToInt32(rjson["r"]) == 1)
+                        {
+                            //保存交易信息
+                            DbHelper.SaveTransInfo(transRspList);
+                        }
+
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    logger.Log("send error:" + ex.ToString());
+                    return;
+                }
+
+            }
+
         }
 
     }

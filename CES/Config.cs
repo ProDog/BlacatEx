@@ -47,6 +47,7 @@ namespace CES
 
             btcAddrList = DbHelper.GetBtcAddr();
             ethAddrList = DbHelper.GetEthAddr();
+            Console.WriteLine(configPath + " init");
         }
 
         private static dynamic getValue(string name)
