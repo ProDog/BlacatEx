@@ -24,64 +24,50 @@ namespace CES
 
         private static void AppStart()
         {
+            var btcTask = Task.Run(() => BtcWatcher.BtcWatcherStartAsync());
+            var ethTask = Task.Run(() => EthWatcher.EthWatcherStartAsync());
+            var neoTask = Task.Run(() => NeoWatcher.NeoWatcherStartAsync());
+            var httpTask = Task.Run(() => HttpHelper.HttpServerStart());
 
-            Thread BtcThread = new Thread(BtcWatcher.BtcWatcherStartAsync);
-            Thread EthThread = new Thread(EthWatcher.EthWatcherStartAsync);
-            Thread NeoThread = new Thread(NeoWatcher.NeoWatcherStart);
-            Thread HttpThread = new Thread(HttpHelper.HttpServerStart);
-            BtcThread.Start();
-            EthThread.Start();
-            NeoThread.Start();
-            HttpThread.Start();
+            while (true)
+            {
+                string comm = Console.ReadLine();
+                switch (comm)
+                {
+                    case "btc exit":
+                        if (httpTask.Status == TaskStatus.RanToCompletion)
+                        {
+                            btcTask.Wait();
+                            Console.WriteLine(comm);
+                        }
 
-            //var btcTask = Task.Run(() => BtcWatcher.BtcWatcherStartAsync());
-            //var ethTask = Task.Run(() => EthWatcher.EthWatcherStartAsync());
-            //var neoTask = new Task(async () => NeoWatcher.NeoWatcherStart());
-            //var httpTask = new Task(async () => HttpHelper.HttpServerStart());
+                        break;
+                    case "eth exit":
+                        if (ethTask.Status == TaskStatus.RanToCompletion)
+                        {
+                            ethTask.Dispose();
+                            Console.WriteLine(comm);
+                        }
 
-            ////btcTask.Start();
-            ////ethTask.Start();
-            //neoTask.Start();
-            //httpTask.Start();
+                        break;
+                    case "neo exit":
+                        if (neoTask.Status == TaskStatus.RanToCompletion)
+                        {
+                            neoTask.Dispose();
+                            Console.WriteLine(comm);
+                        }
 
-            //while (true)
-            //{
-            //    string comm = Console.ReadLine();
-            //    switch (comm)
-            //    {
-            //        case "btc exit":
-            //            if (httpTask.Status == TaskStatus.RanToCompletion)
-            //            {
-            //                btcTask.Wait();
-            //                Console.WriteLine(comm);
-            //            }
+                        break;
+                    case "http exit":
+                        if (httpTask.Status == TaskStatus.RanToCompletion)
+                        {
+                            httpTask.Dispose();
+                            Console.WriteLine(comm);
+                        }
 
-            //            break;
-            //        case "eth exit":
-            //            if (ethTask.Status == TaskStatus.RanToCompletion)
-            //            {
-            //                ethTask.Dispose();
-            //                Console.WriteLine(comm);
-            //            }
-            //            break;
-            //        case "neo exit":
-            //            if (neoTask.Status == TaskStatus.RanToCompletion)
-            //            {
-            //                neoTask.Dispose();
-            //                Console.WriteLine(comm);
-            //            }
-
-            //            break;
-            //        case "http exit":
-            //            if (httpTask.Status == TaskStatus.RanToCompletion)
-            //            {
-            //                httpTask.Dispose();
-            //                Console.WriteLine(comm);
-            //            }
-
-            //            break;
-            //    }
-            //}
+                        break;
+                }
+            }
         }
 
     }

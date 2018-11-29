@@ -293,7 +293,7 @@ namespace CES
         /// 发送交易数据
         /// </summary>
         /// <param name="transRspList">交易数据列表</param>
-        public static void SendTransInfo(List<TransactionInfo> transRspList, Logger logger)
+        public static async Task SendTransInfoAsync(List<TransactionInfo> transRspList, Logger logger)
         {
             if (transRspList.Count > 0)
             {
@@ -318,7 +318,7 @@ namespace CES
                     }
 
                     logger.Log("SendTransInfo : " + Encoding.UTF8.GetString(data));
-                    HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
+                    HttpWebResponse resp = (HttpWebResponse)req.GetResponseAsync().Result;
                     Stream stream = resp.GetResponseStream();
                     using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
                     {
@@ -328,13 +328,13 @@ namespace CES
                         if (Convert.ToInt32(rjson["r"]) == 0)
                         {
                             Thread.Sleep(5000);
-                            SendTransInfo(transRspList, logger);
+                            await SendTransInfoAsync(transRspList, logger);
                         }
 
                         if (Convert.ToInt32(rjson["r"]) == 1)
                         {
                             //保存交易信息
-                            DbHelper.SaveTransInfo(transRspList);
+                            await DbHelper.SaveTransInfoAsync(transRspList);
                         }
 
                     }

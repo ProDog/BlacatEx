@@ -12,7 +12,7 @@ namespace CES
     public class NeoWatcher
     {
         private static Logger neoLogger;
-        public static void NeoWatcherStart()
+        public static async void NeoWatcherStartAsync()
         {
             neoLogger = new Logger($"{DateTime.Now:yyyy-MM-dd}_neo.log");
             neoLogger.Log("Neo Watcher Start! Index: " + Config.neoIndex);
@@ -31,8 +31,8 @@ namespace CES
                             }
 
                             var transRspList = ParseNeoBlock(i, Config.myAccountDic["cneo"]);
-                            MyHelper.SendTransInfo(transRspList, neoLogger);
-                            DbHelper.SaveIndex(i, "neo");
+                            await MyHelper.SendTransInfoAsync(transRspList, neoLogger);
+                            await DbHelper.SaveIndexAsync(i, "neo");
                             Config.neoIndex = i + 1;
                         }
                     }
@@ -104,8 +104,7 @@ namespace CES
                                     neoTrans.value = transAmount;
                                     transRspList.Add(neoTrans);
                                     neoLogger.Log(i + " Aave A Cneo Transaction From :" + from_address +
-                                                  "; Value:" +
-                                                  transAmount + "; Txid:" + txid);
+                                                  "; Value:" + transAmount + "; Txid:" + txid);
 
                                 }
                             }

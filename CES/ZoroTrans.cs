@@ -224,9 +224,7 @@ namespace CES
             byte[] pubkey = Helper_NEO.GetPublicKey_FromPrivateKey(prikey);
             string address = Helper_NEO.GetAddress_FromPublicKey(pubkey);
 
-            var res = MyHelper.HttpGet(Config.apiDic["neo"] + "?method=getblockcount&id=1&params=[]").Result;
-            var ress = Newtonsoft.Json.Linq.JObject.Parse(res)["result"] as Newtonsoft.Json.Linq.JArray;
-            int height = (int) ress[0]["blockcount"];
+            int height = Config.GetNeoHeightAsync().Result;
             if (height > neoTransHeight + 1)
             {
                 neoTransHeight = height;

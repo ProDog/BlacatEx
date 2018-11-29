@@ -33,18 +33,18 @@ namespace CES
         /// 保存监控地址
         /// </summary>
         /// <param name="json"></param>
-        public static void SaveAddress(string coinType, string address)
+        public static async System.Threading.Tasks.Task SaveAddressAsync(string coinType, string address)
         {
             var sql =
                 $"insert into Address (CoinType,Address,DateTime) values ('{coinType}','{address}','{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}')";
-            ExecuteSql(sql);
+            await ExecuteSqlAsync(sql);
         }
 
         /// <summary>
         /// 保存交易信息
         /// </summary>
         /// <param name="transRspList"></param>
-        public static void SaveTransInfo(List<TransactionInfo> transRspList)
+        public static async System.Threading.Tasks.Task SaveTransInfoAsync(List<TransactionInfo> transRspList)
         {
             StringBuilder sbSql = new StringBuilder();
             foreach (var tran in transRspList)
@@ -52,7 +52,7 @@ namespace CES
                 sbSql.Append(
                     $"Replace into Transactions (CoinType,Height,Txid,FromAddress,ToAddress,Value,ConfirmCount,UpdateTime) values ('{tran.coinType}',{tran.height},'{tran.txid}','{tran.fromAddress}','{tran.toAddress}',{tran.value},{tran.confirmcount},'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}');");
             }
-            ExecuteSql(sbSql.ToString());
+            await ExecuteSqlAsync(sbSql.ToString());
         }
 
         public static List<TransactionInfo> GetRspList(ref List<TransactionInfo> TransRspList, int count, string type)
@@ -108,10 +108,10 @@ namespace CES
             return list;
         }
 
-        public static void SaveIndex(int i, string type)
+        public static async System.Threading.Tasks.Task SaveIndexAsync(int i, string type)
         {
             var sql = $"Replace into ParseHeight (CoinType,Height,DateTime) values ('{type}',{i},'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}')";
-            ExecuteSql(sql);
+            await ExecuteSqlAsync(sql);
         }
 
         public static int GetIndex(string coinType)
@@ -136,20 +136,20 @@ namespace CES
         }
 
         //bct cneo
-        public static void SaveDeployInfo(TransactionInfo transInfo)
+        public static async System.Threading.Tasks.Task SaveDeployInfoAsync(TransactionInfo transInfo)
         {
             var sql=
                 $"Insert into Transactions (CoinType,Height,Txid,ToAddress,Value,ConfirmCount,UpdateTime,DeployTxid,DeployTime) values ('{transInfo.coinType}',{transInfo.height},'{transInfo.txid}','{transInfo.toAddress}',{transInfo.value},{transInfo.confirmcount},'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}','{transInfo.deployTxid}','{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}');";
-            ExecuteSql(sql);
+            await ExecuteSqlAsync(sql);
 
         }
 
         //btc eth
-        public static void SaveDeployInfo(string deployTxid,string txid,string coinType)
+        public static async System.Threading.Tasks.Task SaveDeployInfoAsync(string deployTxid,string txid,string coinType)
         {
             var sql =
                 $"update Transactions set DeployTime='{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}',DeployTxid='{deployTxid}' where Txid='{txid}' and CoinType='{coinType}';";
-            ExecuteSql(sql);
+            await ExecuteSqlAsync(sql);
 
         }
 
@@ -162,13 +162,13 @@ namespace CES
             return null;
         }
 
-        public static void SaveExchangeInfo(string recTxid, string sendTxid)
+        public static async System.Threading.Tasks.Task SaveExchangeInfoAsync(string recTxid, string sendTxid)
         {
             var sql = $"insert into ExchangeData (RecTxid,SendTxid,DateTime) values ('{recTxid}','{sendTxid}','{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}')";
-            ExecuteSql(sql);
+            await ExecuteSqlAsync(sql);
         }
 
-        private static void ExecuteSql(string sql)
+        private static async System.Threading.Tasks.Task ExecuteSqlAsync(string sql)
         {
             SQLiteConnection conn = new SQLiteConnection("Data Source = MonitorData.db");
             conn.Open();
@@ -179,7 +179,7 @@ namespace CES
             cmd.CommandText = sql.ToString();
             try
             {
-                cmd.ExecuteNonQuery();
+                await cmd.ExecuteNonQueryAsync();
                 trans.Commit();
             }
             catch (Exception ex)

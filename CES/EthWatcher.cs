@@ -40,7 +40,7 @@ namespace CES
                             }
 
                             await ParseEthBlock(web3, i);
-                            DbHelper.SaveIndex(i, "eth");
+                            await DbHelper.SaveIndexAsync(i, "eth");
                             Config.ethIndex = i + 1;
                         }
                     }
@@ -49,7 +49,8 @@ namespace CES
                 }
                 catch (Exception e)
                 {
-                    ethLogger.Log(e.ToString());
+                    ethLogger.Log(e.Message);
+                    Thread.Sleep(3000);
                     continue;
                 }
 
@@ -98,7 +99,7 @@ namespace CES
                 //更新确认次数
                 await CheckEthConfirmAsync(Config.confirmCountDic["eth"], ethTransRspList, index, web3);
                 //发送和保存交易信息
-                MyHelper.SendTransInfo(ethTransRspList, ethLogger);
+                await MyHelper.SendTransInfoAsync(ethTransRspList, ethLogger);
                 //移除确认次数为 设定数量 和 0 的交易
                 ethTransRspList.RemoveAll(x => x.confirmcount >= Config.confirmCountDic["eth"] || x.confirmcount == 0);
             }
