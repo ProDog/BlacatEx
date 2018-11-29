@@ -238,42 +238,95 @@ namespace CES
 
         #endregion
 
-        //public static string MakeRpcUrlPost(string url, string method, out byte[] data, params MyJson.IJsonNode[] _params)
-        //{
-        //    //if (url.Last() != '/')
-        //    //    url = url + "/";
-        //    var json = new MyJson.JsonNode_Object();
-        //    json["id"] = new MyJson.JsonNode_ValueNumber(1);
-        //    json["jsonrpc"] = new MyJson.JsonNode_ValueString("2.0");
-        //    json["method"] = new MyJson.JsonNode_ValueString(method);
-        //    StringBuilder sb = new StringBuilder();
-        //    var array = new MyJson.JsonNode_Array();
-        //    for (var i = 0; i < _params.Length; i++)
-        //    {
+        public static async Task<string> PostAsync(string url, string data, Encoding encoding, int type = 3)
+        {
+            HttpWebRequest req = null;
+            HttpWebResponse rsp = null;
+            Stream reqStream = null;
+            //Stream resStream = null;
 
-        //        array.Add(_params[i]);
-        //    }
-        //    json["params"] = array;
-        //    data = System.Text.Encoding.UTF8.GetBytes(json.ToString());
-        //    return url;
-        //}
+            try
+            {
+                req = WebRequest.CreateHttp(new Uri(url));
+                if (type == 1)
+                {
+                    req.ContentType = "application/json;charset=utf-8";
+                }
+                else if (type == 2)
+                {
+                    req.ContentType = "application/xml;charset=utf-8";
+                }
+                else
+                {
+                    req.ContentType = "application/x-www-form-urlencoded;charset=utf-8";
+                }
 
-        //public static string MakeRpcUrl(string url, string method, params MyJson.IJsonNode[] _params)
-        //{
-        //    StringBuilder sb = new StringBuilder();
-        //    if (url.Last() != '/')
-        //        url = url + "/";
+                req.Method = "POST";
+                //req.Accept = "text/xml,text/javascript";
+                req.ContinueTimeout = 60000;
 
-        //    sb.Append(url + "?jsonrpc=2.0&id=1&method=" + method + "&params=[");
-        //    for (var i = 0; i < _params.Length; i++)
-        //    {
-        //        _params[i].ConvertToString(sb);
-        //        if (i != _params.Length - 1)
-        //            sb.Append(",");
-        //    }
-        //    sb.Append("]");
-        //    return sb.ToString();
-        //}
+                byte[] postData = encoding.GetBytes(data);
+                reqStream = await req.GetRequestStreamAsync();
+                reqStream.Write(postData, 0, postData.Length);
+                //reqStream.Dispose();
+
+                rsp = (HttpWebResponse)req.GetResponseAsync().Result;
+                string result = GetResponseAsString(rsp, encoding);
+
+                return result;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                // 释放资源
+                if (reqStream != null)
+                {
+                    reqStream.Close();
+                    reqStream = null;
+                }
+                if (rsp != null)
+                {
+                    rsp.Close();
+                    rsp = null;
+                }
+                if (req != null)
+                {
+                    req.Abort();
+
+                    req = null;
+                }
+            }
+        }
+
+        private static string GetResponseAsString(HttpWebResponse rsp, Encoding encoding)
+        {
+            Stream stream = null;
+            StreamReader reader = null;
+
+            try
+            {
+                // 以字符流的方式读取HTTP响应
+                stream = rsp.GetResponseStream();
+                reader = new StreamReader(stream, encoding);
+
+                return reader.ReadToEnd();
+            }
+            finally
+            {
+                // 释放资源
+                if (reader != null)
+                    reader.Close();
+                if (stream != null)
+                    stream.Close();
+
+                reader = null;
+                stream = null;
+
+            }
+        }
 
         public static async Task<string> HttpGet(string url)
         {

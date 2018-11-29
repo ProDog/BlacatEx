@@ -256,9 +256,16 @@ namespace CES
             var trandata = tran.GetRawData();
             var strtrandata = ThinNeo.Helper.Bytes2HexString(trandata);
             string txid = tran.GetHash().ToString();
-            var result =
-                await MyHelper.HttpGet(
-                    $"{Config.apiDic["neo"]}?method=sendrawtransaction&id=1&params=[\"{strtrandata}\"]");
+
+            string input = @"{
+	            'jsonrpc': '2.0',
+                'method': 'sendrawtransaction',
+	            'params': ['#'],
+	            'id': '1'
+            }";
+            input = input.Replace("#", strtrandata);
+            
+            var result = await MyHelper.PostAsync(Config.apiDic["neo"], input, System.Text.Encoding.UTF8, 1);
             return result;
         }
 
@@ -295,14 +302,17 @@ namespace CES
             tran.AddWitness(signdata, pubkey, address);
             string txid = tran.GetHash().ToString();
             byte[] data = tran.GetRawData();
-            string rawdata = ThinNeo.Helper.Bytes2HexString(data);
+            string strtrandata = ThinNeo.Helper.Bytes2HexString(data);
 
-            var result =
-                await MyHelper.HttpGet($"{Config.apiDic["neo"]}?method=sendrawtransaction&id=1&params=[\"{rawdata}\"]");
-            foreach (var input in tran.inputs)
-            {
-                usedUtxoList.Add(((Hash256) input.hash).ToString() + input.index);
-            }
+            string input = @"{
+	            'jsonrpc': '2.0',
+                'method': 'sendrawtransaction',
+	            'params': ['#'],
+	            'id': '1'
+            }";
+            input = input.Replace("#", strtrandata);
+
+            var result = await MyHelper.PostAsync(Config.apiDic["neo"], input, System.Text.Encoding.UTF8, 1);
 
             JObject resJO = JObject.Parse(result);
             return result;

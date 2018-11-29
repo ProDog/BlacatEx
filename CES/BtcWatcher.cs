@@ -55,7 +55,7 @@ namespace CES
                     }
                     else
                     {
-                        btcLogger.Log(e.ToString());
+                        btcLogger.Log(e.Message);
                     }
 
                     Thread.Sleep(10000);
