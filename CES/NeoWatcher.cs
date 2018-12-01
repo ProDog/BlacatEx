@@ -74,7 +74,7 @@ namespace CES
                             var value = n["state"] as JObject;
                             var method = (value["value"] as JArray)[0] as JObject;
                             var name = Encoding.UTF8.GetString(
-                                ThinNeo.Helper.HexString2Bytes((string) method["value"]));
+                                Helper.HexString2Bytes((string) method["value"]));
 
                             if (name == "transfer")
                             {
@@ -93,7 +93,7 @@ namespace CES
                                     var amount = (value["value"] as JArray)[3] as JObject;
                                     var transAmount =
                                         (decimal) new BigInteger(
-                                            ThinNeo.Helper.HexString2Bytes((string) amount["value"])) /
+                                            Helper.HexString2Bytes((string) amount["value"])) /
                                         Config.factorDic["cneo"];
                                     neoTrans.toAddress = address;
                                     neoTrans.coinType = "cneo";
@@ -122,7 +122,7 @@ namespace CES
             WebClient wc = new WebClient();
             var getcounturl = Config.apiDic["neo"] + "?jsonrpc=2.0&id=1&method=getblock&params=[" + block + ",1]";
             var info = wc.DownloadString(getcounturl);
-            var json = Newtonsoft.Json.Linq.JObject.Parse(info);
+            var json = JObject.Parse(info);
             if (info.Contains("result") == false)
                 return null;
             return (JObject)(((JArray)json["result"])[0]);
@@ -134,7 +134,7 @@ namespace CES
 
             var getcounturl = Config.apiDic["neo"] + "?jsonrpc=2.0&id=1&method=getnotify&params=[\"" + txid + "\"]";
             var info = wc.DownloadString(getcounturl);
-            var json = Newtonsoft.Json.Linq.JObject.Parse(info);
+            var json = JObject.Parse(info);
             if (json.ContainsKey("result") == false)
                 return null;
             var result = (JObject)(((JArray)json["result"])[0]);

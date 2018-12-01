@@ -15,14 +15,15 @@ namespace CES
     public class MyHelper
     {
         //获取地址的utxo来得出地址的资产  
-        public static async Task<Dictionary<string, List<Utxo>>> GetBalanceByAddressAsync(string api, string _addr)
+        public static  Dictionary<string, List<Utxo>> GetBalanceByAddress(string api, string _addr, ref Dictionary<string, string> usedUtxoDic)
         {
-            JObject response = JObject.Parse(await MyHelper.HttpGet(api + "?method=getutxo&id=1&params=['" + _addr + "']"));
+            JObject response = JObject.Parse(HttpGet(api + "?method=getutxo&id=1&params=['" + _addr + "']").Result);
             JArray resJA = (JArray)response["result"];
             Dictionary<string, List<Utxo>> _dir = new Dictionary<string, List<Utxo>>();
+            List<string> usedList = new List<string>(usedUtxoDic.Keys);
             foreach (JObject j in resJA)
             {
-                Utxo utxo = new Utxo(j["addr"].ToString(), new ThinNeo.Hash256(j["txid"].ToString()), j["asset"].ToString(), decimal.Parse(j["value"].ToString()), int.Parse(j["n"].ToString()));
+                Utxo utxo = new Utxo(j["addr"].ToString(), new Hash256(j["txid"].ToString()), j["asset"].ToString(), decimal.Parse(j["value"].ToString()), int.Parse(j["n"].ToString()));
                 if (_dir.ContainsKey(j["asset"].ToString()))
                 {
                     _dir[j["asset"].ToString()].Add(utxo);
@@ -34,94 +35,86 @@ namespace CES
                     _dir[j["asset"].ToString()] = l;
                 }
 
+                for (int i = usedList.Count - 1; i >= 0; i--)
+                {
+                    if (usedUtxoDic[usedList[i]] == utxo.txid.ToString())
+                    {
+                        usedUtxoDic.Remove(usedList[i]);
+                        usedList.Remove(usedList[i]);
+                    }
+                }
+
             }
             return _dir;
         }
 
-        public static ThinNeo.Transaction makeTran(List<Utxo> utxos, ref List<string> usedUtxoList, string targetaddr, ThinNeo.Hash256 assetid, decimal sendCount, decimal gasfee)
+        public static Transaction makeTran(ref List<Utxo> list_Gas, Dictionary<string, string> usedUtxoDic, Hash256 assetid, decimal gasfee)
         {
-            if (sendCount == 0) //sendCount==0,说明是合约交易，gasfee做sendCount
-            {
-                sendCount = gasfee;
-                gasfee = 0;
-            }
-
             var tran = new ThinNeo.Transaction();
             tran.type = ThinNeo.TransactionType.ContractTransaction;
             tran.version = 0;//0 or 1
-            
+
             tran.attributes = new ThinNeo.Attribute[0];
             var scraddr = "";
-            utxos.Sort((a, b) =>
-            {
-                if (a.value > b.value)
-                    return 1;
-                else if (a.value < b.value)
-                    return -1;
-                else
-                    return 0;
-            });
+
             decimal count = decimal.Zero;
             List<ThinNeo.TransactionInput> list_inputs = new List<ThinNeo.TransactionInput>();
-            for (var i = 0; i < utxos.Count; i++)
+            for (var i = list_Gas.Count - 1; i >= 0; i--)
             {
-                if (usedUtxoList.Contains(utxos[i].txid.ToString() + utxos[i].n))
-                {
+                if (usedUtxoDic.ContainsKey(list_Gas[i].txid.ToString() + list_Gas[i].n))
                     continue;
-                }
+
                 ThinNeo.TransactionInput input = new ThinNeo.TransactionInput();
-                input.hash = utxos[i].txid;
-                input.index = (ushort)utxos[i].n;
+                input.hash = list_Gas[i].txid;
+                input.index = (ushort)list_Gas[i].n;
                 list_inputs.Add(input);
-                count += utxos[i].value;
-                scraddr = utxos[i].addr;
-                usedUtxoList.Add(utxos[i].txid.ToString() + utxos[i].n);
-                if (count >= sendCount)
-                {
+                count += list_Gas[i].value;
+                scraddr = list_Gas[i].addr;
+                list_Gas.Remove(list_Gas[i]);
+                if (count >= gasfee)
                     break;
-                }
             }
+
             tran.inputs = list_inputs.ToArray();
-            if (count >= sendCount)//输入大于等于输出
+            if (count >= gasfee)//输入大于等于输出
             {
                 List<ThinNeo.TransactionOutput> list_outputs = new List<ThinNeo.TransactionOutput>();
                 //输出
-                if (sendCount > decimal.Zero && targetaddr != null)
-                {
-                    ThinNeo.TransactionOutput output = new ThinNeo.TransactionOutput();
-                    output.assetId = assetid;
-                    output.value = sendCount;
-                    output.toAddress = Helper_NEO.GetScriptHash_FromAddress(targetaddr);
-                    list_outputs.Add(output);
-                }
+                //if (gasfee > decimal.Zero && targetaddr != null)
+                //{
+                //    ThinNeo.TransactionOutput output = new ThinNeo.TransactionOutput();
+                //    output.assetId = assetid;
+                //    output.value = gasfee;
+                //    output.toAddress = ThinNeo.Helper.GetPublicKeyHashFromAddress(targetaddr);
+                //    list_outputs.Add(output);
+                //}
 
                 //找零
-                var change = count - sendCount - gasfee;
+                var change = count - gasfee;
                 if (change > decimal.Zero)
                 {
-                    var num = change;
+                    decimal splitvalue = (decimal)0.01;
                     int i = 0;
-                    decimal splitvalue = 3;
-                    while (num > splitvalue && utxos.Count - usedUtxoList.Count < 100)
+                    while (change > splitvalue && list_Gas.Count - 50 < usedUtxoDic.Count)
                     {
                         ThinNeo.TransactionOutput outputchange = new ThinNeo.TransactionOutput();
                         outputchange.toAddress = Helper_NEO.GetScriptHash_FromAddress(scraddr);
                         outputchange.value = splitvalue;
                         outputchange.assetId = assetid;
                         list_outputs.Add(outputchange);
-                        num -= splitvalue;
+                        change -= splitvalue;
                         i += 1;
-                        if (i >= 100)
+                        if (i > 50)
                         {
                             break;
                         }
                     }
 
-                    if (num > 0)
+                    if (change > 0)
                     {
                         ThinNeo.TransactionOutput outputchange = new ThinNeo.TransactionOutput();
                         outputchange.toAddress = Helper_NEO.GetScriptHash_FromAddress(scraddr);
-                        outputchange.value = num;
+                        outputchange.value = change;
                         outputchange.assetId = assetid;
                         list_outputs.Add(outputchange);
                     }
@@ -339,7 +332,7 @@ namespace CES
             WebClient wc = new WebClient();
             wc.Headers["content-type"] = "text/plain;charset=UTF-8";
             byte[] retdata = await wc.UploadDataTaskAsync(url, "POST", data);
-            return System.Text.Encoding.UTF8.GetString(retdata);
+            return Encoding.UTF8.GetString(retdata);
         }
 
         /// <summary>

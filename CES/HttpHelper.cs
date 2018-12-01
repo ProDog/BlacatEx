@@ -2,7 +2,6 @@
 using System.IO;
 using System.Net;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using NBitcoin;
 using Nethereum.Hex.HexConvertors.Extensions;
@@ -50,7 +49,7 @@ namespace CES
                         var info = sr.ReadToEnd();
                         json = JObject.Parse(info);
                     }
-                    httpLogger.Log("Url: " + rawUrl + "; json: " + json);
+                    //httpLogger.Log("Url: " + rawUrl + "; json: " + json);
                     if (urlPara.Length > 1)
                     {
                         var method = urlPara[1];
@@ -91,8 +90,7 @@ namespace CES
             if (method == "getbalance")
             {
                 var balance = ZoroTrans.GetBalanceAsync(coinType).Result;
-                buffer = Encoding.UTF8.GetBytes(
-                    JsonConvert.SerializeObject(new { state = "true", balance }));
+                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", balance }));
                 httpLogger.Log("Get " + coinType + " Balance: " + balance);
             }
 
@@ -128,8 +126,7 @@ namespace CES
                 string deployTxid = DbHelper.GetDeployStateByTxid(coinType, json["txid"].ToString());
                 if (string.IsNullOrEmpty(deployTxid)) //没有发行NEP5 BTC/ETH
                 {
-                    var deployResult = ZoroTrans
-                        .DeployNep5TokenAsync(coinType, json, Config.minerFeeDic["gas_fee"]).Result;
+                    var deployResult = ZoroTrans.DeployNep5TokenAsync(coinType, json).Result;
                     if (deployResult != null && deployResult.Contains("result"))
                     {
                         var res = JObject.Parse(deployResult)["result"] as JArray;
@@ -172,8 +169,7 @@ namespace CES
                 else //已发行
                 {
                     httpLogger.Log("Already deployed! txid: " + deployTxid);
-                    buffer = Encoding.UTF8.GetBytes(
-                        JsonConvert.SerializeObject(new { state = "true", txid = deployTxid }));
+                    buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid = deployTxid }));
                 }
             }
 
@@ -234,7 +230,7 @@ namespace CES
                 string sendTxid = DbHelper.GetSendTxid(recTxid);
                 if (string.IsNullOrEmpty(sendTxid))
                 {
-                    var result = ZoroTrans.ExchangeAsync(coinType, json, Config.minerFeeDic["gas_fee"]).Result;
+                    var result = ZoroTrans.ExchangeAsync(coinType, json).Result;
                     if (result != null && result.Contains("result"))
                     {
                         var res = JObject.Parse(result)["result"] as JArray;

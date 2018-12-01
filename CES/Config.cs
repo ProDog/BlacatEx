@@ -21,8 +21,7 @@ namespace CES
         public static Dictionary<string, string> tokenHashDic;
         public static Dictionary<string, decimal> factorDic;
         public static JObject ConfigJObject = null;
-        public static int neoTransHeight;
-
+        
         public static List<string> btcAddrList = new List<string>(); //BTC 监听地址列表
         public static List<string> ethAddrList = new List<string>();  //ETH 监听地址列表
 
@@ -42,9 +41,7 @@ namespace CES
             adminWifDic = getStringDic("admin");
             tokenHashDic = getStringDic("token");
             factorDic = getDecimalDic("factor");
-
-            neoTransHeight = GetNeoHeightAsync().Result;
-
+            
             btcAddrList = DbHelper.GetBtcAddr();
             ethAddrList = DbHelper.GetEthAddr();
             Console.WriteLine(configPath + " init");
@@ -79,7 +76,7 @@ namespace CES
         {
             var url = apiDic["neo"] + "?method=getblockcount&id=1&params=[]";
             var result = await MyHelper.HttpGet(url);
-            var res = Newtonsoft.Json.Linq.JObject.Parse(result)["result"] as Newtonsoft.Json.Linq.JArray;
+            var res = JObject.Parse(result)["result"] as JArray;
             int height = (int)res[0]["blockcount"];
             return height;
         }
