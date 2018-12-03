@@ -43,7 +43,7 @@ namespace CES
                 }
                 catch (Exception e)
                 {
-                    neoLogger.Log(e.ToString());
+                    neoLogger.Log(e.Message);
                     Thread.Sleep(5000);
                     continue;
                 }

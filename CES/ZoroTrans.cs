@@ -230,6 +230,8 @@ namespace CES
             list_Gas = dic_UTXO[Config.tokenHashDic["gas"]];
             //MakeTran
             Transaction tran = MyHelper.makeTran(ref list_Gas, usedUtxoDic, new Hash256(Config.tokenHashDic["gas"]), Config.minerFeeDic["gas_fee"]);
+
+            //Console.WriteLine($"Utxo:{list_Gas.Count}; usedUtxo:{usedUtxoDic.Count}; inPut:{tran.inputs.Length}; outPut:{tran.outputs.Length}.");
             tran.type = TransactionType.InvocationTransaction;
             var idata = new InvokeTransData();
             tran.extdata = idata;

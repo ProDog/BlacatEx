@@ -122,15 +122,15 @@ namespace CES
                 return Convert.ToInt32(table.Rows[0][0]);
             return 0;
         }
-     
-        public static string GetDeployStateByTxid(string coinType,string txid)
+
+        public static string GetDeployStateByTxid(string coinType, string txid)
         {
             var sql = $"select DeployTxid,DeployTime from Transactions where CoinType='{coinType}' and txid='{txid}'";
             var table = ExecuSqlToDataTable(sql);
             var deployTxid = string.Empty;
             if (table.Rows.Count > 0)
             {
-                deployTxid = table.Rows[0]["DeployTxid"].ToString();
+                return table.Rows[0]["DeployTxid"].ToString();
             }
             return deployTxid;
         }
@@ -184,7 +184,7 @@ namespace CES
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                Console.WriteLine(ex.Message);
                 trans.Rollback();
             }
             finally

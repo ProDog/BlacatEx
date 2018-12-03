@@ -65,9 +65,8 @@ namespace CES
                 }
                 catch (Exception e)
                 {
-                    httpLogger.Log("Url: " + rawUrl + "; json: " + json);
-                    httpLogger.Log(e.ToString());
-                    buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", msg = e.ToString() }));
+                    httpLogger.Log(e.Message);
+                    buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", msg = e.Message }));
                     continue;
                 }
                 finally
@@ -119,6 +118,7 @@ namespace CES
                 { state = "true", type = coinType, address, priKey }));
             }
 
+            //给用户发行替代的nep5 BTC\ETH，还有用户用 CGAS 购买的 BCT,CNEO
             if (method == "deploy")
             {
                 if (coinType != "btc" && coinType != "eth" && coinType != "cneo" && coinType != "bct")
@@ -142,7 +142,7 @@ namespace CES
                                 transInfo.confirmcount = 1;
                                 transInfo.value = (decimal)json["value"];
                                 transInfo.toAddress = json["address"].ToString();
-                                transInfo.height = Config.GetNeoHeightAsync().Result;
+                                transInfo.height = Config.GetNeoHeightAsync().Result + 1;
                                 transInfo.deployTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                                 await DbHelper.SaveDeployInfoAsync(transInfo);
                             }
@@ -153,22 +153,22 @@ namespace CES
 
                             buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new
                             { state = "true", txid = res[0]["txid"] }));
-                            httpLogger.Log("Nep5 " + coinType + " Deployed,txid: " + res[0]["txid"]);
+                            httpLogger.Log(coinType + " deployed,txid: " + res[0]["txid"]);
                         }
 
                         else //转账出错
                         {
                             buffer = Encoding.UTF8.GetBytes(
                                 JsonConvert.SerializeObject(new { state = "false", msg = deployResult }));
-                            httpLogger.Log("Nep5 " + coinType + " Deployed, result: " +
+                            httpLogger.Log(coinType + " deployed, result: " +
                                            deployResult);
                         }
                     }
-
                 }
+               
                 else //已发行
                 {
-                    httpLogger.Log("Already deployed! txid: " + deployTxid);
+                    httpLogger.Log(coinType + " already deployed! txid: " + deployTxid);
                     buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid = deployTxid }));
                 }
             }
@@ -241,16 +241,17 @@ namespace CES
                     {
                         await DbHelper.SaveExchangeInfoAsync(recTxid, sendTxid);
                         buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid = sendTxid }));
-                        httpLogger.Log("Exchange " + coinType + ",txid: " + sendTxid);
+                        httpLogger.Log(coinType + " exchange, txid: " + sendTxid);
                     }
                     else
                     {
                         buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", msg = result }));
-                        httpLogger.Log("Exchange " + coinType + ",result: " + result);
+                        httpLogger.Log(coinType + " exchange, result: " + result);
                     }
                 }
                 else
                 {
+                    httpLogger.Log(coinType + " already exchange, txid: " + sendTxid);
                     buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", sendTxid }));
                 }
 
