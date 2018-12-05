@@ -33,15 +33,6 @@
         "height":544574,
         "txid":"aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c",
         "value":0.80051573
-    },
-    {
-        "netType":"testnet",
-        "address":"3K2bY9qitYsSd2USgZ22fP7w7Cqyet2uMv",
-        "coinType":"btc",
-        "confirmcount":3,
-        "height":544575,
-        "txid":"73d82f176a2b357256138bd0a6aeddd2131829dadccdee18f98a65da19282228",
-        "value":0.0005
     }
 ]
 ```
@@ -56,12 +47,12 @@
 ```
 
 ### 发送交易
-发送转账交易，调用接口：http://xx.xx.xx.xx:xxxx/trans/，  参数 type 是币种简称，如 btc，eth 等，txid 是充值 BTC 的 txid，支持多个 txid，调用方式：POST，发送数据格式：
+发送转账交易，调用接口：http://xx.xx.xx.xx:xxxx/trans/，  参数 type 是币种简称，如 btc，eth 等，txid 是充值 BTC 的 txid，支持多个 txid，用,隔开，调用方式：POST，发送数据格式：
 ```
 {
     "type": btc,
     "account": "1PweQ2GtDzregsXshCyU2Vj8QWMb8T5tmc",
-    "txid" : "73d82f176a2b357256138bd0a6aeddd2131829dadccdee18f98a65da19282228","aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c",
+    "txid" : "73d82f176a2b357256138bd0a6aeddd2131829dadccdee18f98a65da19282228,aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c",
     "priKey": "Ky9hKMaG2cg6fMvDju91K5PUrnm8boQcRojQ84xGYid9KxCkrWu8"
 }
 ```
@@ -73,7 +64,7 @@
 }
 ```
 
-### 发送新地址
+### 接收新地址
 当有用户创建了新地址时，发送给监控程序，url：http://xx.xx.xx.xx:xxxx/addr/，  发送方式：POST，type 是币种简称，如 btc，eth 等，发送数据格式：
 ```
 {
@@ -83,7 +74,7 @@
 ```
 
 ### 发行 Nep5 BTC/ETH 代币
-钱包中使用 Nep5 Token 代替 BTC、ETH 进行交易兑换等操作，提高效率节省费用，收到 BTC ETH 后请求发行，发行请求：url：http://xx.xx.xx.xx:xxxx/deploy/{coinType}，coinType 是币种简称，如 btc，eth 等,发送数据格式：
+钱包中使用 Nep5 Token 代替 BTC、ETH 进行交易兑换等操作，提高效率节省费用，收到 BTC ETH 后请求发行，除此之外购买 BCT,CNEO 的发放也通过该接口。 发行请求：url：http://xx.xx.xx.xx:xxxx/deploy/{coinType}，coinType 是币种简称，如 btc，eth 等,发送数据格式：
 txid 为收到 BTC ETH 转账的 txid，用来判断是否已经发行过相应的 nep5 BTC ETH
 ```
 {
@@ -116,5 +107,15 @@ txid 为购买时 nep5 BTC ETH 付款的 txid，用来检测是否已经发放�
 {
     "state": "true",
     "txid": "aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c"
+}
+```
+
+### 查询账户余额
+钱包中将 BTC ETH 等兑换成 Nep5 资产，请求 url：http://xx.xx.xx.xx:xxxx/getbalance/{coinType}:
+返回余额：
+```
+{
+    "state": "true",
+    "balance": 36.838
 }
 ```
