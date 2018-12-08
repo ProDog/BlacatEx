@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Numerics;
+using System.Reflection;
 using System.Text;
 using System.Threading;
+using log4net;
 using Newtonsoft.Json.Linq;
 using ThinNeo;
 
@@ -11,11 +14,10 @@ namespace CES
 {
     public class NeoWatcher
     {
-        private static Logger neoLogger;
-        public static async void NeoWatcherStartAsync()
+        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        public static void NeoWatcherStart()
         {
-            neoLogger = new Logger($"{DateTime.Now:yyyy-MM-dd}_neo.log");
-            neoLogger.Log("Neo Watcher Start! Index: " + Config.neoIndex);
+            Logger.Info("Neo Watcher Start! Index: " + Config.neoIndex);
             while (true)
             {
                 try
@@ -25,14 +27,14 @@ namespace CES
                     {
                         for (int i = Config.neoIndex; i < count; i++)
                         {
-                            if (i % 50 == 0)
+                            if (i % 100 == 0)
                             {
-                                neoLogger.Log("Parse NEO Height:" + i);
+                                Logger.Info("Parse NEO Height:" + i);
                             }
 
                             var transRspList = ParseNeoBlock(i, Config.myAccountDic["cneo"]);
-                            await MyHelper.SendTransInfoAsync(transRspList, neoLogger);
-                            await DbHelper.SaveIndexAsync(i, "neo");
+                            MyHelper.SendTransInfo(transRspList);
+                            DbHelper.SaveIndex(i, "neo");
                             Config.neoIndex = i + 1;
                         }
                     }
@@ -43,7 +45,7 @@ namespace CES
                 }
                 catch (Exception e)
                 {
-                    neoLogger.Log(e.Message);
+                    Logger.Error(e.Message);
                     Thread.Sleep(5000);
                     continue;
                 }
@@ -103,7 +105,7 @@ namespace CES
                                     neoTrans.txid = txid;
                                     neoTrans.value = transAmount;
                                     transRspList.Add(neoTrans);
-                                    neoLogger.Log(i + " Aave A Cneo Transaction From :" + from_address +
+                                    Logger.Info(i + " Aave A Cneo Transaction From :" + from_address +
                                                   "; Value:" + transAmount + "; Txid:" + txid);
 
                                 }

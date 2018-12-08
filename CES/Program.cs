@@ -1,32 +1,37 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using NBitcoin;
-using Nethereum.Geth;
-using Nethereum.Hex.HexTypes;
-using Newtonsoft.Json.Linq;
+using log4net;
+using System.Reflection;
+using log4net.Config;
+using System.IO;
+using System.Diagnostics;
+using System.Text;
 
 namespace CES
 {
-    class Program
+    internal class Program
     {
-
+        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         static void Main(string[] args)
         {
+            var logRepository = LogManager.GetRepository(Assembly.GetExecutingAssembly());
+            XmlConfigurator.Configure(logRepository, new FileInfo(@"log4net.config"));
+            GlobalContext.Properties["pname"] = Assembly.GetEntryAssembly().GetName().Name;
+            GlobalContext.Properties["pid"] = Process.GetCurrentProcess().Id;
+            Console.OutputEncoding = Encoding.UTF8;
             DbHelper.CreateDb("MonitorData.db");
             Config.Init("config.json");
-
+            Logger.Info("CES Start.");
             AppStart();
-
+            
             Console.ReadKey();
         }
 
         private static void AppStart()
         {
-            var btcTask = Task.Run(() => BtcWatcher.BtcWatcherStartAsync());
-            var ethTask = Task.Run(() => EthWatcher.EthWatcherStartAsync());
-            var neoTask = Task.Run(() => NeoWatcher.NeoWatcherStartAsync());
+            var btcTask = Task.Run(() => BtcWatcher.BtcWatcherStart());
+            var ethTask = Task.Run(() => EthWatcher.EthWatcherStart());
+            var neoTask = Task.Run(() => NeoWatcher.NeoWatcherStart());
             var httpTask = Task.Run(() => HttpHelper.HttpServerStart());
 
             while (true)

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
+using log4net;
 using NBitcoin;
 
 namespace CES
@@ -10,15 +10,14 @@ namespace CES
     public class BtcWatcher
     {
         private static List<TransactionInfo> btcTransRspList = new List<TransactionInfo>(); //BTC 交易列表
-        private static Logger btcLogger;
+        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         /// <summary>
         /// 比特币转账监听服务
         /// </summary>
-        public static async void BtcWatcherStartAsync()
+        public static void BtcWatcherStart()
         {
-            btcLogger = new Logger($"{DateTime.Now:yyyy-MM-dd}_btc.log");
             DbHelper.GetRspList(ref btcTransRspList, Config.confirmCountDic["btc"], "btc");
-            btcLogger.Log("Btc Watcher Start! Index: " + Config.btcIndex);
+            Logger.Info("Btc Watcher Start! Index: " + Config.btcIndex);
             
             var key = new System.Net.NetworkCredential("1", "1");
             var uri = new Uri(Config.apiDic["btc"]);
@@ -28,18 +27,18 @@ namespace CES
             {
                 try
                 {
-                    var count = await rpcC.GetBlockCountAsync();
+                    var count = rpcC.GetBlockCountAsync().Result;
                     if (count >= Config.btcIndex)
                     {
                         for (int i = Config.btcIndex; i <= count; i++)
                         {
-                            if (i % 1 == 0)
+                            if (i % 10 == 0)
                             {
-                                btcLogger.Log("Parse BTC Height:" + i);
+                                Logger.Info("Parse BTC Height:" + i);
                             }
 
-                            await ParseBtcBlock(rpcC, i);
-                            await DbHelper.SaveIndexAsync(i, "btc");
+                            ParseBtcBlock(rpcC, i);
+                            DbHelper.SaveIndex(i, "btc");
                             Config.btcIndex = i + 1;
                         }
                     }
@@ -49,15 +48,7 @@ namespace CES
                 }
                 catch (Exception e)
                 {
-                    if (e.Source == "System.Net.Requests")
-                    {
-                        btcLogger.Log("Waiting for next btc block.");
-                    }
-                    else
-                    {
-                        btcLogger.Log(e.Message);
-                    }
-
+                    Logger.Error(e.Message);
                     Thread.Sleep(10000);
                     continue;
                 }
@@ -72,9 +63,9 @@ namespace CES
         /// <param name="index">被解析区块</param>
         /// <param name="height">区块高度</param>
         /// <returns></returns>
-        private static async Task ParseBtcBlock(NBitcoin.RPC.RPCClient rpcC, int index)
+        private static void ParseBtcBlock(NBitcoin.RPC.RPCClient rpcC, int index)
         {
-            var block = await rpcC.GetBlockAsync(index);
+            var block = rpcC.GetBlock(index);
 
             if (block.Transactions.Count > 0 && Config.btcAddrList.Count > 0)
             {
@@ -100,7 +91,7 @@ namespace CES
                                 if (btcTransRspList.Exists(x => x.txid == btcTrans.txid))
                                     continue;
                                 btcTransRspList.Add(btcTrans);
-                                btcLogger.Log(index + " Have A BTC Transaction To:" + address + "; Value:" + vout.Value.ToDecimal(MoneyUnit.BTC) + "; Txid:" + btcTrans.txid);
+                                Logger.Info(index + " Have A BTC Transaction To:" + address + "; Value:" + vout.Value.ToDecimal(MoneyUnit.BTC) + "; Txid:" + btcTrans.txid);
                             }
                         }
                     }
@@ -112,7 +103,7 @@ namespace CES
                 //更新确认次数
                 CheckBtcConfirm(Config.confirmCountDic["btc"], btcTransRspList, index, rpcC);
                 //发送和保存交易信息
-                await MyHelper.SendTransInfoAsync(btcTransRspList, btcLogger);
+                MyHelper.SendTransInfo(btcTransRspList);
                 //移除确认次数为 设定数量 和 0 的交易
                 btcTransRspList.RemoveAll(x => x.confirmcount >= Config.confirmCountDic["btc"] || x.confirmcount == 0);
             }

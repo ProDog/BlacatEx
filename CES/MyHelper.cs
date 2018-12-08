@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using log4net;
 using Newtonsoft.Json.Linq;
 using ThinNeo;
 
@@ -14,6 +15,7 @@ namespace CES
 {
     public class MyHelper
     {
+        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         //获取地址的utxo来得出地址的资产  
         public static  Dictionary<string, List<Utxo>> GetBalanceByAddress(string api, string _addr, ref Dictionary<string, string> usedUtxoDic)
         {
@@ -268,9 +270,10 @@ namespace CES
 
                 return result;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                throw;
+                Logger.Error(e.Message);
+                return e.Message;
             }
             finally
             {
@@ -339,7 +342,7 @@ namespace CES
         /// 发送交易数据
         /// </summary>
         /// <param name="transRspList">交易数据列表</param>
-        public static async Task SendTransInfoAsync(List<TransactionInfo> transRspList, Logger logger)
+        public static void SendTransInfo(List<TransactionInfo> transRspList)
         {
             if (transRspList.Count > 0)
             {
@@ -363,24 +366,25 @@ namespace CES
                         reqStream.Close();
                     }
 
-                    logger.Log("SendTransInfo : " + Encoding.UTF8.GetString(data));
+                    Logger.Info("SendTransInfo : " + Encoding.UTF8.GetString(data));
                     HttpWebResponse resp = (HttpWebResponse)req.GetResponseAsync().Result;
                     Stream stream = resp.GetResponseStream();
                     using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
                     {
                         var result = reader.ReadToEnd();
                         var rjson = JObject.Parse(result);
-                        logger.Log("rsp: " + result);
+                        Logger.Info("rsp: " + result);
                         if (Convert.ToInt32(rjson["r"]) == 0)
                         {
+                            Logger.Warn("Send fail:" + rjson.ToString());
                             Thread.Sleep(5000);
-                            await SendTransInfoAsync(transRspList, logger);
+                            SendTransInfo(transRspList);
                         }
 
                         if (Convert.ToInt32(rjson["r"]) == 1)
                         {
                             //保存交易信息
-                            await DbHelper.SaveTransInfoAsync(transRspList);
+                            DbHelper.SaveTransInfo(transRspList);
                         }
 
                     }
@@ -388,7 +392,7 @@ namespace CES
                 }
                 catch (Exception ex)
                 {
-                    logger.Log("send error:" + ex.ToString());
+                    Logger.Error("Send error:" + ex.Message);
                     return;
                 }
 

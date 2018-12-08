@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Net;
 using System.Numerics;
-using System.Runtime.Serialization.Json;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using log4net;
 using Newtonsoft.Json.Linq;
 using ThinNeo;
 
@@ -17,6 +16,7 @@ namespace CES
         private static Dictionary<string, string> usedUtxoDic = new Dictionary<string, string>(); //本区块内同一账户已使用的 UTXO 记录
         private static Dictionary<string, List<Utxo>> dic_UTXO = new Dictionary<string, List<Utxo>>();
         private static List<Utxo> list_Gas = new List<Utxo>();
+        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         /// <summary>
         /// 发行 Nep5 BTC ETH 资产
         /// </summary>

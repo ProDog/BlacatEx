@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using log4net;
 using NBitcoin;
 using Nethereum.Hex.HexConvertors.Extensions;
 using Nethereum.Hex.HexTypes;
@@ -18,20 +20,19 @@ namespace CES
     public class HttpHelper
     {
         private static HttpListener httpPostRequest = new HttpListener();
-        private static Logger httpLogger;
+        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public static void HttpServerStart()
         {
-            httpLogger = new Logger($"{DateTime.Now:yyyy-MM-dd}_http.log");
             httpPostRequest.Prefixes.Add(Config.apiDic["http"]);
-            Task ThrednHttpPostRequest = new Task(async ()=> await httpPostRequestHandleAsync());
-            ThrednHttpPostRequest.Start();
-            httpLogger.Log("Http Server Start!");
+            //Task ThrednHttpPostRequest = new Task(() => httpPostRequestHandle());
+            //ThrednHttpPostRequest.Start();
+            Logger.Info("Http Server Start!");
         }
 
         /// <summary>
         /// Http 服务接口
         /// </summary>
-        private static async Task httpPostRequestHandleAsync()
+        private static void httpPostRequestHandle()
         {
             while (true)
             {
@@ -53,19 +54,19 @@ namespace CES
                     if (urlPara.Length > 1)
                     {
                         var method = urlPara[1];
-                        buffer = await ExecRequestAsync(json, method);
+                        buffer = ExecRequest(json, method);
 
                         if (urlPara.Length > 2)
                         {
                             var coinType = urlPara[2];
-                            buffer = await ExecRequestAsync(json, method, coinType);
+                            buffer = ExecRequest(json, method, coinType);
                         }
                     }
 
                 }
                 catch (Exception e)
                 {
-                    httpLogger.Log(e.Message);
+                    Logger.Error(e.Message);
                     buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", msg = e.Message }));
                     continue;
                 }
@@ -83,14 +84,14 @@ namespace CES
             }
         }
 
-        private static async Task<byte[]> ExecRequestAsync(JObject json, string method, string coinType)
+        private static byte[] ExecRequest(JObject json, string method, string coinType)
         {
             byte[] buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", msg = "request error,please check your url or post data!" }));
             if (method == "getbalance")
             {
                 var balance = ZoroTrans.GetBalanceAsync(coinType).Result;
                 buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", balance }));
-                httpLogger.Log("Get " + coinType + " Balance: " + balance);
+                Logger.Info("Get " + coinType + " Balance: " + balance);
             }
 
             if (method == "getaccount")
@@ -144,23 +145,23 @@ namespace CES
                                 transInfo.toAddress = json["address"].ToString();
                                 transInfo.height = Config.GetNeoHeightAsync().Result + 1;
                                 transInfo.deployTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                                await DbHelper.SaveDeployInfoAsync(transInfo);
+                                DbHelper.SaveDeployInfo(transInfo);
                             }
                             else
                             {
-                                await DbHelper.SaveDeployInfoAsync(res[0]["txid"].ToString(), json["txid"].ToString(), coinType);
+                                DbHelper.SaveDeployInfo(res[0]["txid"].ToString(), json["txid"].ToString(), coinType);
                             }
 
                             buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new
                             { state = "true", txid = res[0]["txid"] }));
-                            httpLogger.Log(coinType + " deployed,txid: " + res[0]["txid"]);
+                            Logger.Info(coinType + " deployed,txid: " + res[0]["txid"]);
                         }
 
                         else //转账出错
                         {
                             buffer = Encoding.UTF8.GetBytes(
                                 JsonConvert.SerializeObject(new { state = "false", msg = deployResult }));
-                            httpLogger.Log(coinType + " deployed, result: " +
+                            Logger.Warn(coinType + " deployed, result: " +
                                            deployResult);
                         }
                     }
@@ -168,7 +169,7 @@ namespace CES
                
                 else //已发行
                 {
-                    httpLogger.Log(coinType + " already deployed! txid: " + deployTxid);
+                    Logger.Info(coinType + " already deployed! txid: " + deployTxid);
                     buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid = deployTxid }));
                 }
             }
@@ -176,7 +177,7 @@ namespace CES
             return buffer;
         }
 
-        private static async Task<byte[]> ExecRequestAsync(JObject json, string method)
+        private static byte[] ExecRequest(JObject json, string method)
         {
             byte[] buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", msg = "request error,please check your url or post data!" }));
             if (method == "addr")
@@ -186,16 +187,16 @@ namespace CES
                 if (coinType == "btc" && !Config.btcAddrList.Contains(address))
                 {
                     Config.btcAddrList.Add(address);
-                    await DbHelper.SaveAddressAsync(coinType, address);
+                    DbHelper.SaveAddress(coinType, address);
                 }
 
                 if (coinType == "eth" && !Config.ethAddrList.Contains(address))
                 {
                     Config.ethAddrList.Add(address);
-                    await DbHelper.SaveAddressAsync(coinType, address);
+                    DbHelper.SaveAddress(coinType, address);
                 }
 
-                httpLogger.Log("Add a new " + coinType + " address: " + address);
+                Logger.Info("Add a new " + coinType + " address: " + address);
                 buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true" }));
 
             }
@@ -220,7 +221,7 @@ namespace CES
                     buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", msg = msg }));
                 else
                     buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid = msg }));
-                httpLogger.Log(json["type"].ToString() + " transaction : " + msg);
+                Logger.Info(json["type"].ToString() + " transaction : " + msg);
             }
 
             if (method == "exchange")
@@ -239,19 +240,19 @@ namespace CES
 
                     if (!string.IsNullOrEmpty(sendTxid))
                     {
-                        await DbHelper.SaveExchangeInfoAsync(recTxid, sendTxid);
+                        DbHelper.SaveExchangeInfo(recTxid, sendTxid);
                         buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", txid = sendTxid }));
-                        httpLogger.Log(coinType + " exchange, txid: " + sendTxid);
+                        Logger.Info(coinType + " exchange, txid: " + sendTxid);
                     }
                     else
                     {
                         buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", msg = result }));
-                        httpLogger.Log(coinType + " exchange, result: " + result);
+                        Logger.Info(coinType + " exchange, result: " + result);
                     }
                 }
                 else
                 {
-                    httpLogger.Log(coinType + " already exchange, txid: " + sendTxid);
+                    Logger.Info(coinType + " already exchange, txid: " + sendTxid);
                     buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "true", sendTxid }));
                 }
 
