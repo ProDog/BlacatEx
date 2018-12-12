@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <RootNamespace>NFT_API</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="NFT-API.deps.json" />
+    <None Remove="NFT-API.dll" />
+    <None Remove="NFT-API.pdb" />
+    <None Remove="NFT-API.runtimeconfig.dev.json" />
+    <None Remove="NFT-API.runtimeconfig.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="Neo.sdk.thin" Version="1.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
