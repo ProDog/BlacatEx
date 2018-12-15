@@ -18,7 +18,7 @@ namespace CES
         /// <summary>
         /// ETH转账监听服务
         /// </summary>
-        public static void EthWatcherStart()
+        public static void Start()
         {
             DbHelper.GetRspList(ref ethTransRspList, Config.confirmCountDic["eth"], "eth");
             Logger.Info("Eth Watcher Start! Index: " + Config.ethIndex);

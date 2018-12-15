@@ -14,7 +14,7 @@ namespace CES
         /// <summary>
         /// 比特币转账监听服务
         /// </summary>
-        public static void BtcWatcherStart()
+        public static void Start()
         {
             DbHelper.GetRspList(ref btcTransRspList, Config.confirmCountDic["btc"], "btc");
             Logger.Info("Btc Watcher Start! Index: " + Config.btcIndex);

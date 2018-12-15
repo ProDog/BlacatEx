@@ -15,14 +15,14 @@ namespace CES
     public class NeoWatcher
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        public static void NeoWatcherStart()
+        public static void Start()
         {
             Logger.Info("Neo Watcher Start! Index: " + Config.neoIndex);
             while (true)
             {
                 try
                 {
-                    var count = Config.GetNeoHeightAsync().Result;
+                    var count = Config.GetNeoHeight();
                     if (count >= Config.neoIndex)
                     {
                         for (int i = Config.neoIndex; i < count; i++)

@@ -70,12 +70,12 @@ namespace CES
             return DbHelper.GetIndex(name);
         }
 
-        public static async System.Threading.Tasks.Task<int> GetNeoHeightAsync()
+        public static int  GetNeoHeight()
         {
             var url = apiDic["neo"] + "?method=getblockcount&id=1&params=[]";
-            var result = await MyHelper.HttpGet(url);
+            var result = MyHelper.HttpGet(url).Result;
             var res = JObject.Parse(result)["result"];
-            int height = (int)res;
+            int height = int.Parse(res[0]["blockcount"].ToString());
             return height;
         }
         

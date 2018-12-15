@@ -21,7 +21,7 @@ namespace CES
     {
         private static HttpListener httpPostRequest = new HttpListener();
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        public static void HttpServerStart()
+        public static void Start()
         {
             httpPostRequest.Prefixes.Add(Config.apiDic["http"]);
             //Task ThrednHttpPostRequest = new Task(() => httpPostRequestHandle());
@@ -143,7 +143,7 @@ namespace CES
                                 transInfo.confirmcount = 1;
                                 transInfo.value = (decimal)json["value"];
                                 transInfo.toAddress = json["address"].ToString();
-                                transInfo.height = Config.GetNeoHeightAsync().Result + 1;
+                                transInfo.height = Config.GetNeoHeight() + 1;
                                 transInfo.deployTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                                 DbHelper.SaveDeployInfo(transInfo);
                             }
