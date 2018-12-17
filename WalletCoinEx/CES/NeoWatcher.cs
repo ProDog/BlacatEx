@@ -23,29 +23,25 @@ namespace CES
                 try
                 {
                     var count = Config.GetNeoHeight();
-                    if (count >= Config.neoIndex)
+                    while (Config.neoIndex < count)
                     {
-                        for (int i = Config.neoIndex; i < count; i++)
+                        if (Config.neoIndex % 100 == 0)
                         {
-                            if (i % 100 == 0)
-                            {
-                                Logger.Info("Parse NEO Height:" + i);
-                            }
-
-                            var transRspList = ParseNeoBlock(i, Config.myAccountDic["cneo"]);
-                            MyHelper.SendTransInfo(transRspList);
-                            DbHelper.SaveIndex(i, "neo");
-                            Config.neoIndex = i + 1;
+                            Logger.Info("Parse NEO Height:" + Config.neoIndex);
                         }
+                        var transRspList = ParseNeoBlock(Config.neoIndex, Config.myAccountDic["cneo"]);
+                        MyHelper.SendTransInfo(transRspList);
+                        DbHelper.SaveIndex(Config.neoIndex, "neo");
+                        Config.neoIndex++;
                     }
 
-                    if (count == Config.neoIndex)
+                    if (count + 1 == Config.neoIndex)
                         Thread.Sleep(1000);
 
                 }
                 catch (Exception e)
                 {
-                    Logger.Error(e.Message);
+                    Logger.Error("neo " + e.Message);
                     Thread.Sleep(5000);
                     continue;
                 }

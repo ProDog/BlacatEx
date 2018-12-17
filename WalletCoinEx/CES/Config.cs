@@ -24,15 +24,15 @@ namespace CES
         public static List<string> btcAddrList = new List<string>(); //BTC 监听地址列表
         public static List<string> ethAddrList = new List<string>();  //ETH 监听地址列表
 
-        public static Network nettype = Network.Main;
+        public static Network nettype = Network.TestNet;
 
         public static void Init(string configPath)
         {
             ConfigJObject = JObject.Parse(File.ReadAllText(configPath));
-            neoIndex = getIndex("neo");
-            ethIndex = getIndex("eth");
-            btcIndex = getIndex("btc");
-
+            neoIndex = getIndex("neo") + 1;
+            ethIndex = getIndex("eth") + 1;
+            btcIndex = getIndex("btc") + 1;
+            //btcIndex = 1447085 + 1;
             confirmCountDic = getIntDic("confirm_count");
             apiDic = getStringDic("api");
             myAccountDic = getStringDic("my_account");

@@ -31,26 +31,22 @@ namespace CES
                     var aa = web3.Eth.Blocks.GetBlockNumber.SendRequestAsync().Result;
                     var height = aa.Value;
 
-                    if (height >= Config.ethIndex)
+                    while (Config.ethIndex <= height)
                     {
-                        for (int i = Config.ethIndex; i <= height; i++)
+                        if (Config.ethIndex % 100 == 0)
                         {
-                            if (Config.ethIndex % 100 == 0)
-                            {
-                                Logger.Info("Parse ETH Height:" + Config.ethIndex);
-                            }
-
-                            ParseEthBlock(web3, i);
-                            DbHelper.SaveIndex(i, "eth");
-                            Config.ethIndex = i + 1;
+                            Logger.Info("Parse ETH Height:" + Config.ethIndex);
                         }
+                        ParseEthBlock(web3, Config.ethIndex);
+                        DbHelper.SaveIndex(Config.ethIndex, "eth");
+                        Config.ethIndex++;
                     }
-                    if (height == Config.ethIndex)
+                    if (height + 1 == Config.ethIndex)
                         Thread.Sleep(3000);
                 }
                 catch (Exception e)
                 {
-                    Logger.Error(e.Message);
+                    Logger.Error("eth " + e.Message);
                     Thread.Sleep(3000);
                     continue;
                 }

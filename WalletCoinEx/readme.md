@@ -111,7 +111,7 @@ txid 为购买时 nep5 BTC ETH 付款的 txid，用来检测是否已经发放�
 ```
 
 ### 查询账户余额
-钱包中将 BTC ETH 等兑换成 Nep5 资产，请求 url：http://xx.xx.xx.xx:xxxx/getbalance/{coinType}:
+查询发币账户的余额、余额不足时暂停接收购买请求，请求 url：http://xx.xx.xx.xx:xxxx/getbalance/{coinType}:
 返回余额：
 ```
 {

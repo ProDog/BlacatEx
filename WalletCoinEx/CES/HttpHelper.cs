@@ -24,8 +24,8 @@ namespace CES
         public static void Start()
         {
             httpPostRequest.Prefixes.Add(Config.apiDic["http"]);
-            //Task ThrednHttpPostRequest = new Task(() => httpPostRequestHandle());
-            //ThrednHttpPostRequest.Start();
+            Task ThrednHttpPostRequest = new Task(() => httpPostRequestHandle());
+            ThrednHttpPostRequest.Start();
             Logger.Info("Http Server Start!");
         }
 
@@ -66,7 +66,7 @@ namespace CES
                 }
                 catch (Exception e)
                 {
-                    Logger.Error(e.Message);
+                    Logger.Error(e);
                     buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { state = "false", msg = e.Message }));
                     continue;
                 }

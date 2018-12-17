@@ -28,27 +28,24 @@ namespace CES
                 try
                 {
                     var count = rpcC.GetBlockCountAsync().Result;
-                    if (count >= Config.btcIndex)
-                    {
-                        for (int i = Config.btcIndex; i <= count; i++)
-                        {
-                            if (i % 10 == 0)
-                            {
-                                Logger.Info("Parse BTC Height:" + i);
-                            }
 
-                            ParseBtcBlock(rpcC, i);
-                            DbHelper.SaveIndex(i, "btc");
-                            Config.btcIndex = i + 1;
+                    while (Config.btcIndex <= count)
+                    {
+                        if (Config.btcIndex % 10 == 0)
+                        {
+                            Logger.Info("Parse BTC Height:" + Config.btcIndex);
                         }
+                        ParseBtcBlock(rpcC, Config.btcIndex);
+                        DbHelper.SaveIndex(Config.btcIndex, "btc");
+                        Config.btcIndex++;
                     }
 
-                    if (count == Config.btcIndex)
+                    if (count + 1 == Config.btcIndex)
                         Thread.Sleep(10000);
                 }
                 catch (Exception e)
                 {
-                    Logger.Error(e.Message);
+                    Logger.Error("btc " + e.Message);
                     Thread.Sleep(10000);
                     continue;
                 }
@@ -65,7 +62,7 @@ namespace CES
         /// <returns></returns>
         private static void ParseBtcBlock(NBitcoin.RPC.RPCClient rpcC, int index)
         {
-            var block = rpcC.GetBlock(index);
+            var block = rpcC.GetBlockAsync(index).Result;
 
             if (block.Transactions.Count > 0 && Config.btcAddrList.Count > 0)
             {
