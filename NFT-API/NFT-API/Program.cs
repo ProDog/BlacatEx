@@ -23,7 +23,6 @@ namespace NFT_API
         static void Main(string[] args)
         {
             Config.init("config.json");
-            var logname = $"{DateTime.Now:yyyy-MM-dd}.log";
             var logRepository = LogManager.GetRepository(Assembly.GetExecutingAssembly());
             XmlConfigurator.Configure(logRepository, new FileInfo(@"log4net.config"));
             GlobalContext.Properties["pname"] = Assembly.GetEntryAssembly().GetName().Name;
