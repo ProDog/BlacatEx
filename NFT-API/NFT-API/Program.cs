@@ -154,6 +154,7 @@ namespace NFT_API
                                 stack = ((JObject.Parse(msg)["result"] as JArray)[0]["stack"] as JArray)[0] as JObject;
                                 resContent = CountParse(stack);
                                 break;
+
                             case "getconfig":
                                 array.Add("(int)" + "1");
                                 msg = await Controller.CallInvokescriptAsync(array, method);
@@ -236,7 +237,7 @@ namespace NFT_API
             if (value[3]["type"].ToString() == "Integer")
                 nftInfo.ContributionPoint = Convert.ToInt32(value[3]["value"]);
             if (!string.IsNullOrEmpty(value[4]["value"].ToString()))
-                nftInfo.TokenId = value[4]["value"].ToString();
+                nftInfo.InviterTokenId = value[4]["value"].ToString();
             return nftInfo;
         }
 
