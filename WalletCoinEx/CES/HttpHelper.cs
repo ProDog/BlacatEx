@@ -161,8 +161,7 @@ namespace CES
                         {
                             buffer = Encoding.UTF8.GetBytes(
                                 JsonConvert.SerializeObject(new { state = "false", msg = deployResult }));
-                            Logger.Warn(coinType + " deployed, result: " +
-                                           deployResult);
+                            Logger.Warn(coinType + " deployed, result: " + deployResult);
                         }
                     }
                 }

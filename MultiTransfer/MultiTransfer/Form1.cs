@@ -31,7 +31,7 @@ namespace MultiTransfer
             {
                 SendTransaction(tbxFromWif.Text, rtbxToAddress.Text);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show("出错了：" + ex.ToString());
             }
@@ -54,8 +54,8 @@ namespace MultiTransfer
                 MessageBox.Show("暂时只支持 bcp 和 bct！");
                 return;
             }
-                GetBalance(decimals);
-           
+            GetBalance(decimals);
+
         }
 
         private void GetBalance(decimal decimals)
@@ -109,34 +109,38 @@ namespace MultiTransfer
                 MessageBox.Show("暂时只支持 bcp 和 bct！");
                 return;
             }
-                
-            decimal amount = decimal.Parse(tbxValue.Text) * decimals;
-            ScriptBuilder sb = new ScriptBuilder();
+
+            decimal amount = Math.Round(decimal.Parse(tbxValue.Text) * decimals, 0);
+
             foreach (var toAddr in toAddrArray)
             {
+                if (toAddr.Length < 1)
+                    continue;
+                ScriptBuilder sb = new ScriptBuilder();
+                byte[] data = null;
                 JArray array = new JArray();
                 array.Add("(addr)" + address); //from
                 array.Add("(addr)" + toAddr); //to
                 array.Add("(int)" + amount); //value
                 sb.EmitParamJson(array);
-                sb.Emit(ThinNeo.VM.OpCode.DROP);
                 sb.EmitPushString("transfer");
                 sb.EmitAppCall(new Hash160(tbxTokenHash.Text));//合约脚本hash
-            }
-            byte[] data = sb.ToArray();
-            var result = SendrawTransaction(wif, data);
-            if (result != null && result.Contains("result"))
-            {
-                var res = JObject.Parse(result)["result"] as JArray;
-                var sendTxid = (string)res[0]["txid"];
-                if (!string.IsNullOrEmpty(sendTxid))
-                    rtbxResult.Text = "交易发送成功，txid：" + sendTxid;
+
+                data = sb.ToArray();
+                var result = SendrawTransaction(wif, data);
+                if (result != null && result.Contains("result"))
+                {
+                    var res = JObject.Parse(result)["result"] as JArray;
+                    var sendTxid = (string)res[0]["txid"];
+                    if (!string.IsNullOrEmpty(sendTxid))
+                        rtbxResult.Text += $"交易发送成功，To:{toAddr}; txid:{sendTxid}\n";
+                    else
+                        rtbxResult.Text += $"交易发送失败，To:{toAddr}; 返回:{result.ToString()}\n";
+                }
                 else
-                    rtbxResult.Text = "交易发送失败，返回：" + result.ToString();
-            }
-            else
-            {
-                rtbxResult.Text = "交易发送失败，返回：" + result.ToString();
+                {
+                    rtbxResult.Text += $"交易发送失败，To:{toAddr}; 返回:{result.ToString()}\n";
+                }
             }
         }
 
@@ -193,7 +197,7 @@ namespace MultiTransfer
             return result;
         }
 
-        private void tbxFromWif_TextChanged(object sender, EventArgs e)
+        private void tbxFromWif_TextChanged_1(object sender, EventArgs e)
         {
             decimal decimals = 0;
             if (tbxTokenHash.Text.Contains("04e31cee0443bb916534dad2adf508458920e66d"))

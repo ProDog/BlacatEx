@@ -67,6 +67,22 @@ namespace NFT_API
         public string tokenId;
     }
 
+    public class NotifyInfo
+    {
+        public string ExchangeFrom;
+        public string ExchangeTo;
+        public string ExchangeTokenId;
+
+        public string UpgradeTokenId;
+        public string UpgradeAddress;
+        public int UpgradeLastRank;
+        public int UpgradenowRank;
+
+        public string AddPointTokenId;
+        public string AddPointAddress;
+        public int AddPointValue;
+    }
+
     //配置
     public class ConfigInfo
     {

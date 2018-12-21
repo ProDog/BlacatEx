@@ -161,6 +161,8 @@ namespace NFT_API
                                 stack = ((JObject.Parse(msg)["result"] as JArray)[0]["stack"] as JArray)[0] as JObject;
                                 resContent = ConfigParse(stack);
                                 break;
+
+                                case "get"
                         }
                         rsp = JsonConvert.SerializeObject(new RspInfo() { state = true, msg = resContent });
                     }
