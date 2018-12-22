@@ -23,29 +23,9 @@
 * NFT 证书信息，查询 NFT 证书所有信息的接口。
 
 ## 调用接口
-目前 SendRawTransaction 接口都是管理员权限接口。
-### deploy 
-首批发行：POST，接口和参数如下：
 
-http://xxx.xxx:xxxx/deploy
-```
-{
-    "address":"AQzB8XJAwRQqBGFe3fsM5Leq6U8eAQ2kZi"
-}
-```
-
-返回 txid：
-
-```
-{
-    "state":true,
-    "msg":{
-    "txid":"0x604c5a37520a3a114015026735faddae6d16c4d972d75309519a3bcb0545847f"
-    }
-}
-```
 ### buy 
-购买发行：POST，传入付钱的 txid，接口和参数如下：
+购买发行：POST，传入付钱的 txid 和邀请者 address，接口和参数如下：
 
 http://xxx.xxx:xxxx/buy
 ```
@@ -101,7 +81,7 @@ http://xxx.xxx:xxxx/addpoint
 ```
 
 ### exchange 
-转移交易：POST，接口和参数如下：
+转手交易：POST，接口和参数如下：
 
 http://xxx.xxx:xxxx/exchange
 ```
@@ -120,7 +100,7 @@ http://xxx.xxx:xxxx/exchange
 }
 ```
 ### getnftinfo 
-查询 NFT 证书信息：POST，接口和参数如下：
+根据 address 查询 NFT 证书信息：POST，接口和参数如下：
 
 http://xxx.xxx:xxxx/getnftinfo
 ```
@@ -144,8 +124,33 @@ http://xxx.xxx:xxxx/getnftinfo
     }
 }
 ```
+### getnftinfobyid 
+根据 tokenId 查询 NFT 证书信息：POST，接口和参数如下：
+
+http://xxx.xxx:xxxx/getnftinfo
+```
+{
+    "tokenId":"0x9fad4cfa9b87dcf442d3768c2d229d99db436a6ea2b86927c49fa426f3676266"
+}
+```
+返回 json 格式的证书信息：
+
+```
+{
+    "state":true,
+    "msg":{
+        "NFTInfo":{
+            "TokenId":"604c5a37520a3a114015026735faddae6d16c4d972d75309519a3bcb0545847f", //tokenid 证书ID
+            "Owner":"AMWc2Q9EcrytKN7Qi7FpB56zbhtXkBmRAp", //所有者 address
+            "Rank":1, //等级
+            "ContributionPoint":500, //贡献值
+            "InviterTokenId":"c21ff5eaf70375350ead6cd31140c63a159b395eae59f0ff1c368e8cc352b5f6" //邀请者证书ID
+        }
+    }
+}
+```
 ### gettxinfo 
-查询交易信息：POST，接口和参数如下：
+查询证书交易信息，buy、exchange 时会产生交易信息：POST，接口和参数如下：
 
 http://xxx.xxx:xxxx/gettxinfo
 ```
@@ -168,7 +173,7 @@ http://xxx.xxx:xxxx/gettxinfo
 }
 ```
 ### getcount 
-查询已发行证书数量：GET，接口：http://xxx.xxx:xxxx/getcount
+查询已发行证书数量：POST，接口：http://xxx.xxx:xxxx/getcount
 返回 json 格式的数量信息：
 
 ```
@@ -182,6 +187,42 @@ http://xxx.xxx:xxxx/gettxinfo
             "PlatinumCount":5, //铂金数量
             "DiamondCount":5 //钻石数量
         }
+    }
+}
+```
+### getnotify
+根据 txid 获取一次交易产生的 notify。
+
+产生 notify 的接口：
+
+* buy 会产生 addpoint 和 exchange 的 notify；
+* upgrade 会产生 addpoint 和 upgrade 的 notify；
+* exchange 会产生 exchange 的 notify；
+* addpoint 会产生 addpoint 的 notify。
+
+POST，接口：http://xxx.xxx:xxxx/getnotify
+```
+{
+    "txid":"0x6c5e42da352bec914448fd07981c833f287049e985bad19114a226ec227bf526"
+}
+```
+返回 json 格式的 notify 信息：
+比如下面是一笔 buy 交易产生的 notify，有 addpoint 和 exchange 两种。
+```
+{
+    "state": true,
+    "msg": {
+        "NotifyType": "buy", //交易类型，有 buy、upgrade、exchange、addpoint 四种
+        "ExchangeFrom": null, //exchange 的 form
+        "ExchangeTo": "AdsNmzKPPG7HfmQpacZ4ixbv9XJHJs2ACz", //exchange 的 to
+        "ExchangeTokenId": "1f5861ebb7ef64c3d5b358bb8fc8392b66e7126c82f4ab983696ab393b03efbb", //exchange 的 tokenId
+        "UpgradeTokenId": null, //upgrade 的 tokenId
+        "UpgradeAddress": null, //upgrade 的 证书所有者 address
+        "UpgradeLastRank": 0, //upgrade 的 升级前等级
+        "UpgradenowRank": 0, //upgrade 的 升级后等级
+        "AddPointTokenId": "9fad4cfa9b87dcf442d3768c2d229d99db436a6ea2b86927c49fa426f3676266", //addpoint 的 tokenId
+        "AddPointAddress": "AbN2K2trYzgx8WMg2H7U7JHH6RQVzz2fnx", //addpoint 的 证书所有者 address
+        "AddPointValue": 100 //addpoint 的 加分值
     }
 }
 ```

@@ -85,15 +85,17 @@ namespace NFT_API
             array.Add("(int)1669990000");
             array.Add("(int)16669990000");
 
-            array.Add("(int)1");
             array.Add("(int)10");
             array.Add("(int)100");
             array.Add("(int)1000");
+            array.Add("(int)10000");
             array.Add("(int)0");
 
-            array.Add("(int)100");
             array.Add("(int)1000");
             array.Add("(int)10000");
+            array.Add("(int)100000");
+
+            array.Add("(addr)AM5ho5nEodQiai1mCTFDV3YUNYApCorMCX");
            
             var aa = SendrawTransactionAsync(array, "setconfig").Result;
             Console.WriteLine(aa);
@@ -121,6 +123,11 @@ namespace NFT_API
             var result = await Helper.HttpGet($"{Config.nelApi}?method=invokescript&id=1&params=[\"{strscript}\"]");
             return result;
         }
-       
+
+        public static async Task<string> GetNotifyByTxidAsync(string txid)
+        {
+            var result = await Helper.HttpGet($"{Config.nelApi}?method=getnotify&id=1&params=[\"{txid}\"]");
+            return result;
+        }
     }
 }

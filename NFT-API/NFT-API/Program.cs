@@ -23,6 +23,7 @@ namespace NFT_API
         static void Main(string[] args)
         {
             Config.init("config.json");
+
             var logRepository = LogManager.GetRepository(Assembly.GetExecutingAssembly());
             XmlConfigurator.Configure(logRepository, new FileInfo(@"log4net.config"));
             GlobalContext.Properties["pname"] = Assembly.GetEntryAssembly().GetName().Name;
@@ -113,6 +114,7 @@ namespace NFT_API
                                 array.Add("(addr)" + json["from"].ToString());
                                 array.Add("(addr)" + json["to"].ToString());
                                 break;
+                            
                         }
                         msg = await Controller.SendrawTransactionAsync(array, method);
                         var state = (bool)(JObject.Parse(msg)["result"] as JArray)[0]["sendrawtransactionresult"];
@@ -140,6 +142,12 @@ namespace NFT_API
                                 stack = ((JObject.Parse(msg)["result"] as JArray)[0]["stack"] as JArray)[0] as JObject;
                                 resContent = CountNftInfoParse(stack);
                                 break;
+                            case "getnftinfobyid":
+                                array.Add("(bytes)" + json["tokenId"].ToString());
+                                msg = await Controller.CallInvokescriptAsync(array, method);
+                                stack = ((JObject.Parse(msg)["result"] as JArray)[0]["stack"] as JArray)[0] as JObject;
+                                resContent = CountNftInfoParse(stack);
+                                break;
 
                             case "gettxinfo":
                                 array.Add("(hex256)" + json["txid"].ToString());
@@ -162,7 +170,20 @@ namespace NFT_API
                                 resContent = ConfigParse(stack);
                                 break;
 
-                                case "get"
+                            case "getstate":
+                                array.Add("(int)" + "1");
+                                msg = await Controller.CallInvokescriptAsync(array, method);
+                                stack = ((JObject.Parse(msg)["result"] as JArray)[0]["stack"] as JArray)[0] as JObject;
+                                if (string.IsNullOrEmpty(stack["value"].ToString()))
+                                    resContent = Enum.GetName(typeof(ContractState), ContractState.Active);
+                                break;
+
+                            case "getnotify":
+                                var txid = json["txid"].ToString();
+                                msg = await Controller.GetNotifyByTxidAsync(txid);
+                                stack = ((JObject.Parse(msg)["result"] as JArray)[0]["executions"] as JArray)[0] as JObject;
+                                resContent = NotifyInfoParse(stack);
+                                break;
                         }
                         rsp = JsonConvert.SerializeObject(new RspInfo() { state = true, msg = resContent });
                     }
@@ -174,7 +195,8 @@ namespace NFT_API
 
             return buffer;
         }
-        
+
+
         private static object ConfigParse(JObject stack)
         {
             var config = new ConfigInfo();
@@ -205,6 +227,8 @@ namespace NFT_API
                 config.PlatinumUpgradePoint = new BigInteger(Helper.HexString2Bytes((string)value[10]["value"]));
             if (value[11]["type"].ToString() == "ByteArray")
                 config.DiamondUpgradePoint = new BigInteger(Helper.HexString2Bytes((string)value[11]["value"]));
+            if (value[11]["type"].ToString() == "ByteArray")
+                config.GatheringAddress = Helper_NEO.GetAddress_FromScriptHash(ThinNeo.Helper.HexString2Bytes(value[12]["value"].ToString()));
             return config;
         }
 
@@ -261,6 +285,71 @@ namespace NFT_API
                 count.DiamondCount = Convert.ToInt32(value[4]["value"]);
             return count;
         }
+
+        private static NotifyInfo NotifyInfoParse(JObject stack)
+        {
+            var notifyInfo = new NotifyInfo();
+            var notifications = stack["notifications"] as JArray;
+            if(notifications.Count == 1) // addpoint  exchange
+            {
+                var jValue = notifications[0]["state"]["value"] as JArray;
+                var method = Encoding.UTF8.GetString(ThinNeo.Helper.HexString2Bytes(jValue[0]["value"].ToString()));
+                if (method == "addpoint")
+                {
+                    notifyInfo.AddPointTokenId = jValue[1]["value"].ToString();
+                    notifyInfo.AddPointAddress = Helper_NEO.GetAddress_FromScriptHash(ThinNeo.Helper.HexString2Bytes(jValue[2]["value"].ToString()));
+                    notifyInfo.AddPointValue = new BigInteger(ThinNeo.Helper.HexString2Bytes(jValue[3]["value"].ToString()));
+                }
+
+                if(method== "exchange")
+                {
+                    if (!string.IsNullOrEmpty(jValue[1]["value"].ToString()))
+                        notifyInfo.ExchangeFrom = Helper_NEO.GetAddress_FromScriptHash(ThinNeo.Helper.HexString2Bytes(jValue[1]["value"].ToString()));
+                    if (!string.IsNullOrEmpty(jValue[2]["value"].ToString()))
+                        notifyInfo.ExchangeTo = Helper_NEO.GetAddress_FromScriptHash(ThinNeo.Helper.HexString2Bytes(jValue[2]["value"].ToString()));
+                    if (!string.IsNullOrEmpty(jValue[3]["value"].ToString()))
+                        notifyInfo.ExchangeTokenId = jValue[3]["value"].ToString();
+                }
+                notifyInfo.NotifyType = method;
+            }
+
+            if (notifications.Count == 2) // buy upgrade
+            {
+                var jValue1 = notifications[0]["state"]["value"] as JArray;
+                var method1 = Encoding.UTF8.GetString(ThinNeo.Helper.HexString2Bytes(jValue1[0]["value"].ToString()));
+                if(method1 == "addpoint")
+                {
+                    notifyInfo.AddPointTokenId = jValue1[1]["value"].ToString();
+                    notifyInfo.AddPointAddress = Helper_NEO.GetAddress_FromScriptHash(ThinNeo.Helper.HexString2Bytes(jValue1[2]["value"].ToString()));
+                    notifyInfo.AddPointValue = new BigInteger(ThinNeo.Helper.HexString2Bytes(jValue1[3]["value"].ToString()));
+                }
+
+                var jValue2 = notifications[1]["state"]["value"] as JArray;
+                var method2 = Encoding.UTF8.GetString(ThinNeo.Helper.HexString2Bytes(jValue2[0]["value"].ToString()));
+                if (method2 == "exchange")
+                {
+                    if (!string.IsNullOrEmpty(jValue2[1]["value"].ToString()))
+                        notifyInfo.ExchangeFrom = Helper_NEO.GetAddress_FromScriptHash(ThinNeo.Helper.HexString2Bytes(jValue2[1]["value"].ToString()));
+                    if (!string.IsNullOrEmpty(jValue2[2]["value"].ToString()))
+                        notifyInfo.ExchangeTo = Helper_NEO.GetAddress_FromScriptHash(ThinNeo.Helper.HexString2Bytes(jValue2[2]["value"].ToString()));
+                    if (!string.IsNullOrEmpty(jValue2[3]["value"].ToString()))
+                        notifyInfo.ExchangeTokenId = jValue2[3]["value"].ToString();
+                    notifyInfo.NotifyType = "buy";
+                }
+
+                if (method2 == "upgrade")
+                {
+                    notifyInfo.UpgradeTokenId = jValue2[1]["value"].ToString();
+                    notifyInfo.UpgradeAddress = Helper_NEO.GetAddress_FromScriptHash(ThinNeo.Helper.HexString2Bytes(jValue2[2]["value"].ToString()));
+                    notifyInfo.UpgradeLastRank = BigInteger.Parse(jValue2[3]["value"].ToString());
+                    notifyInfo.UpgradenowRank = BigInteger.Parse(jValue2[4]["value"].ToString());
+                    notifyInfo.NotifyType = "upgrade";
+                }
+            }
+
+            return notifyInfo;
+        }
+
 
     }
 

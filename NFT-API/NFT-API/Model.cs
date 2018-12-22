@@ -69,18 +69,19 @@ namespace NFT_API
 
     public class NotifyInfo
     {
+        public string NotifyType;
         public string ExchangeFrom;
         public string ExchangeTo;
         public string ExchangeTokenId;
 
         public string UpgradeTokenId;
         public string UpgradeAddress;
-        public int UpgradeLastRank;
-        public int UpgradenowRank;
+        public BigInteger UpgradeLastRank;
+        public BigInteger UpgradenowRank;
 
         public string AddPointTokenId;
         public string AddPointAddress;
-        public int AddPointValue;
+        public BigInteger AddPointValue;
     }
 
     //配置
@@ -101,6 +102,16 @@ namespace NFT_API
         public BigInteger GoldUpgradePoint; //升级黄金所需贡献值
         public BigInteger PlatinumUpgradePoint; //升级铂金所需贡献值
         public BigInteger DiamondUpgradePoint; //升级钻石所需贡献值
+
+        public string GatheringAddress; //收钱地址
+    }
+
+    public enum ContractState
+    {
+        None,
+        Active,
+        Inactive,
+        AllStop
     }
 
 }
