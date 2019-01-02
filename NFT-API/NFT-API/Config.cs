@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
+﻿using System.IO;
 using Newtonsoft.Json.Linq;
 
 namespace NFT_API
@@ -15,11 +11,14 @@ namespace NFT_API
         public static string nftHash;
         public static string adminAif;
         public static decimal gasFee;
-        public static string httpUrl;
+        public static string httpAddress;
+
+        public static string bctHash;
+        public static string bcpHash;
 
         private static JObject configJson = null;
 
-        public static void init(string configPath)
+        public static void Init(string configPath)
         {
             configJson = JObject.Parse(File.ReadAllText(configPath));
             nelApi = getValue("nelApi");
@@ -28,21 +27,16 @@ namespace NFT_API
             nftHash = getValue("nftHash");
             adminAif = getValue("adminWif");
             gasFee = decimal.Parse(getValue("gasFee"));
-            httpUrl = getValue("httpUrl");
+            httpAddress = getValue("httpAddress");
+
+            bctHash = getValue("bctHash");
+            bcpHash = getValue("bcpHash");
         }
 
         private static string getValue(string name)
         {
             return configJson.GetValue(name).ToString();
         }
-        
-        public static int GetNeoHeight()
-        {
-            var url = nelApi + "?method=getblockcount&id=1&params=[]";
-            var result = Helper.HttpGet(url).Result;
-            var res = JObject.Parse(result)["result"] as JArray;
-            int height = (int)res[0]["blockcount"];
-            return height;
-        }
+
     }
 }

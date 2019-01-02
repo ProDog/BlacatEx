@@ -15,7 +15,17 @@ namespace NFT_API
     {
         public static Dictionary<string, List<Utxo>> GetBalanceByAddress(string api, string _addr, ref Dictionary<string,string> usedUtxoDic)
         {
-            JObject response = JObject.Parse(Helper.HttpGet(api + "?method=getutxo&id=1&params=['" + _addr + "']").Result);
+            //string input = @"{
+	           // 'jsonrpc': '2.0',
+            //    'method': 'invokescript',
+	           // 'params': ['#'],
+	           // 'id': '1'
+            //}";
+            //input = input.Replace("#", _addr);
+
+            //string result = PostAsync(Config.nelApi, input, Encoding.UTF8, 1).Result;
+
+            JObject response = JObject.Parse(Helper.HttpGetAsync(api + "?method=getutxo&id=1&params=['" + _addr + "']").Result);
             JArray resJA = (JArray)response["result"];
             Dictionary<string, List<Utxo>> _dir = new Dictionary<string, List<Utxo>>();
             List<string> usedList = new List<string>(usedUtxoDic.Keys);
@@ -153,14 +163,14 @@ namespace NFT_API
 
                 req.Method = "POST";
                 //req.Accept = "text/xml,text/javascript";
-                req.ContinueTimeout = 60000;
+                req.ContinueTimeout = 10;
 
                 byte[] postData = encoding.GetBytes(data);
-                reqStream = await req.GetRequestStreamAsync();
+                reqStream = req.GetRequestStreamAsync().Result;
                 reqStream.Write(postData, 0, postData.Length);
                 //reqStream.Dispose();
 
-                rsp = (HttpWebResponse)await req.GetResponseAsync();
+                rsp = (HttpWebResponse) await req.GetResponseAsync();
                 string result = GetResponseAsString(rsp, encoding);
 
                 return result;
@@ -218,7 +228,7 @@ namespace NFT_API
             }
         }
 
-        public static async Task<string> HttpGet(string url)
+        public static async Task<string> HttpGetAsync(string url)
         {
             WebClient wc = new WebClient();
             return await wc.DownloadStringTaskAsync(url);

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Numerics;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using ThinNeo;
@@ -97,7 +96,7 @@ namespace NFT_API
 
             array.Add("(addr)AM5ho5nEodQiai1mCTFDV3YUNYApCorMCX");
            
-            var aa = SendrawTransactionAsync(array, "setconfig").Result;
+            var aa = SendrawTransactionAsync(array, "setconfig");
             Console.WriteLine(aa);
         }
 
@@ -107,27 +106,51 @@ namespace NFT_API
             byte[] script;
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitParamJson(array);
-            byte[] randomBytes = new byte[32];
-            using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(randomBytes);
-            }
-            BigInteger randomNum = new BigInteger(randomBytes);
-            sb.EmitPushNumber(randomNum);
-            sb.Emit(ThinNeo.VM.OpCode.DROP);
             sb.EmitPushString(method);
             sb.EmitAppCall(new Hash160(Config.nftHash));//合约脚本hash
             data = sb.ToArray();
             script = sb.ToArray();
             var strscript = ThinNeo.Helper.Bytes2HexString(script);
-            var result = await Helper.HttpGet($"{Config.nelApi}?method=invokescript&id=1&params=[\"{strscript}\"]");
+            var result = await Helper.HttpGetAsync($"{Config.myApi}?method=invokescript&id=1&params=[\"{strscript}\"]");
             return result;
         }
 
         public static async Task<string> GetNotifyByTxidAsync(string txid)
         {
-            var result = await Helper.HttpGet($"{Config.nelApi}?method=getnotify&id=1&params=[\"{txid}\"]");
+            var result = await Helper.HttpGetAsync($"{Config.myApi}?method=getapplicationlog&id=1&params=[\"{txid}\"]");
             return result;
+        }
+
+        public static BigInteger GetHeight()
+        {
+            BigInteger height = 0;
+            var url = Config.myApi + "?method=getblockcount&id=1&params=[]";
+            var result = Helper.HttpGetAsync(url).Result;
+            if (result.Contains("result"))
+            {
+                var res = JObject.Parse(result)["result"];
+                height = int.Parse(res.ToString());
+            }
+
+            return height;
+        }
+
+        public static BlockDataHeight GetBlockDataHeight()
+        {
+            var blockDataHeight = new BlockDataHeight();
+            var url = Config.nelApi + "?method=getdatablockheight&id=1&params=[]";
+            var result = Helper.HttpGetAsync(url).Result;
+            if (result.Contains("result"))
+            {
+                var res = JObject.Parse(result)["result"] as JArray;
+                if (res.Count > 0)
+                {
+                    blockDataHeight.NotifyDataHeight = (int)res[0]["notifyDataHeight"];
+                    blockDataHeight.Nep5DataHeight = (int)res[0]["NEP5"];
+                }
+            }
+            
+            return blockDataHeight;
         }
     }
 }

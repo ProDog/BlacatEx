@@ -69,6 +69,8 @@ namespace NFT_API
 
     public class NotifyInfo
     {
+        public BigInteger BlockHeight;
+
         public string NotifyType;
         public string ExchangeFrom;
         public string ExchangeTo;
@@ -82,6 +84,12 @@ namespace NFT_API
         public string AddPointTokenId;
         public string AddPointAddress;
         public BigInteger AddPointValue;
+    }
+
+    public class BlockDataHeight
+    {
+        public BigInteger NotifyDataHeight;
+        public BigInteger Nep5DataHeight;
     }
 
     //配置
