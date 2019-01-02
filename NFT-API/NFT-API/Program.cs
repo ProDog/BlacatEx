@@ -91,12 +91,12 @@ namespace NFT_API
                     json = JObject.Parse(info);
                 if (urlPara.Length > 1)
                 {
-                    Logger.Info($"Have a request,url:{rawUrl}; post data:{json}");
                     JArray array = new JArray();
                     string method = urlPara[1].ToString();
                     if (method == "deploy" || method == "addpoint" || method == "buy" || method == "upgrade" ||
                         method == "exchange")
                     {
+                        Logger.Info($"Have a request,url:{rawUrl}; post data:{json}");
                         switch (method)
                         {
                             case "deploy":
@@ -188,7 +188,7 @@ namespace NFT_API
                         rsp = JsonConvert.SerializeObject(new RspInfo() { state = true, msg = resContent });
                     }
 
-                    Logger.Info("Response: " + rsp);
+                    //Logger.Info("Response: " + rsp);
                     buffer = Encoding.UTF8.GetBytes(rsp);
                 }
             }
