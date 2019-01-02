@@ -226,3 +226,22 @@ POST，接口：http://xxx.xxx:xxxx/getnotify
     }
 }
 ```
+下面是一笔 upgrade 交易产生的 notify
+```
+{
+    "state": true,
+    "msg": {
+        "NotifyType": "upgrade",
+        "ExchangeFrom": null,
+        "ExchangeTo": null,
+        "ExchangeTokenId": null,
+        "UpgradeTokenId": "7cd39e8f1929f14c7a306727bb8943d0cacb8b60988d09ebdd8fb2132ffff44f",
+        "UpgradeAddress": "AeriJeuFS5EKHWmCgLmEiQx94C7yhPXLhc",
+        "UpgradeLastRank": 1,
+        "UpgradenowRank": 2,
+        "AddPointTokenId": "9fad4cfa9b87dcf442d3768c2d229d99db436a6ea2b86927c49fa426f3676266",
+        "AddPointAddress": "AbN2K2trYzgx8WMg2H7U7JHH6RQVzz2fnx",
+        "AddPointValue": 1000
+    }
+}
+```
