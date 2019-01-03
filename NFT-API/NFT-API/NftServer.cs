@@ -7,7 +7,6 @@ using System.Net;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using ThinNeo;
 
 namespace NFT_API
@@ -17,18 +16,21 @@ namespace NFT_API
 
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public static async Task<byte[]> ExecRequestAsync(HttpListenerContext requestContext)
+        public static byte[] ExecRequest(HttpListenerContext requestContext)
         {
             //获取客户端传递的参数
             StreamReader sr = new StreamReader(requestContext.Request.InputStream);
             var reqMethod = requestContext.Request.RawUrl.Replace("/", "");
             var data = sr.ReadToEnd();
             byte[] buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new RspInfo() { }));
+            var json = new JObject();           
+            if (!string.IsNullOrEmpty(data))
+                json = JObject.Parse(data);
 
             try
             {
                 Logger.Info($"Have a request:{reqMethod}; post data:{data}");
-                buffer = await ExecRequestAsync(reqMethod, data);
+                buffer = GetResponse(reqMethod, json);
             }
 
             catch (Exception e)
@@ -41,36 +43,89 @@ namespace NFT_API
             return buffer;
         }
 
-        private static async Task<byte[]> ExecRequestAsync(string reqMethod, string data)
+        private static byte[] GetResponse(string reqMethod, JObject json)
         {
             RspInfo rspInfo = new RspInfo();
 
             if (reqMethod == "deploy" || reqMethod == "addpoint" || reqMethod == "buy" || reqMethod == "upgrade" || reqMethod == "exchange")
-                rspInfo = await GetSendrawRspAsync(reqMethod, data);
+                rspInfo = GetSendrawRsp(reqMethod, json);
 
-            else if (reqMethod == "getreward")
-                rspInfo = await SendReward(data);
+            else if (reqMethod == "getmoney")
+                rspInfo = SendMoney(json);
             else
-                rspInfo = await GetInvokeRspAsync(reqMethod, data);
+                rspInfo = GetInvokeRsp(reqMethod, json);
 
             return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(rspInfo));
-            
+
         }
 
-        private static Task<RspInfo> SendReward(string data)
+        private static RspInfo SendMoney(JObject json)
         {
-            throw new NotImplementedException();
+            RspInfo rspInfo = new RspInfo() { state = false, msg = new Error() { error = "Input data error!" } };
+            if (string.IsNullOrEmpty(json["coinType"].ToString()) || string.IsNullOrEmpty(json["key"].ToString()) || string.IsNullOrEmpty(json["address"].ToString()) || string.IsNullOrEmpty(json["value"].ToString()))
+                return rspInfo;
+            var nep5Hash = "";
+            decimal value = 0;
+            string txid = DbHelper.GetSendMoneyTxid(json);
+            if (string.IsNullOrEmpty(txid))
+            {
+                if (json["coinType"].ToString() == "bct")
+                {
+                    nep5Hash = Config.bctHash;
+                    value = Math.Round((decimal)json["value"] * (decimal)10000.0000, 0);
+                }
+                else if (json["coinType"].ToString() == "bcp")
+                {
+                    nep5Hash = Config.bcpHash;
+                    value = Math.Round((decimal)json["value"] * (decimal)100000000.00000000, 0);
+                }
+                else
+                    return rspInfo;
+
+                var result = NeoController.Nep5TransferAsync(nep5Hash, json["address"].ToString(), value).Result;
+                var state = (bool)(JObject.Parse(result)["result"] as JArray)[0]["sendrawtransactionresult"];
+                if (state)
+                {
+                    txid = (JObject.Parse(result)["result"] as JArray)[0]["txid"].ToString();
+                    rspInfo = new RspInfo()
+                    {
+                        state = true,
+                        msg = new TransResult()
+                        { txid = txid, key = json["key"].ToString() }
+                    };
+                    DbHelper.SaveSendMoneyResult(json["coinType"].ToString(), json["key"].ToString(), txid, json["address"].ToString(), (decimal)json["value"]);
+                }
+                else
+                {
+                    rspInfo = new RspInfo()
+                    {
+                        state = false,
+                        msg = new Error()
+                        { error = (JObject.Parse(result)["result"] as JArray)[0]["errorMessage"].ToString() }
+                    };
+                }
+
+                return rspInfo;
+            }
+            else
+            {
+                rspInfo = new RspInfo()
+                {
+                    state = true,
+                    msg = new TransResult()
+                    { txid = txid, key = json["key"].ToString() }
+                };
+            }
+
+            return rspInfo;
         }
 
-        private static async Task<RspInfo> GetSendrawRspAsync(string reqMethod, string data)
+        private static RspInfo GetSendrawRsp(string reqMethod, JObject json)
         {
-            var json = new JObject();
             JArray array = new JArray();
             string result = string.Empty;
             RspInfo rspInfo = new RspInfo();
-            if (!string.IsNullOrEmpty(data))
-                json = JObject.Parse(data);
-
+            
             switch (reqMethod)
             {
                 case "deploy":
@@ -89,7 +144,7 @@ namespace NFT_API
                     array.Add("(addr)" + json["to"].ToString());
                     break;
             }
-            result = await Controller.SendrawTransactionAsync(array, reqMethod);
+            result = NeoController.SendrawTransactionAsync(array, reqMethod).Result;
 
             var state = (bool)(JObject.Parse(result)["result"] as JArray)[0]["sendrawtransactionresult"];
             if (state)
@@ -114,14 +169,11 @@ namespace NFT_API
             return rspInfo;
         }
 
-        private static async Task<RspInfo> GetInvokeRspAsync(string reqMethod, string data)
+        private static RspInfo GetInvokeRsp(string reqMethod, JObject json)
         {
-            var json = new JObject();
             JArray array = new JArray();
             string result = string.Empty;
             RspInfo rspInfo = new RspInfo();
-            if (!string.IsNullOrEmpty(data))
-                json = JObject.Parse(data);
             JObject stack;
             object resContent = null;
 
@@ -129,41 +181,41 @@ namespace NFT_API
             {
                 case "getnftinfo":
                     array.Add("(addr)" + json["address"].ToString());
-                    result = await Controller.CallInvokescriptAsync(array, reqMethod);
+                    result = NeoController.CallInvokescriptAsync(array, reqMethod).Result;
                     stack = (JObject.Parse(result)["result"]["stack"] as JArray)[0] as JObject;
                     resContent = CountNftInfoParse(stack);
                     break;
                 case "getnftinfobyid":
                     array.Add("(bytes)" + json["tokenId"].ToString());
-                    result = await Controller.CallInvokescriptAsync(array, reqMethod);
+                    result = NeoController.CallInvokescriptAsync(array, reqMethod).Result;
                     stack = (JObject.Parse(result)["result"]["stack"] as JArray)[0] as JObject;
                     resContent = CountNftInfoParse(stack);
                     break;
 
                 case "gettxinfo":
                     array.Add("(hex256)" + json["txid"].ToString());
-                    result = await Controller.CallInvokescriptAsync(array, reqMethod);
+                    result = NeoController.CallInvokescriptAsync(array, reqMethod).Result;
                     stack = (JObject.Parse(result)["result"]["stack"] as JArray)[0] as JObject;
                     resContent = TxInfoParse(stack);
                     break;
 
                 case "getcount":
                     array.Add("(int)" + "1");
-                    result = await Controller.CallInvokescriptAsync(array, reqMethod);
+                    result = NeoController.CallInvokescriptAsync(array, reqMethod).Result;
                     stack = (JObject.Parse(result)["result"]["stack"] as JArray)[0] as JObject;
                     resContent = CountParse(stack);
                     break;
 
                 case "getconfig":
                     array.Add("(int)" + "1");
-                    result = await Controller.CallInvokescriptAsync(array, reqMethod);
+                    result = NeoController.CallInvokescriptAsync(array, reqMethod).Result;
                     stack = (JObject.Parse(result)["result"]["stack"] as JArray)[0] as JObject;
                     resContent = ConfigParse(stack);
                     break;
 
                 case "getstate":
                     array.Add("(int)" + "1");
-                    result = await Controller.CallInvokescriptAsync(array, reqMethod);
+                    result = NeoController.CallInvokescriptAsync(array, reqMethod).Result;
                     stack = (JObject.Parse(result)["result"]["stack"] as JArray)[0] as JObject;
                     if (string.IsNullOrEmpty(stack["value"].ToString()))
                         resContent = Enum.GetName(typeof(ContractState), ContractState.Active);
@@ -171,9 +223,10 @@ namespace NFT_API
 
                 case "getnotify":
                     var txid = json["txid"].ToString();
-                    result = await Controller.GetNotifyByTxidAsync(txid);
+                    var height = NeoController.GetHeight();
+                    result = NeoController.GetNotifyByTxidAsync(txid).Result;
                     stack = (JObject.Parse(result)["result"]["executions"] as JArray)[0] as JObject;
-                    resContent = NotifyInfoParse(stack);
+                    resContent = NotifyInfoParse(stack, height);
                     break;
             }
             rspInfo.state = true;
@@ -236,11 +289,11 @@ namespace NFT_API
             return count;
         }
 
-        private static NotifyInfo NotifyInfoParse(JObject stack)
+        private static NotifyInfo NotifyInfoParse(JObject stack, BigInteger height)
         {
             var notifyInfo = new NotifyInfo();
 
-            notifyInfo.BlockHeight = Controller.GetHeight();
+            notifyInfo.BlockHeight = height;
 
             var notifications = stack["notifications"] as JArray;
             if (notifications.Count == 1) // addpoint  exchange

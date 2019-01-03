@@ -23,7 +23,7 @@ namespace CES
             DbHelper.CreateDb("MonitorData.db");
 
             Config.Init("config.json");
-            Logger.Info("CES Start.");
+            
             AppStart();
             
             Console.ReadKey();
@@ -35,6 +35,8 @@ namespace CES
             var ethTask = Task.Run(() => EthWatcher.Start());
             var neoTask = Task.Run(() => NeoWatcher.Start());
             var httpTask = Task.Run(() => HttpHelper.Start());
+
+            Logger.Info("CES Start.");
 
             while (true)
             {

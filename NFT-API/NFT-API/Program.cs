@@ -23,7 +23,7 @@ namespace NFT_API
         static void Main(string[] args)
         {
             Config.Init("config.json");
-            DbHelper.CreateDb("TransRecord.db");
+            DbHelper.CreateDb();
 
             var logRepository = LogManager.GetRepository(Assembly.GetExecutingAssembly());
             XmlConfigurator.Configure(logRepository, new FileInfo(@"log4net.config"));
@@ -46,7 +46,7 @@ namespace NFT_API
                 { state = false, msg = new Error() }));
                 try
                 {
-                    var task = Task.Run(async () => buffer = await NftServer.ExecRequestAsync(requestContext));
+                    var task = Task.Run(() => buffer = NftServer.ExecRequest(requestContext));
                     task.Wait();
                 }
                 catch (Exception e)

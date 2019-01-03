@@ -8,7 +8,7 @@ using ThinNeo;
 
 namespace NFT_API
 {
-    public class Controller
+    public class NeoController
     {
         private static Dictionary<string, string> usedUtxoDic = new Dictionary<string, string>();
         private static Dictionary<string, List<Utxo>> dic_UTXO = new Dictionary<string, List<Utxo>>();
@@ -73,6 +73,72 @@ namespace NFT_API
             input = input.Replace("#", strtrandata);
             string result = await Helper.PostAsync(Config.nelApi, input, System.Text.Encoding.UTF8, 1);
             
+            return result;
+        }
+
+        public static async Task<string> Nep5TransferAsync(string nep5Hash, string toAddress, decimal value)
+        {
+            byte[] prikey = Helper_NEO.GetPrivateKeyFromWIF(Config.adminAif);
+            byte[] pubkey = Helper_NEO.GetPublicKey_FromPrivateKey(prikey);
+            var address = Helper_NEO.GetAddress_FromPublicKey(pubkey);
+
+            byte[] data = null;
+            JArray array = new JArray();
+            array.Add("(addr)" + address);
+            array.Add("(addr)" + toAddress);
+            array.Add("(int)" + value);
+            ScriptBuilder sb = new ScriptBuilder();
+            sb.EmitParamJson(array);
+            byte[] randomBytes = new byte[32];
+            using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomBytes);
+            }
+            BigInteger randomNum = new BigInteger(randomBytes);
+            sb.EmitPushNumber(randomNum);
+            sb.Emit(ThinNeo.VM.OpCode.DROP);
+            sb.EmitPushString("transfer");
+            sb.EmitAppCall(new Hash160(nep5Hash));//合约脚本hash
+            data = sb.ToArray();
+
+            if (dic_UTXO.ContainsKey(Config.gasId) == false || list_Gas.Count - 10 < usedUtxoDic.Count)
+            {
+                dic_UTXO = Helper.GetBalanceByAddress(Config.nelApi, address, ref usedUtxoDic);
+            }
+
+            if (dic_UTXO.ContainsKey(Config.gasId) == false)
+            {
+                throw new Exception("no gas.");
+            }
+
+            list_Gas = dic_UTXO[Config.gasId];
+            Transaction tran = Helper.makeTran(ref list_Gas, usedUtxoDic, new Hash256(Config.gasId), Config.gasFee);
+
+            tran.type = ThinNeo.TransactionType.InvocationTransaction;
+            var idata = new ThinNeo.InvokeTransData();
+            tran.extdata = idata;
+            idata.script = data;
+            idata.gas = 0;
+
+            var signdata = Helper_NEO.Sign(tran.GetMessage(), prikey);
+            tran.AddWitness(signdata, pubkey, address);
+            var trandata = tran.GetRawData();
+            var strtrandata = ThinNeo.Helper.Bytes2HexString(trandata);
+            var txid = tran.GetHash().ToString();
+            foreach (var item in tran.inputs)
+            {
+                usedUtxoDic[((Hash256)item.hash).ToString() + item.index] = txid;
+            }
+            string input = @"{
+	            'jsonrpc': '2.0',
+                'method': 'sendrawtransaction',
+	            'params': ['#'],
+	            'id': '1'
+            }";
+
+            input = input.Replace("#", strtrandata);
+            string result = await Helper.PostAsync(Config.nelApi, input, System.Text.Encoding.UTF8, 1);
+
             return result;
         }
 

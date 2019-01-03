@@ -36,6 +36,12 @@ namespace NFT_API
         public string txid;
     }
 
+    public class TransResult
+    {
+        public string txid;
+        public string key;
+    }
+
     public class Error
     {
         public string error;
