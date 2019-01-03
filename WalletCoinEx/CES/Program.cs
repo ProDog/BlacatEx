@@ -12,6 +12,7 @@ namespace CES
     public class Program
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         static void Main(string[] args)
         {
             var logRepository = LogManager.GetRepository(Assembly.GetExecutingAssembly());
@@ -20,7 +21,7 @@ namespace CES
             GlobalContext.Properties["pid"] = Process.GetCurrentProcess().Id;
             Console.OutputEncoding = Encoding.UTF8;
 
-            DbHelper.CreateDb("MonitorData.db");
+            DbHelper.CreateDb();
 
             Config.Init("config.json");
             
@@ -37,46 +38,6 @@ namespace CES
             var httpTask = Task.Run(() => HttpHelper.Start());
 
             Logger.Info("CES Start.");
-
-            while (true)
-            {
-                string comm = Console.ReadLine();
-                switch (comm)
-                {
-                    case "btc exit":
-                        if (httpTask.Status == TaskStatus.RanToCompletion)
-                        {
-                            btcTask.Wait();
-                            Console.WriteLine(comm);
-                        }
-
-                        break;
-                    case "eth exit":
-                        if (ethTask.Status == TaskStatus.RanToCompletion)
-                        {
-                            ethTask.Dispose();
-                            Console.WriteLine(comm);
-                        }
-
-                        break;
-                    case "neo exit":
-                        if (neoTask.Status == TaskStatus.RanToCompletion)
-                        {
-                            neoTask.Dispose();
-                            Console.WriteLine(comm);
-                        }
-
-                        break;
-                    case "http exit":
-                        if (httpTask.Status == TaskStatus.RanToCompletion)
-                        {
-                            httpTask.Dispose();
-                            Console.WriteLine(comm);
-                        }
-
-                        break;
-                }
-            }
         }
 
     }

@@ -12,7 +12,8 @@ namespace CES
     public class DbHelper
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        public static void CreateDb(string dbName)
+        private static string dbName = "MonitorData.db";
+        public static void CreateDb()
         {
             if (File.Exists(dbName))
                 return;
@@ -173,7 +174,7 @@ namespace CES
 
         private static void ExecuteSql(string sql)
         {
-            SQLiteConnection conn = new SQLiteConnection("Data Source = MonitorData.db");
+            SQLiteConnection conn = new SQLiteConnection("Data Source = " + dbName);
             conn.Open();
             //事务操作
             SQLiteTransaction trans = conn.BeginTransaction();
@@ -199,7 +200,7 @@ namespace CES
         private static DataTable ExecuSqlToDataTable(string sql)
         {
             DataTable table = new DataTable();
-            SQLiteConnection conn = new SQLiteConnection("Data Source = MonitorData.db");
+            SQLiteConnection conn = new SQLiteConnection("Data Source = " + dbName);
             SQLiteCommand cmd = new SQLiteCommand(sql, conn);
             SQLiteDataAdapter sqliteDa = new SQLiteDataAdapter(cmd);
             conn.Open();

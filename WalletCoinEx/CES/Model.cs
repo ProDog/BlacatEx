@@ -35,4 +35,40 @@
             this.n = _n;
         }
     }
+
+    public class RspInfo
+    {
+        public bool state;
+        public dynamic msg;
+    }
+
+    public class Txid
+    {
+        public string txid;
+    }
+
+    public class Error
+    {
+        public string error;
+    }
+
+    public class CoinInfon
+    {
+        public string CoinType { get; set; }
+        public decimal Balance { get; set; }
+    }
+
+    public class DeployInfo
+    {
+        public string CoinType { get; set; }
+        public string OldTxid { get; set; }
+        public string DeployTxid { get; set; }
+    }
+
+    public class AccountInfo
+    {
+        public string CoinType { get; set; }
+        public string PriKey { get; set; }
+        public string Address { get; set; }
+    }
 }

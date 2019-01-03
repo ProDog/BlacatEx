@@ -40,7 +40,13 @@ namespace CES
             adminWifDic = getStringDic("admin");
             tokenHashDic = getStringDic("token");
             factorDic = getDecimalDic("factor");
-            
+
+            var net = (string)getValue("netType");
+            if (net == "mainnet")
+                nettype = Network.Main;
+            if (net == "testnet")
+                nettype = Network.TestNet;
+
             btcAddrList = DbHelper.GetBtcAddr();
             ethAddrList = DbHelper.GetEthAddr();    
         }
