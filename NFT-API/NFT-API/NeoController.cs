@@ -55,6 +55,7 @@ namespace NFT_API
             idata.gas = 0;
 
             var signdata = Helper_NEO.Sign(tran.GetMessage(), prikey);
+
             tran.AddWitness(signdata, pubkey, address);
             var trandata = tran.GetRawData();
             var strtrandata = ThinNeo.Helper.Bytes2HexString(trandata);
@@ -168,13 +169,11 @@ namespace NFT_API
 
         public static async Task<string> CallInvokescriptAsync(JArray array, string method)
         {
-            byte[] data = null;
             byte[] script;
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitParamJson(array);
             sb.EmitPushString(method);
             sb.EmitAppCall(new Hash160(Config.nftHash));//合约脚本hash
-            data = sb.ToArray();
             script = sb.ToArray();
             var strscript = ThinNeo.Helper.Bytes2HexString(script);
             var result = await Helper.HttpGetAsync($"{Config.myApi}?method=invokescript&id=1&params=[\"{strscript}\"]");

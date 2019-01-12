@@ -23,23 +23,11 @@ namespace NFT_API
             var reqMethod = requestContext.Request.RawUrl.Replace("/", "");
             var data = sr.ReadToEnd();
             byte[] buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new RspInfo() { }));
-            var json = new JObject();           
+            Logger.Info($"Have a request:{reqMethod}; post data:{data}");
+            var json = new JObject();
             if (!string.IsNullOrEmpty(data))
                 json = JObject.Parse(data);
-
-            try
-            {
-                Logger.Info($"Have a request:{reqMethod}; post data:{data}");
-                buffer = GetResponse(reqMethod, json);
-            }
-
-            catch (Exception e)
-            {
-                var rsp = JsonConvert.SerializeObject(new RspInfo() { state = false, msg = new Error() { error = e.Message } });
-                buffer = Encoding.UTF8.GetBytes(rsp);
-                Logger.Error(e.Message);
-            }
-
+            buffer = GetResponse(reqMethod, json);
             return buffer;
         }
 

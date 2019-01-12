@@ -29,10 +29,10 @@ namespace NFT_API
             XmlConfigurator.Configure(logRepository, new FileInfo(@"log4net.config"));
             Console.OutputEncoding = Encoding.UTF8;
 
-            httpPostRequestHandle();
+            HttpServerStart();
         }
 
-        private static void httpPostRequestHandle()
+        private static void HttpServerStart()
         {
             Logger.Info("Http Server Start!");
             httpListener.Prefixes.Add(Config.httpAddress);

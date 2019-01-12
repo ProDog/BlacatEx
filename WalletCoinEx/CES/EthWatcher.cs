@@ -86,8 +86,12 @@ namespace CES
                                 continue;
                             ethTransRspList.Add(ethTrans);
                             Logger.Info(index + " Have An ETH Transaction To:" + tran.To.ToString() + "; Value:" + value + "; Txid:" + ethTrans.txid);
+                            
                         }
+
                     }
+
+                   
                 }
             }
 
