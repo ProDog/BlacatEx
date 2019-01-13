@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Globalization;
+using System.Numerics;
 using System.Windows.Forms;
 using Zoro;
 using Zoro.Ledger;
@@ -93,11 +94,11 @@ namespace Zoro_Gui
             if (!string.IsNullOrEmpty(rtbxParameterJson.Text))
             {
                 var parameterArray = rtbxParameterJson.Text.Split(';');
-                sb.EmitAppCall(ZoroHelper.Parse(tbxContractScriptHash.Text), tbxMethodName.Text, parameterArray);
+                sb.EmitAppCall(UInt160.Parse(tbxContractScriptHash.Text), tbxMethodName.Text, parameterArray);
             }
             else
             {
-                sb.EmitAppCall(ZoroHelper.Parse(tbxContractScriptHash.Text), tbxMethodName.Text);
+                sb.EmitAppCall(UInt160.Parse(tbxContractScriptHash.Text), tbxMethodName.Text);
             }
 
             var info = ZoroHelper.InvokeScript(sb.ToArray(), "");
@@ -124,6 +125,23 @@ namespace Zoro_Gui
                 MessageBox.Show("调用参数不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+
+            ScriptBuilder sb = new ScriptBuilder();
+            if (!string.IsNullOrEmpty(rtbxParameterJson.Text))
+            {
+                var parameterArray = rtbxParameterJson.Text.Split(';');
+                sb.EmitAppCall(UInt160.Parse(tbxContractScriptHash.Text), tbxMethodName.Text, parameterArray);
+            }
+            else
+            {
+                sb.EmitAppCall(UInt160.Parse(tbxContractScriptHash.Text), tbxMethodName.Text);
+            }
+
+            decimal gas = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
+
+            var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), keypair, "", Fixed8.FromDecimal(gas), Fixed8.One);
+
+            rtbxReturnJson.Text = result;
 
         }
 
@@ -274,7 +292,7 @@ namespace Zoro_Gui
 
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitSysCall("Zoro.NativeNEP5.Call", "Transfer", assetId, addressHash, targetscripthash, value);
+                sb.EmitSysCall("Zoro.NativeNEP5.Call", "Transfer", assetId, addressHash, targetscripthash, new BigInteger(value));
 
                 decimal gas = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
 

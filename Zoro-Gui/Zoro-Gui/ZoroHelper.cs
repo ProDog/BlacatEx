@@ -188,7 +188,7 @@ namespace Zoro_Gui
                 outd[i] = byte.Parse(str.Substring(i * 2, 2), System.Globalization.NumberStyles.HexNumber);
             }
             return outd;
-        }
+        }    
 
         public static string SendRawTransaction(string rawdata, string chainHash)
         {
