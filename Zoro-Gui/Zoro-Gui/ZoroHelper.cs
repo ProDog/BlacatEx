@@ -19,7 +19,8 @@ namespace Zoro_Gui
 {
     class ZoroHelper
     {
-        private static string api = "http://47.91.210.16:20333";
+        //private static string api = "http://47.91.210.16:20333";
+        private static string api = "http://127.0.0.1:20332";
         public static UInt160 Parse(string value)
         {
             if (value.StartsWith("0x"))
@@ -317,7 +318,7 @@ namespace Zoro_Gui
         {
             InvocationTransaction tx = MakeTransaction(script, keypair, gasLimit, gasPrice);
 
-            return SendRawTransaction(tx.ToArray().ToHexString(), chainHash) + "; txid: " + tx.Hash;
+            return SendRawTransaction(tx.ToArray().ToHexString(), chainHash) + "\r\n txid: " + tx.Hash;
         }
 
         public static string SendInvocationTransaction(byte[] script, int m, KeyPair[] keypairs, string chainHash, Fixed8 gasLimit, Fixed8 gasPrice)

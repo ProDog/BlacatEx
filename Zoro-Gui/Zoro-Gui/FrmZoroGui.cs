@@ -131,8 +131,7 @@ namespace Zoro_Gui
 
                 var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), keypair, "", Fixed8.FromDecimal(bcpFee), Fixed8.One);
 
-                JObject resJO = JObject.Parse(result);
-                MessageBox.Show(resJO.ToString(), "交易返回", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                rtbxPublishReturn.Text = result;
             }
         }
 
@@ -215,7 +214,7 @@ namespace Zoro_Gui
             }
 
             decimal gas = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
-            gas = Math.Max((decimal)10, gas);
+            gas = Math.Max(decimal.Parse(tbxGasFee.Text), gas);
 
             var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), keypair, "", Fixed8.FromDecimal(gas), Fixed8.One);
 
@@ -371,5 +370,12 @@ namespace Zoro_Gui
             return paraList;
         }
 
+        private void tbxGasFee_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar != 8 && !Char.IsDigit(e.KeyChar))
+            {
+                e.Handled = true;
+            }
+        }
     }
 }
