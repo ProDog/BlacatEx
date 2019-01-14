@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmZoroGui));
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.label10 = new System.Windows.Forms.Label();
@@ -86,6 +87,8 @@
             this.lblBcpBalance = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.btnLoadContract = new System.Windows.Forms.Button();
+            this.btnBalanceRefresh = new System.Windows.Forms.Button();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -101,15 +104,16 @@
             this.tabControl1.Controls.Add(this.tabPage3);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tabControl1.Location = new System.Drawing.Point(3, 103);
+            this.tabControl1.Location = new System.Drawing.Point(3, 97);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(848, 431);
+            this.tabControl1.Size = new System.Drawing.Size(848, 437);
             this.tabControl1.TabIndex = 0;
             // 
             // tabPage1
             // 
             this.tabPage1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.tabPage1.Controls.Add(this.btnLoadContract);
             this.tabPage1.Controls.Add(this.label10);
             this.tabPage1.Controls.Add(this.tbxParameterType);
             this.tabPage1.Controls.Add(this.label11);
@@ -348,10 +352,9 @@
             // 
             this.tbxContractPath.Location = new System.Drawing.Point(231, 60);
             this.tbxContractPath.Name = "tbxContractPath";
-            this.tbxContractPath.Size = new System.Drawing.Size(170, 25);
+            this.tbxContractPath.Size = new System.Drawing.Size(117, 25);
             this.tbxContractPath.TabIndex = 1;
             this.tbxContractPath.Text = "BCTContract.avm";
-            this.tbxContractPath.TextChanged += new System.EventHandler(this.tbxContractPath_TextChanged);
             // 
             // cbxNeedNep4
             // 
@@ -379,7 +382,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 28);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(840, 399);
+            this.tabPage2.Size = new System.Drawing.Size(840, 405);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "调用合约";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -521,6 +524,7 @@
             this.btnCancelTran.TabIndex = 27;
             this.btnCancelTran.Text = "取消";
             this.btnCancelTran.UseVisualStyleBackColor = false;
+            this.btnCancelTran.Click += new System.EventHandler(this.btnCancelTran_Click);
             // 
             // btnSendTransaction
             // 
@@ -614,7 +618,7 @@
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(59, 16);
+            this.label9.Location = new System.Drawing.Point(45, 16);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(78, 20);
             this.label9.TabIndex = 21;
@@ -622,7 +626,7 @@
             // 
             // tbxWif
             // 
-            this.tbxWif.Location = new System.Drawing.Point(144, 13);
+            this.tbxWif.Location = new System.Drawing.Point(130, 13);
             this.tbxWif.Name = "tbxWif";
             this.tbxWif.PasswordChar = '*';
             this.tbxWif.Size = new System.Drawing.Size(434, 25);
@@ -632,7 +636,7 @@
             // label12
             // 
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(59, 58);
+            this.label12.Location = new System.Drawing.Point(45, 58);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(79, 20);
             this.label12.TabIndex = 27;
@@ -641,7 +645,7 @@
             // tbxAddress
             // 
             this.tbxAddress.BackColor = System.Drawing.Color.AliceBlue;
-            this.tbxAddress.Location = new System.Drawing.Point(144, 55);
+            this.tbxAddress.Location = new System.Drawing.Point(130, 55);
             this.tbxAddress.Name = "tbxAddress";
             this.tbxAddress.ReadOnly = true;
             this.tbxAddress.Size = new System.Drawing.Size(434, 25);
@@ -650,6 +654,7 @@
             // panel1
             // 
             this.panel1.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.panel1.Controls.Add(this.btnBalanceRefresh);
             this.panel1.Controls.Add(this.lblBctBalance);
             this.panel1.Controls.Add(this.label19);
             this.panel1.Controls.Add(this.lblBcpBalance);
@@ -662,14 +667,14 @@
             this.panel1.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.panel1.Location = new System.Drawing.Point(3, 3);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(848, 94);
+            this.panel1.Size = new System.Drawing.Size(848, 88);
             this.panel1.TabIndex = 1;
             // 
             // lblBctBalance
             // 
             this.lblBctBalance.AutoSize = true;
             this.lblBctBalance.ForeColor = System.Drawing.Color.DodgerBlue;
-            this.lblBctBalance.Location = new System.Drawing.Point(662, 57);
+            this.lblBctBalance.Location = new System.Drawing.Point(648, 57);
             this.lblBctBalance.Name = "lblBctBalance";
             this.lblBctBalance.Size = new System.Drawing.Size(60, 20);
             this.lblBctBalance.TabIndex = 31;
@@ -678,7 +683,7 @@
             // label19
             // 
             this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(592, 57);
+            this.label19.Location = new System.Drawing.Point(578, 57);
             this.label19.Name = "label19";
             this.label19.Size = new System.Drawing.Size(77, 20);
             this.label19.TabIndex = 30;
@@ -688,7 +693,7 @@
             // 
             this.lblBcpBalance.AutoSize = true;
             this.lblBcpBalance.ForeColor = System.Drawing.Color.DodgerBlue;
-            this.lblBcpBalance.Location = new System.Drawing.Point(662, 18);
+            this.lblBcpBalance.Location = new System.Drawing.Point(648, 18);
             this.lblBcpBalance.Name = "lblBcpBalance";
             this.lblBcpBalance.Size = new System.Drawing.Size(60, 20);
             this.lblBcpBalance.TabIndex = 29;
@@ -697,7 +702,7 @@
             // label17
             // 
             this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(592, 17);
+            this.label17.Location = new System.Drawing.Point(578, 17);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(78, 20);
             this.label17.TabIndex = 28;
@@ -714,10 +719,42 @@
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 18.80819F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 81.1918F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 17.50466F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 82.49535F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(854, 537);
             this.tableLayoutPanel1.TabIndex = 2;
+            // 
+            // btnLoadContract
+            // 
+            this.btnLoadContract.BackColor = System.Drawing.SystemColors.Highlight;
+            this.btnLoadContract.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.btnLoadContract.FlatAppearance.BorderSize = 0;
+            this.btnLoadContract.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnLoadContract.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnLoadContract.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.btnLoadContract.Location = new System.Drawing.Point(354, 58);
+            this.btnLoadContract.Name = "btnLoadContract";
+            this.btnLoadContract.Size = new System.Drawing.Size(47, 29);
+            this.btnLoadContract.TabIndex = 26;
+            this.btnLoadContract.Text = "加载";
+            this.btnLoadContract.UseVisualStyleBackColor = false;
+            this.btnLoadContract.Click += new System.EventHandler(this.btnLoadContract_Click);
+            // 
+            // btnBalanceRefresh
+            // 
+            this.btnBalanceRefresh.BackColor = System.Drawing.SystemColors.Highlight;
+            this.btnBalanceRefresh.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.btnBalanceRefresh.FlatAppearance.BorderSize = 0;
+            this.btnBalanceRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBalanceRefresh.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnBalanceRefresh.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.btnBalanceRefresh.Location = new System.Drawing.Point(727, 32);
+            this.btnBalanceRefresh.Name = "btnBalanceRefresh";
+            this.btnBalanceRefresh.Size = new System.Drawing.Size(47, 29);
+            this.btnBalanceRefresh.TabIndex = 32;
+            this.btnBalanceRefresh.Text = "刷新";
+            this.btnBalanceRefresh.UseVisualStyleBackColor = false;
+            this.btnBalanceRefresh.Click += new System.EventHandler(this.btnBalanceRefresh_Click);
             // 
             // FrmZoroGui
             // 
@@ -726,6 +763,9 @@
             this.BackColor = System.Drawing.SystemColors.ActiveCaption;
             this.ClientSize = new System.Drawing.Size(854, 537);
             this.Controls.Add(this.tableLayoutPanel1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
             this.Name = "FrmZoroGui";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Zoro-Gui";
@@ -804,6 +844,8 @@
         private System.Windows.Forms.RichTextBox rtbxTranResult;
         private System.Windows.Forms.TextBox tbxValue;
         private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.Button btnLoadContract;
+        private System.Windows.Forms.Button btnBalanceRefresh;
     }
 }
 

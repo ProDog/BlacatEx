@@ -1,6 +1,7 @@
 ﻿using Neo.VM;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Numerics;
 using System.Windows.Forms;
@@ -23,11 +24,71 @@ namespace Zoro_Gui
             InitializeComponent();
         }
 
-        private void tbxContractPath_TextChanged(object sender, EventArgs e)
+        private void FrmZoroGui_Load(object sender, EventArgs e)
         {
-            GetContract();
+            if (!string.IsNullOrEmpty(tbxWif.Text))
+            {
+                GetAccount();
+            }
+
+            if (!string.IsNullOrEmpty(tbxContractPath.Text))
+            {
+                GetContract();
+            }
+
+            lblBcpFee.Text = bcpFee.ToString();
+
+            cmbxTokenType.SelectedIndex = 0;
         }
 
+        //转账交易
+        private void btnSendTransaction_Click(object sender, EventArgs e)
+        {
+            UInt160 assetId;
+            if (cmbxTokenType.Text == "BCP")
+            {
+                assetId = Genesis.BcpContractAddress;
+            }
+            else if (cmbxTokenType.Text == "BCT")
+            {
+                assetId = Genesis.BctContractAddress;
+            }
+            else
+            {
+                MessageBox.Show("请选择币种！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(tbxValue.Text))
+            {
+                MessageBox.Show("请输入金额！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(tbxTargetAddress.Text))
+            {
+                MessageBox.Show("请输入接收地址！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!GetAccount()) return;
+
+            Decimal value = Decimal.Parse(tbxValue.Text, NumberStyles.Float) * new Decimal(Math.Pow(10, 8));
+            UInt160 targetscripthash = ZoroHelper.GetPublicKeyHashFromAddress(tbxTargetAddress.Text);
+
+            using (ScriptBuilder sb = new ScriptBuilder())
+            {
+                sb.EmitSysCall("Zoro.NativeNEP5.Call", "Transfer", assetId, addressHash, targetscripthash, new BigInteger(value));
+
+                decimal gas = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
+
+                var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), keypair, "", Fixed8.FromDecimal(gas), Fixed8.One);
+
+                rtbxTranResult.Text = result;
+            }
+        }
+
+        //发布合约
         private void btnPublish_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(tbxWif.Text))
@@ -75,6 +136,7 @@ namespace Zoro_Gui
             }
         }
 
+        //Invoke
         private void btnInvoke_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(tbxContractScriptHash.Text))
@@ -93,8 +155,16 @@ namespace Zoro_Gui
 
             if (!string.IsNullOrEmpty(rtbxParameterJson.Text))
             {
-                var parameterArray = rtbxParameterJson.Text.Split(';');
-                sb.EmitAppCall(UInt160.Parse(tbxContractScriptHash.Text), tbxMethodName.Text, parameterArray);
+                try
+                {
+                    List<dynamic> paraList = GetParameterArray();
+                    sb.EmitAppCall(UInt160.Parse(tbxContractScriptHash.Text), tbxMethodName.Text, paraList.ToArray());
+                }
+                catch
+                {
+                    MessageBox.Show("参数格式错误！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
             }
             else
             {
@@ -106,6 +176,7 @@ namespace Zoro_Gui
             rtbxReturnJson.Text = info;
         }
 
+        //SendRaw
         private void btnSendRaw_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(tbxWif.Text))
@@ -120,17 +191,23 @@ namespace Zoro_Gui
                 return;
             }
 
-            if (string.IsNullOrEmpty(rtbxParameterJson.Text))
-            {
-                MessageBox.Show("调用参数不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+            KeyPair keypair = ZoroHelper.GetKeyPairFromWIF(tbxWif.Text);
+            UInt160 scriptHash = ZoroHelper.GetPublicKeyHash(keypair.PublicKey);
 
             ScriptBuilder sb = new ScriptBuilder();
+
             if (!string.IsNullOrEmpty(rtbxParameterJson.Text))
             {
-                var parameterArray = rtbxParameterJson.Text.Split(';');
-                sb.EmitAppCall(UInt160.Parse(tbxContractScriptHash.Text), tbxMethodName.Text, parameterArray);
+                try
+                {
+                    List<dynamic> paraList = GetParameterArray();
+                    sb.EmitAppCall(UInt160.Parse(tbxContractScriptHash.Text), tbxMethodName.Text, paraList.ToArray());
+                }
+                catch
+                {
+                    MessageBox.Show("参数格式错误！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
             }
             else
             {
@@ -138,6 +215,7 @@ namespace Zoro_Gui
             }
 
             decimal gas = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
+            gas = Math.Max((decimal)10, gas);
 
             var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), keypair, "", Fixed8.FromDecimal(gas), Fixed8.One);
 
@@ -145,7 +223,27 @@ namespace Zoro_Gui
 
         }
 
-        private void GetAccount()
+        //加载合约
+        private void btnLoadContract_Click(object sender, EventArgs e)
+        {
+            GetContract();
+        }
+
+        //刷新余额
+        private void btnBalanceRefresh_Click(object sender, EventArgs e)
+        {
+            if (GetAccount())
+                GetBalance();
+        }
+
+        //取消
+        private void btnCancelTran_Click(object sender, EventArgs e)
+        {
+            //tbxValue.Text = string.Empty;
+            //tbxTargetAddress.Text = string.Empty;
+        }
+
+        private bool GetAccount()
         {
             try
             {
@@ -155,29 +253,32 @@ namespace Zoro_Gui
             }
             catch
             {
-                MessageBox.Show("Wif 密钥格式错误！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                MessageBox.Show("钱包 Wif 密钥格式错误！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
+            return true;
         }
 
-        private void GetContract()
+        private bool GetContract()
         {
             var contractPath = tbxContractPath.Text;
             tbxContractName.Text = contractPath.Replace(".avm", "");
             if (!System.IO.File.Exists(contractPath))
             {
                 MessageBox.Show("合约文件路径无效！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                tbxContractHash.Text = string.Empty;
+                return false;
             }
             contractScript = System.IO.File.ReadAllBytes(contractPath);
             var contractHash = contractScript.ToScriptHash();
             tbxContractHash.Text = contractHash.ToString();
+            return true;
         }
 
         private void tbxWif_TextChanged(object sender, EventArgs e)
         {
-            GetAccount();
-            GetBalance();
+            if (GetAccount())
+                GetBalance();
         }
 
         private void GetBalance()
@@ -199,7 +300,7 @@ namespace Zoro_Gui
 
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitSysCall("Zoro.NativeNEP5.Call", "BalanceOf", bctAssetId, tbxAddress.Text);
+                sb.EmitSysCall("Zoro.NativeNEP5.Call", "BalanceOf", bctAssetId, addressHash);
                 sb.EmitSysCall("Zoro.NativeNEP5.Call", "Decimals", bctAssetId);
 
                 var info = ZoroHelper.InvokeScript(sb.ToArray(), "");
@@ -210,7 +311,7 @@ namespace Zoro_Gui
             }
         }
 
-        string GetBalanceFromJson(string info)
+        private string GetBalanceFromJson(string info)
         {
             string result = "";
             JObject json = JObject.Parse(info);
@@ -257,66 +358,18 @@ namespace Zoro_Gui
             lblBcpFee.Text = bcpFee.ToString();
         }
 
-        private void btnSendTransaction_Click(object sender, EventArgs e)
+        private List<dynamic> GetParameterArray()
         {
-            UInt160 assetId;
-            if (cmbxTokenType.Text == "BCP")
+            List<dynamic> paraList = new List<dynamic>();
+
+            string[] parameterArray = rtbxParameterJson.Text.Split(';');
+            for (int i = 0; i < parameterArray.Length; i++)
             {
-                assetId = Genesis.BcpContractAddress;
-            }
-            else if (cmbxTokenType.Text == "BCT")
-            {
-                assetId = Genesis.BctContractAddress;
-            }
-            else
-            {
-                MessageBox.Show("请选择币种！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                paraList.Add(ZoroHelper.GetParamBytes(parameterArray[i]));
             }
 
-            if (string.IsNullOrEmpty(tbxValue.Text))
-            {
-                MessageBox.Show("请输入金额！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (string.IsNullOrEmpty(tbxTargetAddress.Text))
-            {
-                MessageBox.Show("请输入接收地址！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            Decimal value = Decimal.Parse(tbxValue.Text, NumberStyles.Float) * new Decimal(Math.Pow(10, 8));
-            UInt160 targetscripthash1 = ZoroHelper.GetPublicKeyHashFromAddress(tbxAddress.Text);
-            UInt160 targetscripthash = ZoroHelper.GetPublicKeyHashFromAddress(tbxTargetAddress.Text);
-
-            using (ScriptBuilder sb = new ScriptBuilder())
-            {
-                sb.EmitSysCall("Zoro.NativeNEP5.Call", "Transfer", assetId, addressHash, targetscripthash, new BigInteger(value));
-
-                decimal gas = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
-
-                var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), keypair, "", Fixed8.FromDecimal(gas), Fixed8.One);
-
-                rtbxTranResult.Text = result;
-            }
+            return paraList;
         }
 
-        private void FrmZoroGui_Load(object sender, EventArgs e)
-        {
-            if (!string.IsNullOrEmpty(tbxWif.Text))
-            {
-                GetAccount();
-            }
-
-            if (!string.IsNullOrEmpty(tbxContractPath.Text))
-            {
-                GetContract();
-            }
-
-            lblBcpFee.Text = bcpFee.ToString();
-
-            cmbxTokenType.SelectedIndex = 0;
-        }
     }
 }
