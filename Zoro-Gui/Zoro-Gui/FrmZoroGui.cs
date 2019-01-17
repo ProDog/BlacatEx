@@ -372,9 +372,16 @@ namespace Zoro_Gui
 
         private void tbxGasFee_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if (e.KeyChar != 8 && !Char.IsDigit(e.KeyChar))
+            if (!Char.IsNumber(e.KeyChar) && !Char.IsPunctuation(e.KeyChar) && !Char.IsControl(e.KeyChar))
             {
-                e.Handled = true;
+                e.Handled = true;//消除不合适字符
+            }
+            else if (Char.IsPunctuation(e.KeyChar))
+            {
+                if (e.KeyChar != '.' )//小数点
+                {
+                    e.Handled = true;
+                }
             }
         }
     }

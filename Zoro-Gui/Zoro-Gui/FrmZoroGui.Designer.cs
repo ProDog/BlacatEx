@@ -31,6 +31,9 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmZoroGui));
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.label25 = new System.Windows.Forms.Label();
+            this.rtbxPublishReturn = new System.Windows.Forms.RichTextBox();
+            this.btnLoadContract = new System.Windows.Forms.Button();
             this.label10 = new System.Windows.Forms.Label();
             this.tbxParameterType = new System.Windows.Forms.TextBox();
             this.label11 = new System.Windows.Forms.Label();
@@ -56,6 +59,9 @@
             this.tbxContractPath = new System.Windows.Forms.TextBox();
             this.cbxNeedNep4 = new System.Windows.Forms.CheckBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.label24 = new System.Windows.Forms.Label();
+            this.label23 = new System.Windows.Forms.Label();
+            this.tbxGasFee = new System.Windows.Forms.TextBox();
             this.label16 = new System.Windows.Forms.Label();
             this.tbxMethodName = new System.Windows.Forms.TextBox();
             this.label15 = new System.Windows.Forms.Label();
@@ -82,18 +88,12 @@
             this.label12 = new System.Windows.Forms.Label();
             this.tbxAddress = new System.Windows.Forms.TextBox();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.btnBalanceRefresh = new System.Windows.Forms.Button();
             this.lblBctBalance = new System.Windows.Forms.Label();
             this.label19 = new System.Windows.Forms.Label();
             this.lblBcpBalance = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.btnLoadContract = new System.Windows.Forms.Button();
-            this.btnBalanceRefresh = new System.Windows.Forms.Button();
-            this.label23 = new System.Windows.Forms.Label();
-            this.tbxGasFee = new System.Windows.Forms.TextBox();
-            this.label24 = new System.Windows.Forms.Label();
-            this.label25 = new System.Windows.Forms.Label();
-            this.rtbxPublishReturn = new System.Windows.Forms.RichTextBox();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -152,6 +152,42 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "发布合约";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // label25
+            // 
+            this.label25.AutoSize = true;
+            this.label25.Location = new System.Drawing.Point(40, 296);
+            this.label25.Name = "label25";
+            this.label25.Size = new System.Drawing.Size(79, 20);
+            this.label25.TabIndex = 28;
+            this.label25.Text = "返回结果：";
+            // 
+            // rtbxPublishReturn
+            // 
+            this.rtbxPublishReturn.BackColor = System.Drawing.Color.AliceBlue;
+            this.rtbxPublishReturn.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.rtbxPublishReturn.Location = new System.Drawing.Point(45, 328);
+            this.rtbxPublishReturn.Name = "rtbxPublishReturn";
+            this.rtbxPublishReturn.ReadOnly = true;
+            this.rtbxPublishReturn.Size = new System.Drawing.Size(758, 58);
+            this.rtbxPublishReturn.TabIndex = 27;
+            this.rtbxPublishReturn.Text = "";
+            // 
+            // btnLoadContract
+            // 
+            this.btnLoadContract.BackColor = System.Drawing.SystemColors.Highlight;
+            this.btnLoadContract.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.btnLoadContract.FlatAppearance.BorderSize = 0;
+            this.btnLoadContract.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnLoadContract.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnLoadContract.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.btnLoadContract.Location = new System.Drawing.Point(361, 15);
+            this.btnLoadContract.Name = "btnLoadContract";
+            this.btnLoadContract.Size = new System.Drawing.Size(47, 29);
+            this.btnLoadContract.TabIndex = 26;
+            this.btnLoadContract.Text = "加载";
+            this.btnLoadContract.UseVisualStyleBackColor = false;
+            this.btnLoadContract.Click += new System.EventHandler(this.btnLoadContract_Click);
             // 
             // label10
             // 
@@ -396,6 +432,33 @@
             this.tabPage2.Text = "调用合约";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // label24
+            // 
+            this.label24.AutoSize = true;
+            this.label24.Location = new System.Drawing.Point(183, 198);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(36, 20);
+            this.label24.TabIndex = 29;
+            this.label24.Text = "BCP";
+            // 
+            // label23
+            // 
+            this.label23.AutoSize = true;
+            this.label23.Location = new System.Drawing.Point(39, 198);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(75, 20);
+            this.label23.TabIndex = 27;
+            this.label23.Text = "Gas费用：";
+            // 
+            // tbxGasFee
+            // 
+            this.tbxGasFee.Location = new System.Drawing.Point(118, 195);
+            this.tbxGasFee.Name = "tbxGasFee";
+            this.tbxGasFee.Size = new System.Drawing.Size(62, 25);
+            this.tbxGasFee.TabIndex = 26;
+            this.tbxGasFee.Text = "10";
+            this.tbxGasFee.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxGasFee_KeyPress);
+            // 
             // label16
             // 
             this.label16.AutoSize = true;
@@ -527,7 +590,7 @@
             this.btnCancelTran.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnCancelTran.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnCancelTran.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.btnCancelTran.Location = new System.Drawing.Point(452, 146);
+            this.btnCancelTran.Location = new System.Drawing.Point(466, 146);
             this.btnCancelTran.Name = "btnCancelTran";
             this.btnCancelTran.Size = new System.Drawing.Size(99, 29);
             this.btnCancelTran.TabIndex = 27;
@@ -543,7 +606,7 @@
             this.btnSendTransaction.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSendTransaction.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnSendTransaction.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.btnSendTransaction.Location = new System.Drawing.Point(279, 146);
+            this.btnSendTransaction.Location = new System.Drawing.Point(293, 146);
             this.btnSendTransaction.Name = "btnSendTransaction";
             this.btnSendTransaction.Size = new System.Drawing.Size(99, 29);
             this.btnSendTransaction.TabIndex = 26;
@@ -573,15 +636,16 @@
             // 
             // tbxValue
             // 
-            this.tbxValue.Location = new System.Drawing.Point(480, 35);
+            this.tbxValue.Location = new System.Drawing.Point(494, 35);
             this.tbxValue.Name = "tbxValue";
             this.tbxValue.Size = new System.Drawing.Size(185, 25);
             this.tbxValue.TabIndex = 22;
+            this.tbxValue.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxGasFee_KeyPress);
             // 
             // label21
             // 
             this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(395, 38);
+            this.label21.Location = new System.Drawing.Point(409, 38);
             this.label21.Name = "label21";
             this.label21.Size = new System.Drawing.Size(79, 20);
             this.label21.TabIndex = 23;
@@ -590,7 +654,7 @@
             // label20
             // 
             this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(130, 36);
+            this.label20.Location = new System.Drawing.Point(144, 36);
             this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(79, 20);
             this.label20.TabIndex = 8;
@@ -602,7 +666,7 @@
             this.cmbxTokenType.Items.AddRange(new object[] {
             "BCP",
             "BCT"});
-            this.cmbxTokenType.Location = new System.Drawing.Point(215, 35);
+            this.cmbxTokenType.Location = new System.Drawing.Point(229, 35);
             this.cmbxTokenType.Name = "cmbxTokenType";
             this.cmbxTokenType.Size = new System.Drawing.Size(121, 27);
             this.cmbxTokenType.TabIndex = 7;
@@ -610,7 +674,7 @@
             // label18
             // 
             this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(130, 94);
+            this.label18.Location = new System.Drawing.Point(144, 94);
             this.label18.Name = "label18";
             this.label18.Size = new System.Drawing.Size(79, 20);
             this.label18.TabIndex = 6;
@@ -619,7 +683,7 @@
             // tbxTargetAddress
             // 
             this.tbxTargetAddress.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.tbxTargetAddress.Location = new System.Drawing.Point(215, 91);
+            this.tbxTargetAddress.Location = new System.Drawing.Point(229, 91);
             this.tbxTargetAddress.Name = "tbxTargetAddress";
             this.tbxTargetAddress.Size = new System.Drawing.Size(450, 25);
             this.tbxTargetAddress.TabIndex = 5;
@@ -679,6 +743,22 @@
             this.panel1.Size = new System.Drawing.Size(859, 88);
             this.panel1.TabIndex = 1;
             // 
+            // btnBalanceRefresh
+            // 
+            this.btnBalanceRefresh.BackColor = System.Drawing.SystemColors.Highlight;
+            this.btnBalanceRefresh.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.btnBalanceRefresh.FlatAppearance.BorderSize = 0;
+            this.btnBalanceRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBalanceRefresh.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnBalanceRefresh.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.btnBalanceRefresh.Location = new System.Drawing.Point(762, 30);
+            this.btnBalanceRefresh.Name = "btnBalanceRefresh";
+            this.btnBalanceRefresh.Size = new System.Drawing.Size(47, 29);
+            this.btnBalanceRefresh.TabIndex = 32;
+            this.btnBalanceRefresh.Text = "刷新";
+            this.btnBalanceRefresh.UseVisualStyleBackColor = false;
+            this.btnBalanceRefresh.Click += new System.EventHandler(this.btnBalanceRefresh_Click);
+            // 
             // lblBctBalance
             // 
             this.lblBctBalance.AutoSize = true;
@@ -732,85 +812,6 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 82.49535F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(865, 537);
             this.tableLayoutPanel1.TabIndex = 2;
-            // 
-            // btnLoadContract
-            // 
-            this.btnLoadContract.BackColor = System.Drawing.SystemColors.Highlight;
-            this.btnLoadContract.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.btnLoadContract.FlatAppearance.BorderSize = 0;
-            this.btnLoadContract.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnLoadContract.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btnLoadContract.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.btnLoadContract.Location = new System.Drawing.Point(361, 15);
-            this.btnLoadContract.Name = "btnLoadContract";
-            this.btnLoadContract.Size = new System.Drawing.Size(47, 29);
-            this.btnLoadContract.TabIndex = 26;
-            this.btnLoadContract.Text = "加载";
-            this.btnLoadContract.UseVisualStyleBackColor = false;
-            this.btnLoadContract.Click += new System.EventHandler(this.btnLoadContract_Click);
-            // 
-            // btnBalanceRefresh
-            // 
-            this.btnBalanceRefresh.BackColor = System.Drawing.SystemColors.Highlight;
-            this.btnBalanceRefresh.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.btnBalanceRefresh.FlatAppearance.BorderSize = 0;
-            this.btnBalanceRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnBalanceRefresh.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btnBalanceRefresh.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.btnBalanceRefresh.Location = new System.Drawing.Point(759, 30);
-            this.btnBalanceRefresh.Name = "btnBalanceRefresh";
-            this.btnBalanceRefresh.Size = new System.Drawing.Size(47, 29);
-            this.btnBalanceRefresh.TabIndex = 32;
-            this.btnBalanceRefresh.Text = "刷新";
-            this.btnBalanceRefresh.UseVisualStyleBackColor = false;
-            this.btnBalanceRefresh.Click += new System.EventHandler(this.btnBalanceRefresh_Click);
-            // 
-            // label23
-            // 
-            this.label23.AutoSize = true;
-            this.label23.Location = new System.Drawing.Point(39, 198);
-            this.label23.Name = "label23";
-            this.label23.Size = new System.Drawing.Size(75, 20);
-            this.label23.TabIndex = 27;
-            this.label23.Text = "Gas费用：";
-            // 
-            // tbxGasFee
-            // 
-            this.tbxGasFee.Location = new System.Drawing.Point(118, 195);
-            this.tbxGasFee.Name = "tbxGasFee";
-            this.tbxGasFee.Size = new System.Drawing.Size(62, 25);
-            this.tbxGasFee.TabIndex = 26;
-            this.tbxGasFee.Text = "10";
-            this.tbxGasFee.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxGasFee_KeyPress);
-            // 
-            // label24
-            // 
-            this.label24.AutoSize = true;
-            this.label24.Location = new System.Drawing.Point(183, 198);
-            this.label24.Name = "label24";
-            this.label24.Size = new System.Drawing.Size(36, 20);
-            this.label24.TabIndex = 29;
-            this.label24.Text = "BCP";
-            // 
-            // label25
-            // 
-            this.label25.AutoSize = true;
-            this.label25.Location = new System.Drawing.Point(40, 296);
-            this.label25.Name = "label25";
-            this.label25.Size = new System.Drawing.Size(79, 20);
-            this.label25.TabIndex = 28;
-            this.label25.Text = "返回结果：";
-            // 
-            // rtbxPublishReturn
-            // 
-            this.rtbxPublishReturn.BackColor = System.Drawing.Color.AliceBlue;
-            this.rtbxPublishReturn.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.rtbxPublishReturn.Location = new System.Drawing.Point(45, 328);
-            this.rtbxPublishReturn.Name = "rtbxPublishReturn";
-            this.rtbxPublishReturn.ReadOnly = true;
-            this.rtbxPublishReturn.Size = new System.Drawing.Size(758, 58);
-            this.rtbxPublishReturn.TabIndex = 27;
-            this.rtbxPublishReturn.Text = "";
             // 
             // FrmZoroGui
             // 
