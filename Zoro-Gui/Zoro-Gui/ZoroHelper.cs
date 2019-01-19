@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using System.Threading.Tasks;
 using Zoro;
 using Zoro.Cryptography;
 using Zoro.Cryptography.ECC;
@@ -19,8 +18,8 @@ namespace Zoro_Gui
 {
     class ZoroHelper
     {
-        //private static string api = "http://47.91.210.16:20333";
-        private static string api = "http://127.0.0.1:20332";
+        private static string api = "http://47.91.210.16:20333";
+        //private static string api = "http://127.0.0.1:20332";
         public static UInt160 Parse(string value)
         {
             if (value.StartsWith("0x"))

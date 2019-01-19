@@ -1,5 +1,4 @@
 ﻿using Neo.VM;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,8 +14,6 @@ namespace Zoro_Gui
     public partial class FrmZoroGui : Form
     {
         private byte[] contractScript;
-        private KeyPair keypair;
-        private UInt160 addressHash;
         decimal bcpFee = 100;
 
         public FrmZoroGui()
@@ -26,10 +23,6 @@ namespace Zoro_Gui
 
         private void FrmZoroGui_Load(object sender, EventArgs e)
         {
-            if (!string.IsNullOrEmpty(tbxWif.Text))
-            {
-                GetAccount();
-            }
 
             if (!string.IsNullOrEmpty(tbxContractPath.Text))
             {
@@ -59,6 +52,12 @@ namespace Zoro_Gui
                 return;
             }
 
+            if (string.IsNullOrEmpty(transAccountFrm.addressHash.ToString()))
+            {
+                MessageBox.Show("请打开钱包！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
             if (string.IsNullOrEmpty(tbxValue.Text))
             {
                 MessageBox.Show("请输入金额！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -71,18 +70,16 @@ namespace Zoro_Gui
                 return;
             }
 
-            if (!GetAccount()) return;
-
             Decimal value = Decimal.Parse(tbxValue.Text, NumberStyles.Float) * new Decimal(Math.Pow(10, 8));
             UInt160 targetscripthash = ZoroHelper.GetPublicKeyHashFromAddress(tbxTargetAddress.Text);
 
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitSysCall("Zoro.NativeNEP5.Call", "Transfer", assetId, addressHash, targetscripthash, new BigInteger(value));
+                sb.EmitSysCall("Zoro.NativeNEP5.Call", "Transfer", assetId, transAccountFrm.addressHash, targetscripthash, new BigInteger(value));
 
                 decimal gas = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
 
-                var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), keypair, "", Fixed8.FromDecimal(gas), Fixed8.One);
+                var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), transAccountFrm.keypair, "", Fixed8.FromDecimal(gas), Fixed8.One);
 
                 rtbxTranResult.Text = result;
             }
@@ -91,7 +88,7 @@ namespace Zoro_Gui
         //发布合约
         private void btnPublish_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(tbxWif.Text))
+            if (string.IsNullOrEmpty(publishAccountFrm.wif))
             {
                 MessageBox.Show("请输入钱包 wif ！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -102,8 +99,6 @@ namespace Zoro_Gui
                 MessageBox.Show("请输入合约文件！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-
-            keypair = ZoroHelper.GetKeyPairFromWIF(tbxWif.Text);
 
             byte[] parameter__list = ZoroHelper.HexString2Bytes(tbxParameterType.Text);
             byte[] return_type = ZoroHelper.HexString2Bytes("05");
@@ -129,7 +124,7 @@ namespace Zoro_Gui
 
                 lblBcpFee.Text = bcpFee.ToString();
 
-                var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), keypair, "", Fixed8.FromDecimal(bcpFee), Fixed8.One);
+                var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), publishAccountFrm.keypair, "", Fixed8.FromDecimal(bcpFee), Fixed8.One);
 
                 rtbxPublishReturn.Text = result;
             }
@@ -178,7 +173,7 @@ namespace Zoro_Gui
         //SendRaw
         private void btnSendRaw_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(tbxWif.Text))
+            if (string.IsNullOrEmpty(invokeAccountFrm.wif))
             {
                 MessageBox.Show("请输入钱包 wif ！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -189,9 +184,6 @@ namespace Zoro_Gui
                 MessageBox.Show("合约 Hash 不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-
-            KeyPair keypair = ZoroHelper.GetKeyPairFromWIF(tbxWif.Text);
-            UInt160 scriptHash = ZoroHelper.GetPublicKeyHash(keypair.PublicKey);
 
             ScriptBuilder sb = new ScriptBuilder();
 
@@ -216,7 +208,7 @@ namespace Zoro_Gui
             decimal gas = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
             gas = Math.Max(decimal.Parse(tbxGasFee.Text), gas);
 
-            var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), keypair, "", Fixed8.FromDecimal(gas), Fixed8.One);
+            var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), invokeAccountFrm.keypair, "", Fixed8.FromDecimal(gas), Fixed8.One);
 
             rtbxReturnJson.Text = result;
 
@@ -228,34 +220,11 @@ namespace Zoro_Gui
             GetContract();
         }
 
-        //刷新余额
-        private void btnBalanceRefresh_Click(object sender, EventArgs e)
-        {
-            if (GetAccount())
-                GetBalance();
-        }
-
         //取消
         private void btnCancelTran_Click(object sender, EventArgs e)
         {
             //tbxValue.Text = string.Empty;
             //tbxTargetAddress.Text = string.Empty;
-        }
-
-        private bool GetAccount()
-        {
-            try
-            {
-                keypair = ZoroHelper.GetKeyPairFromWIF(tbxWif.Text);
-                addressHash = ZoroHelper.GetPublicKeyHashFromWIF(tbxWif.Text);
-                tbxAddress.Text = ZoroHelper.GetAddressFromScriptHash(addressHash);
-            }
-            catch
-            {
-                MessageBox.Show("钱包 Wif 密钥格式错误！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
-            return true;
         }
 
         private bool GetContract()
@@ -272,71 +241,6 @@ namespace Zoro_Gui
             var contractHash = contractScript.ToScriptHash();
             tbxContractHash.Text = contractHash.ToString();
             return true;
-        }
-
-        private void tbxWif_TextChanged(object sender, EventArgs e)
-        {
-            if (GetAccount())
-                GetBalance();
-        }
-
-        private void GetBalance()
-        {
-            UInt160 bcpAssetId = Genesis.BcpContractAddress;
-            UInt160 bctAssetId = Genesis.BctContractAddress;
-
-            using (ScriptBuilder sb = new ScriptBuilder())
-            {
-                sb.EmitSysCall("Zoro.NativeNEP5.Call", "BalanceOf", bcpAssetId, addressHash);
-                sb.EmitSysCall("Zoro.NativeNEP5.Call", "Decimals", bcpAssetId);
-
-                var info = ZoroHelper.InvokeScript(sb.ToArray(), "");
-                var value = GetBalanceFromJson(info);
-
-                lblBcpBalance.Text = value;
-
-            }
-
-            using (ScriptBuilder sb = new ScriptBuilder())
-            {
-                sb.EmitSysCall("Zoro.NativeNEP5.Call", "BalanceOf", bctAssetId, addressHash);
-                sb.EmitSysCall("Zoro.NativeNEP5.Call", "Decimals", bctAssetId);
-
-                var info = ZoroHelper.InvokeScript(sb.ToArray(), "");
-                var value = GetBalanceFromJson(info);
-
-                lblBctBalance.Text = value;
-
-            }
-        }
-
-        private string GetBalanceFromJson(string info)
-        {
-            string result = "";
-            JObject json = JObject.Parse(info);
-
-            if (json.ContainsKey("result"))
-            {
-                JObject json_result = json["result"] as JObject;
-                JArray stack = json_result["stack"] as JArray;
-
-                if (stack != null && stack.Count >= 2)
-                {
-                    string balance = ZoroHelper.GetJsonValue(stack[0] as JObject);
-                    string decimals = ZoroHelper.GetJsonValue(stack[1] as JObject);
-
-                    Decimal value = Decimal.Parse(balance) / new Decimal(Math.Pow(10, int.Parse(decimals)));
-                    string fmt = "{0:N" + decimals + "}";
-                    result = string.Format(fmt, value);
-                }
-            }
-            else if (json.ContainsKey("error"))
-            {
-                JObject json_error_obj = json["error"] as JObject;
-                result = json_error_obj.ToString();
-            }
-
-            return result;
         }
 
         private void cbxNeedNep4_CheckedChanged(object sender, EventArgs e)
