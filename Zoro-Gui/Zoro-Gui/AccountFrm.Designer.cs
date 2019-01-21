@@ -53,6 +53,7 @@
             this.btnAccountRefresh.TabIndex = 41;
             this.btnAccountRefresh.Text = "刷新";
             this.btnAccountRefresh.UseVisualStyleBackColor = false;
+            this.btnAccountRefresh.Click += new System.EventHandler(this.btnAccountRefresh_Click);
             // 
             // lblBctBalance
             // 

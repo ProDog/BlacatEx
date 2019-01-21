@@ -104,5 +104,11 @@ namespace Zoro_Gui
 
             return result;
         }
+
+        private void btnAccountRefresh_Click(object sender, EventArgs e)
+        {
+            if (GetAccount())
+                GetBalance();
+        }
     }
 }
