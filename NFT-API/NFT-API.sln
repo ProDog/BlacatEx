@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NFT-API", "NFT-API\NFT-API.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NFT-Test", "NFT-Test\NFT-Test.csproj", "{5B714A53-59B1-4409-BECE-1F902E56F0B0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kestrel", "Kestrel\Kestrel.csproj", "{FFD8F166-1E8B-4B99-9FFF-20CC8D0323A0}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{5B714A53-59B1-4409-BECE-1F902E56F0B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B714A53-59B1-4409-BECE-1F902E56F0B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5B714A53-59B1-4409-BECE-1F902E56F0B0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FFD8F166-1E8B-4B99-9FFF-20CC8D0323A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FFD8F166-1E8B-4B99-9FFF-20CC8D0323A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FFD8F166-1E8B-4B99-9FFF-20CC8D0323A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FFD8F166-1E8B-4B99-9FFF-20CC8D0323A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,42 +1,36 @@
 ﻿using System.IO;
 using Newtonsoft.Json.Linq;
+using Zoro;
+using Zoro.Wallets;
 
 namespace NFT_API
 {
     class Config
     {
-        public static string nelApi;
-        public static string myApi;
-        public static string gasId;
-        public static string nftHash;
-        public static string adminAif;
-        public static decimal gasFee;
-        public static string httpAddress;
+        public static JObject configJson = null;
 
-        public static string bctHash;
-        public static string bcpHash;
+        public static Fixed8 GasPrice = Fixed8.One;
 
-        private static JObject configJson = null;
+        public static decimal GasNEP5Transfer = (decimal)4.5;
 
-        public static void Init(string configPath)
+        public static void init(string configPath)
         {
             configJson = JObject.Parse(File.ReadAllText(configPath));
-            nelApi = getValue("nelApi");
-            myApi = getValue("myApi");
-            gasId = getValue("gasId");
-            nftHash = getValue("nftHash");
-            adminAif = getValue("adminWif");
-            gasFee = decimal.Parse(getValue("gasFee"));
-            httpAddress = getValue("httpAddress");
-
-            bctHash = getValue("bctHash");
-            bcpHash = getValue("bcpHash");
         }
 
-        private static string getValue(string name)
+        public static string getStrValue(string name)
         {
             return configJson.GetValue(name).ToString();
         }
 
+        public static int getIntValue(string name)
+        {
+            return int.Parse(configJson.GetValue(name).ToString());
+        }
+
+        public static long getLongValue(string name)
+        {
+            return long.Parse(configJson.GetValue(name).ToString());
+        }
     }
 }

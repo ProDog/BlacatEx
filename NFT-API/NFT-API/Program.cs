@@ -1,17 +1,12 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Numerics;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using log4net.Config;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using ThinNeo;
 
 namespace NFT_API
 {
@@ -22,8 +17,8 @@ namespace NFT_API
 
         static void Main(string[] args)
         {
-            Config.Init("config.json");
             DbHelper.CreateDb();
+            Config.init("Config.json");
 
             var logRepository = LogManager.GetRepository(Assembly.GetExecutingAssembly());
             XmlConfigurator.Configure(logRepository, new FileInfo(@"log4net.config"));
@@ -35,7 +30,7 @@ namespace NFT_API
         private static void HttpServerStart()
         {
             Logger.Info("Http Server Start!");
-            httpListener.Prefixes.Add(Config.httpAddress);
+            httpListener.Prefixes.Add(Config.getStrValue("httpAddress"));
             while (true)
             {
                 httpListener.Start();
@@ -43,16 +38,15 @@ namespace NFT_API
                 HttpListenerContext requestContext = httpListener.GetContext();
                 //logger.Log("Have a request: " + requestContext.Request.RawUrl);
                 byte[] buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new RspInfo()
-                { state = false, msg = new Error() }));
+                { state = false, msg = "" }));
                 try
                 {
-                    var task = Task.Run(() => buffer = NftServer.ExecRequest(requestContext));
-                    task.Wait();
+                    buffer = NftServer.ExecRequest(requestContext);
                 }
                 catch (Exception e)
                 {
                     var rsp = JsonConvert.SerializeObject(new RspInfo()
-                    { state = false, msg = new Error() { error = e.Message } });
+                    { state = false, msg = e.Message });
                     buffer = Encoding.UTF8.GetBytes(rsp);
                     Logger.Error(rsp);
                 }

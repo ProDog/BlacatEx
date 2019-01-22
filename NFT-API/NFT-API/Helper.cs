@@ -1,149 +1,103 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Numerics;
 using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
-using ThinNeo;
 
 namespace NFT_API
 {
-    public class Helper
+    class Helper
     {
-        public static Dictionary<string, List<Utxo>> GetBalanceByAddress(string api, string _addr, ref Dictionary<string,string> usedUtxoDic)
+        public static string HttpPost(string url, byte[] data)
         {
-            //string input = @"{
-	           // 'jsonrpc': '2.0',
-            //    'method': 'invokescript',
-	           // 'params': ['#'],
-	           // 'id': '1'
-            //}";
-            //input = input.Replace("#", _addr);
-
-            //string result = PostAsync(Config.nelApi, input, Encoding.UTF8, 1).Result;
-
-            JObject response = JObject.Parse(Helper.HttpGetAsync(api + "?method=getutxo&id=1&params=['" + _addr + "']").Result);
-            JArray resJA = (JArray)response["result"];
-            Dictionary<string, List<Utxo>> _dir = new Dictionary<string, List<Utxo>>();
-            List<string> usedList = new List<string>(usedUtxoDic.Keys);
-            foreach (JObject j in resJA)
+            using (WebClient wc = new WebClient())
             {
-                Utxo utxo = new Utxo(j["addr"].ToString(), new ThinNeo.Hash256(j["txid"].ToString()), j["asset"].ToString(), decimal.Parse(j["value"].ToString()), int.Parse(j["n"].ToString()));
-                if (_dir.ContainsKey(j["asset"].ToString()))
-                {
-                    _dir[j["asset"].ToString()].Add(utxo);
-                }
-                else
-                {
-                    List<Utxo> l = new List<Utxo>();
-                    l.Add(utxo);
-                    _dir[j["asset"].ToString()] = l;
-                }
-
-                for (int i = usedList.Count - 1; i >= 0; i--)
-                {
-                    if (usedUtxoDic[usedList[i]] == utxo.txid.ToString())
-                    {
-                        usedUtxoDic.Remove(usedList[i]);
-                        usedList.Remove(usedList[i]);
-                    }
-                }
-
+                wc.Proxy = null;
+                wc.Headers["content-type"] = "text/plain;charset=UTF-8";
+                byte[] retdata = wc.UploadData(url, "POST", data);
+                return System.Text.Encoding.UTF8.GetString(retdata);
             }
-            return _dir;
         }
 
-        public static Transaction makeTran(ref List<Utxo> list_Gas, Dictionary<string, string> usedUtxoDic, Hash256 assetid, decimal gasfee)
+        public static string GetJsonAddress(JObject item)
         {
-            var tran = new ThinNeo.Transaction();
-            tran.type = ThinNeo.TransactionType.ContractTransaction;
-            tran.version = 0;//0 or 1
-
-            tran.attributes = new ThinNeo.Attribute[0];
-            var scraddr = "";
-            
-            decimal count = decimal.Zero;
-            List<ThinNeo.TransactionInput> list_inputs = new List<ThinNeo.TransactionInput>();
-            for (var i = list_Gas.Count - 1; i >= 0; i--)
+            var type = item["type"].ToString();
+            var value = item["value"];
+            if (type == "ByteArray")
             {
-                if (usedUtxoDic.ContainsKey(list_Gas[i].txid.ToString() + list_Gas[i].n))
-                    continue;
-
-                ThinNeo.TransactionInput input = new ThinNeo.TransactionInput();
-                input.hash = list_Gas[i].txid;
-                input.index = (ushort) list_Gas[i].n;
-                list_inputs.Add(input);
-                count += list_Gas[i].value;
-                scraddr = list_Gas[i].addr;
-                list_Gas.Remove(list_Gas[i]);
-                if (count >= gasfee)
-                    break;
+                return ZoroHelper.GetAddressFromScriptHash(ZoroHelper.HexString2Bytes(value.ToString()));
             }
-
-            tran.inputs = list_inputs.ToArray();
-            if (count >= gasfee)//输入大于等于输出
-            {
-                List<ThinNeo.TransactionOutput> list_outputs = new List<ThinNeo.TransactionOutput>();
-                //输出
-                //if (gasfee > decimal.Zero && targetaddr != null)
-                //{
-                //    ThinNeo.TransactionOutput output = new ThinNeo.TransactionOutput();
-                //    output.assetId = assetid;
-                //    output.value = gasfee;
-                //    output.toAddress = ThinNeo.Helper.GetPublicKeyHashFromAddress(targetaddr);
-                //    list_outputs.Add(output);
-                //}
-
-                //找零
-                var change = count - gasfee;
-                if (change > decimal.Zero)
-                {
-                    decimal splitvalue = (decimal)0.01;
-                    int i = 0;
-                    while (change > splitvalue && list_Gas.Count - 10 < usedUtxoDic.Count)
-                    {
-                        ThinNeo.TransactionOutput outputchange = new ThinNeo.TransactionOutput();
-                        outputchange.toAddress = Helper_NEO.GetScriptHash_FromAddress(scraddr);
-                        outputchange.value = splitvalue;
-                        outputchange.assetId = assetid;
-                        list_outputs.Add(outputchange);
-                        change -= splitvalue;
-                        i += 1;
-                        if (i > 50)
-                        {
-                            break;
-                        }
-                    }
-
-                    if (change > 0)
-                    {
-                        ThinNeo.TransactionOutput outputchange = new ThinNeo.TransactionOutput();
-                        outputchange.toAddress = Helper_NEO.GetScriptHash_FromAddress(scraddr);
-                        outputchange.value = change;
-                        outputchange.assetId = assetid;
-                        list_outputs.Add(outputchange);
-                    }
-
-                }
-
-                tran.outputs = list_outputs.ToArray();
-            }
-            else
-            {
-                throw new Exception("no enough money.");
-            }
-            return tran;
+            return "";
         }
 
-        public static async Task<string> PostAsync(string url, string data, Encoding encoding, int type = 3)
+        public static string GetJsonString(JObject item)
+        {
+            var type = item["type"].ToString();
+            var value = item["value"];
+            if (type == "ByteArray")
+            {
+                var bt = ZoroHelper.HexString2Bytes(value.ToString());
+                string str = System.Text.Encoding.ASCII.GetString(bt);
+                return str;
+            }
+            return "";
+        }
+
+        public static BigInteger GetJsonBigInteger(JObject item)
+        {
+            var type = item["type"].ToString();
+            var value = item["value"];
+            if (type == "ByteArray")
+            {
+                var bt = ZoroHelper.HexString2Bytes(value.ToString());
+                return new BigInteger(bt);
+            }
+            else if (type == "Integer")
+            {
+                return BigInteger.Parse(value.ToString());
+            }
+            return 0;
+        }
+
+        public static int GetJsonInteger(JObject item)
+        {
+            var type = item["type"].ToString();
+            var value = item["value"];
+            if (type == "Integer")
+            {
+                return int.Parse(value.ToString());
+            }
+            return 0;
+        }
+
+        public static string MakeRpcUrlPost(string url, string method, out byte[] data, JArray postArray)
+        {
+            var json = new JObject();
+            json["id"] = new JValue(1);
+            json["jsonrpc"] = new JValue("2.0");
+            json["method"] = new JValue(method);
+            var array = new JArray();
+            for (var i = 0; i < postArray.Count; i++)
+            {
+                array.Add(postArray[i]);
+            }
+            json["params"] = array;
+            data = System.Text.Encoding.UTF8.GetBytes(json.ToString());
+            return url;
+        }
+
+        public static string HttpGet(string url)
+        {
+            WebClient wc = new WebClient();
+            return wc.DownloadString(url);
+        }
+
+        public static string Post(string url, string data, Encoding encoding, int type = 3)
         {
             HttpWebRequest req = null;
             HttpWebResponse rsp = null;
             Stream reqStream = null;
-            //Stream resStream = null;
 
             try
             {
@@ -162,15 +116,13 @@ namespace NFT_API
                 }
 
                 req.Method = "POST";
-                //req.Accept = "text/xml,text/javascript";
                 req.ContinueTimeout = 10;
 
                 byte[] postData = encoding.GetBytes(data);
                 reqStream = req.GetRequestStreamAsync().Result;
                 reqStream.Write(postData, 0, postData.Length);
-                //reqStream.Dispose();
 
-                rsp = (HttpWebResponse) await req.GetResponseAsync();
+                rsp = (HttpWebResponse)req.GetResponse();
                 string result = GetResponseAsString(rsp, encoding);
 
                 return result;
@@ -226,41 +178,6 @@ namespace NFT_API
                 stream = null;
 
             }
-        }
-
-        public static async Task<string> HttpGetAsync(string url)
-        {
-            WebClient wc = new WebClient();
-            return await wc.DownloadStringTaskAsync(url);
-        }
-
-        public static async Task<string> HttpPost(string url, byte[] data)
-        {
-            WebClient wc = new WebClient();
-            wc.Headers["content-type"] = "text/plain;charset=UTF-8";
-            byte[] retdata = await wc.UploadDataTaskAsync(url, "POST", data);
-            return System.Text.Encoding.UTF8.GetString(retdata);
-        }
-
-        public static string Bytes2HexString(byte[] data)
-        {
-            StringBuilder sb = new StringBuilder();
-            foreach (var d in data)
-            {
-                sb.Append(d.ToString("x02"));
-            }
-            return sb.ToString();
-        }
-        public static byte[] HexString2Bytes(string str)
-        {
-            if (str.IndexOf("0x") == 0)
-                str = str.Substring(2);
-            byte[] outd = new byte[str.Length / 2];
-            for (var i = 0; i < str.Length / 2; i++)
-            {
-                outd[i] = byte.Parse(str.Substring(i * 2, 2), System.Globalization.NumberStyles.HexNumber);
-            }
-            return outd;
         }
     }
 }
