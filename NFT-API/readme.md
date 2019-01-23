@@ -236,28 +236,35 @@ POST，接口：http://xxx.xxx:xxxx/getApplicationLog
 {
     "state": true,
     "msg": {
-        "height": 17840,
+        "height": 21123,
         "applicationLog": {
             "addPointLogs": [
                 {
-                    "tokenId": "e4658581f20649c32314326f180c7ec89587b786bc29ab2a9a8ce4b7c96d7418",
+                    "tokenId": "d23fe468f6e698d2957d228cc07b275a448348bbd9da542df510d61a7dda030a",
                     "ownerAddress": "AbN2K2trYzgx8WMg2H7U7JHH6RQVzz2fnx",
                     "addPoint": 400
+                },
+                {
+                    "tokenId": "e4658581f20649c32314326f180c7ec89587b786bc29ab2a9a8ce4b7c96d7418",
+                    "ownerAddress": "AbN2K2trYzgx8WMg2H7U7JHH6RQVzz2fnx",
+                    "addPoint": 40
                 }
             ],
             "createNftLogs": {
+                "ownerAddress": "AcQLYjGbQU2bEQ8RKFXUcf8XvromfUQodq",
+                "buyCount": 10,
+                "payValue": 35991,
                 "tokenIdList": [
-                    "e4658581f20649c32314326f180c7ec89587b786bc29ab2a9a8ce4b7c96d7418",
-                    "2d99161a1b53342f0f3abc6f6e93513ce09eb7b3caf63fce2d0a7e566147591a",
-                    "d23fe468f6e698d2957d228cc07b275a448348bbd9da542df510d61a7dda030a",
-                    "fcac236be6fe8dd62268df68d169be7b428396a34b6fd92f0ccbb15549101680",
-                    "5a89efaf7c9d51f35d5ac616c4efe0a14a66631dbe42d02b62981eba10211168",
-                    "000265927502c6f31b3a28d0e4cc984db8b990ac7dcaaf59f8c1191a2955de4d",
-                    "7f7abfd4ca8b8f8c18f17e42bfaa3265bcb7150514df8974ce99b31b3827b93f",
-                    "f6e18cd5220cde0c4ce985be29fa1c53744f8ce892770ea78233b9ae3cc68fcb",
-                    "edd8cd96fdb26e9554b5b3869fe22195a378a052aa131102fcacd33678739efe",
-                    "fedcd7f54241cfccccec94610ef4dce660f299468513da715fe930911212be7c",
-                    "98ee9f9abd5daf662175761e276dff9e12cf871a70a02a1490f80cb4da7232fc"
+                    "12a52e3c6d200b4a51015d4874ed332b05ea98c5073eaf01bd285765af2922a1",
+                    "3912b77f223e71a6a0eb6d2fd88f2d26aec9a5f72b1e9e91ebc877cfe3b26d8d",
+                    "f81c7397a631f07fd2f1378f635c4c7f43ef2e069821873cb05288f5b9e18d11",
+                    "3fda1ae5a591d0a85623f740211fa028950c9b01bd5e5c2a3e0694ad749cc0c5",
+                    "e3e93f04e33b4f91539fae5083c04d2622ff3faae10844dec42e07603d282afc",
+                    "64ac19439580c549d50d2ce38b1f4b57f01f2dc85227764f712457dd82c344fa",
+                    "d0bbe82d7a8be6fbe0f2587f9da8e6d1dee3f9b2d65e42d222c0ccdad35c9091",
+                    "542867fa6a0cb3bfebc8028365e1dfe16b8ec866c65f4d793ff6ccb522b60ae2",
+                    "8ce8138eaeb40c93a664bd3cc9964cac71e0a84b04a904787b489031f70bb24d",
+                    "fe6864542a48be9798e9cea84143dedb74c7337d6caf3bf8b83c7c11f0d01e55"
                 ]
             }
         }

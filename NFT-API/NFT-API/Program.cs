@@ -3,7 +3,6 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using log4net;
 using log4net.Config;
 using Newtonsoft.Json;
@@ -45,8 +44,7 @@ namespace NFT_API
                 }
                 catch (Exception e)
                 {
-                    var rsp = JsonConvert.SerializeObject(new RspInfo()
-                    { state = false, msg = e.Message });
+                    var rsp = JsonConvert.SerializeObject(new RspInfo() { state = false, msg = e.Message });
                     buffer = Encoding.UTF8.GetBytes(rsp);
                     Logger.Error(rsp);
                 }

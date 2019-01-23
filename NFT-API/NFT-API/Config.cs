@@ -11,11 +11,12 @@ namespace NFT_API
 
         public static Fixed8 GasPrice = Fixed8.One;
 
-        public static decimal GasNEP5Transfer = (decimal)4.5;
+        public static string nftHash;
 
         public static void init(string configPath)
         {
             configJson = JObject.Parse(File.ReadAllText(configPath));
+            nftHash = getStrValue("nftHash");
         }
 
         public static string getStrValue(string name)

@@ -15,11 +15,17 @@ namespace NFT_API
         public string key;
     }
 
+    public class SendRawResult
+    {
+        public string txid;
+        public string nftHash;
+    }
+
     public class NFTInfo
     {
         public string TokenId; //tokenid 证书ID
         public string Owner; //所有者 address
-        public int Rank; //等级
+        public int Grade; //等级
         public int AllPoint; //贡献值
         public int AvailablePoint; //可用贡献值
         public string InviterTokenId; //邀请者证书ID
@@ -61,9 +67,9 @@ namespace NFT_API
 
     public class CreateNftLog
     {
-        //public string ownerAddress;
-        //public BigInteger buyCount;
-        //public long payValue;
+        public string ownerAddress;
+        public BigInteger buyCount;
+        public long payValue;
         public List<string> tokenIdList;
     }
 
