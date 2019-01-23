@@ -100,7 +100,7 @@ namespace CES
                 //更新确认次数
                 CheckBtcConfirm(Config.confirmCountDic["btc"], btcTransRspList, index, rpcC);
                 //发送和保存交易信息
-                MyHelper.SendTransInfo(btcTransRspList);
+                Helper.SendTransInfo(btcTransRspList);
                 //移除确认次数为 设定数量 和 0 的交易
                 btcTransRspList.RemoveAll(x => x.confirmcount >= Config.confirmCountDic["btc"] || x.confirmcount == 0);
             }

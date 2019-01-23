@@ -33,12 +33,12 @@ namespace CES
             ethIndex = getIndex("eth") + 1;
             btcIndex = getIndex("btc") + 1;
             //btcIndex = 1447085 + 1;
-            confirmCountDic = getIntDic("confirm_count");
+            confirmCountDic = getIntDic("confirmCount");
             apiDic = getStringDic("api");
-            myAccountDic = getStringDic("my_account");
-            minerFeeDic = getDecimalDic("miner_fee");
-            adminWifDic = getStringDic("admin");
-            tokenHashDic = getStringDic("token");
+            myAccountDic = getStringDic("gatherAddress");
+            minerFeeDic = getDecimalDic("gasFee");
+            adminWifDic = getStringDic("adminWif");
+            tokenHashDic = getStringDic("tokenHash");
             factorDic = getDecimalDic("factor");
 
             var net = (string)getValue("netType");
@@ -79,7 +79,7 @@ namespace CES
         public static int  GetNeoHeight()
         {
             var url = apiDic["neo"] + "?method=getblockcount&id=1&params=[]";
-            var result = MyHelper.HttpGet(url).Result;
+            var result = Helper.HttpGet(url);
             var res = JObject.Parse(result)["result"];
             int height = int.Parse(res[0]["blockcount"].ToString());
             return height;

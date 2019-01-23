@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 using log4net;
 using Nethereum.Geth;
 using Nethereum.Hex.HexTypes;
@@ -100,7 +98,7 @@ namespace CES
                 //更新确认次数
                 CheckEthConfirm(Config.confirmCountDic["eth"], ethTransRspList, index, web3);
                 //发送和保存交易信息
-                MyHelper.SendTransInfo(ethTransRspList);
+                Helper.SendTransInfo(ethTransRspList);
                 //移除确认次数为 设定数量 和 0 的交易
                 ethTransRspList.RemoveAll(x => x.confirmcount >= Config.confirmCountDic["eth"] || x.confirmcount == 0);
             }

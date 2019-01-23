@@ -13,13 +13,13 @@ using ThinNeo;
 
 namespace CES
 {
-    public class MyHelper
+    public class Helper
     {
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         //获取地址的utxo来得出地址的资产  
         public static  Dictionary<string, List<Utxo>> GetBalanceByAddress(string api, string _addr, ref Dictionary<string, string> usedUtxoDic)
         {
-            JObject response = JObject.Parse(HttpGet(api + "?method=getutxo&id=1&params=['" + _addr + "']").Result);
+            JObject response = JObject.Parse(HttpGet(api + "?method=getutxo&id=1&params=['" + _addr + "']"));
             JArray resJA = (JArray)response["result"];
             Dictionary<string, List<Utxo>> _dir = new Dictionary<string, List<Utxo>>();
             List<string> usedList = new List<string>(usedUtxoDic.Keys);
@@ -324,18 +324,34 @@ namespace CES
             }
         }
 
-        public static async Task<string> HttpGet(string url)
+        public static string HttpGet(string url)
         {
             WebClient wc = new WebClient();
-            return await wc.DownloadStringTaskAsync(url);
+            return wc.DownloadString(url);
         }
 
-        public static async Task<string> HttpPost(string url, byte[] data)
+        public static string HttpPost(string url, byte[] data)
         {
             WebClient wc = new WebClient();
             wc.Headers["content-type"] = "text/plain;charset=UTF-8";
-            byte[] retdata = await wc.UploadDataTaskAsync(url, "POST", data);
+            byte[] retdata = wc.UploadData(url, "POST", data);
             return Encoding.UTF8.GetString(retdata);
+        }
+
+        public static string MakeRpcUrlPost(string url, string method, out byte[] data, JArray postArray)
+        {
+            var json = new JObject();
+            json["id"] = new JValue(1);
+            json["jsonrpc"] = new JValue("2.0");
+            json["method"] = new JValue(method);
+            var array = new JArray();
+            for (var i = 0; i < postArray.Count; i++)
+            {
+                array.Add(postArray[i]);
+            }
+            json["params"] = array;
+            data = System.Text.Encoding.UTF8.GetBytes(json.ToString());
+            return url;
         }
 
         /// <summary>

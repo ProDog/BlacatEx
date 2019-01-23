@@ -1,11 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Numerics;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using log4net;
 using NBitcoin;
+using Neo.VM;
 using Nethereum.Hex.HexConvertors.Extensions;
 using Nethereum.Hex.HexTypes;
 using Nethereum.Web3;
@@ -14,22 +16,23 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QBitNinja.Client;
 using QBitNinja.Client.Models;
+using Zoro;
+using Zoro.IO;
+using Zoro.Network.P2P.Payloads;
+using Zoro.Wallets;
+using Transaction = NBitcoin.Transaction;
 
 namespace CES
 {
-    public class HttpHelper
+    public class HttpServer
     {
         private static HttpListener httpListener = new HttpListener();
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        public static void Start()
-        {
-            HttpServerStart(); 
-        }
 
         /// <summary>
         /// Http 服务接口
         /// </summary>
-        private static void HttpServerStart()
+        public static void Start()
         {
             Logger.Info("Http Server Start!");
             httpListener.Prefixes.Add(Config.apiDic["http"]);
@@ -39,18 +42,27 @@ namespace CES
                 HttpListenerContext requestContext = httpListener.GetContext();
 
                 byte[] buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new RspInfo()
-                { state = false, msg = new Error() }));
+                { state = false, msg = null }));
 
                 try
                 {
-                    var task = Task.Run(() => buffer = ExecRequest(requestContext));
-                    task.Wait();
+                    //获取客户端传递的参数
+                    StreamReader sr = new StreamReader(requestContext.Request.InputStream);
+                    var reqMethod = requestContext.Request.RawUrl.Replace("/", "");
+                    var data = sr.ReadToEnd();
+
+                    var json = new JObject();
+                    if (!string.IsNullOrEmpty(data))
+                        json = JObject.Parse(data);
+
+                    Logger.Info($"Have a request:{reqMethod}; post data:{data}");
+
+                    buffer = GetResponse(reqMethod, json);
                 }
 
                 catch (Exception e)
                 {
-                    var rsp = JsonConvert.SerializeObject(new RspInfo()
-                    { state = false, msg = new Error() { error = e.Message } });
+                    var rsp = JsonConvert.SerializeObject(new RspInfo() { state = false, msg = e.Message });
                     buffer = Encoding.UTF8.GetBytes(rsp);
                     Logger.Error(rsp);
                 }
@@ -68,46 +80,28 @@ namespace CES
             }
         }
 
-        private static byte[] ExecRequest(HttpListenerContext requestContext)
-        {
-            //获取客户端传递的参数
-            StreamReader sr = new StreamReader(requestContext.Request.InputStream);
-            var reqMethod = requestContext.Request.RawUrl.Replace("/", "");
-            var data = sr.ReadToEnd();
-            byte[] buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new RspInfo() { }));
-            var json = new JObject();
-            if (!string.IsNullOrEmpty(data))
-                json = JObject.Parse(data);
-
-            Logger.Info($"Have a request:{reqMethod}; post data:{data}");
-
-            buffer = GetResponse(reqMethod, json);
-
-            return buffer;
-        }
-
         private static byte[] GetResponse(string reqMethod, JObject json)
         {
             RspInfo rspInfo = new RspInfo();
             switch (reqMethod)
             {
-                case "getbalance":
-                    rspInfo = GetNep5Balance(json["coinType"].ToString());
+                case "getBalance":
+                    rspInfo = GetBalanceRsp(json["coinType"].ToString());
                     break;
-                case "getaccount":
-                    rspInfo = GetAccount(json["coinType"].ToString());
+                case "getAccount":
+                    rspInfo = GetAccountRsp(json["coinType"].ToString());
                     break;
-                case "deploy":
-                    rspInfo = DeployNep5Money(json);
+                case "deployNep5":
+                    rspInfo = DeployNep5Rsp(json);
                     break;
-                case "addAddr":
-                    rspInfo = AddAddress(json);
+                case "addAddress":
+                    rspInfo = AddAddressRsp(json);
                     break;
                 case "gatherCoin":
-                    rspInfo = GatherCoin(json);
+                    rspInfo = GatherCoinRsp(json);
                     break;
                 case "exchange":
-                    rspInfo = ExchangeCoin(json);
+                    rspInfo = ExchangeCoinRsp(json);
                     break;
                 default:
                     break;
@@ -116,34 +110,65 @@ namespace CES
             return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(rspInfo));
         }
 
-        private static RspInfo ExchangeCoin(JObject json)
+        private static RspInfo ExchangeCoinRsp(JObject json)
         {
+            RspInfo rspInfo = new RspInfo() { state = false, msg = "Input data error!" };
             string recTxid = json["txid"].ToString();
-            var coinType = json["type"].ToString();
+            var coinType = json["coinType"].ToString();
+            UInt160 nep5Hash;
+            decimal value = 0;
             string sendTxid = DbHelper.GetSendTxid(recTxid);
             if (string.IsNullOrEmpty(sendTxid))
             {
-                var result = ZoroTrans.ExchangeAsync(coinType, json).Result;
-                if (result != null && result.Contains("result"))
-                {
-                    var res = JObject.Parse(result)["result"] as JArray;
-                    sendTxid = (string)res[0]["txid"];
-                }
+                nep5Hash = UInt160.Parse(Config.tokenHashDic[coinType]);
 
-                if (!string.IsNullOrEmpty(sendTxid))
+                value = Math.Round((decimal)json["value"] * (decimal)100000000.00000000, 0);
+                UInt160 targetscripthash = ZoroHelper.GetPublicKeyHashFromAddress(json["address"].ToString());
+                ScriptBuilder sb = new ScriptBuilder();
+
+                KeyPair keypair = ZoroHelper.GetKeyPairFromWIF(Config.adminWifDic[coinType]);
+                var adminHash = ZoroHelper.GetPublicKeyHashFromWIF(Config.adminWifDic[coinType]);
+
+                sb.EmitSysCall("Zoro.NativeNEP5.Call", "Transfer", nep5Hash, adminHash, targetscripthash, new BigInteger(value));
+                decimal gas = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
+
+                InvocationTransaction tx = ZoroHelper.MakeTransaction(sb.ToArray(), keypair, Fixed8.FromDecimal(gas), Fixed8.One);
+                var result = ZoroHelper.SendRawTransaction(tx.ToArray().ToHexString(), "");
+                sendTxid = tx.Hash.ToString();
+
+                var state = (bool)(JObject.Parse(result)["result"]);
+                if (state)
                 {
+                    rspInfo = new RspInfo()
+                    {
+                        state = true,
+                        msg = new TransResult() { transTxid = sendTxid, key = json["key"].ToString() }
+                    };
                     DbHelper.SaveExchangeInfo(recTxid, sendTxid);
-                    return new RspInfo { state = true, msg = new Txid { txid = sendTxid } };
                 }
                 else
-                    return new RspInfo { state = false, msg = new Error { error = result } };
+                {
+                    rspInfo = new RspInfo()
+                    {
+                        state = false,
+                        msg = result
+                    };
+                }
+                return rspInfo;
             }
             else
-                return new RspInfo { state = true, msg = new Txid { txid = sendTxid } };
-
+            {
+                rspInfo = new RspInfo()
+                {
+                    state = true,
+                    msg = new TransResult() { transTxid = sendTxid, key = json["key"].ToString() }
+                };
+            }
+            return rspInfo;
         }
 
-        private static RspInfo GatherCoin(JObject json)
+
+        private static RspInfo GatherCoinRsp(JObject json)
         {
             var msg = "";
             switch (json["type"].ToString())
@@ -162,10 +187,10 @@ namespace CES
             if (msg.Contains("Error"))
                 return new RspInfo { state = false, msg = msg };
             else
-                return new RspInfo { state = true, msg = new Txid { txid = msg } };
+                return new RspInfo { state = true, msg = msg };
         }
 
-        private static RspInfo AddAddress(JObject json)
+        private static RspInfo AddAddressRsp(JObject json)
         {
             string coinType = json["type"].ToString();
             string address = json["address"].ToString();
@@ -185,48 +210,39 @@ namespace CES
             return new RspInfo { state = true, msg = "Add a new " + coinType + " address: " + address };
         }
 
-        private static RspInfo DeployNep5Money(JObject json)
+        private static RspInfo DeployNep5Rsp(JObject json)
         {
             string coinType = json["coinType"].ToString();
+
+            if (coinType == "bct")
+                return ExchangeCoinRsp(json);
+
             string oldTxid = json["txid"].ToString();
             string deployTxid = DbHelper.GetDeployStateByTxid(coinType, oldTxid);
-            if (string.IsNullOrEmpty(deployTxid)) //没有发行NEP5 BTC/ETH
+            if (string.IsNullOrEmpty(deployTxid)) //没有发放NEP5 BTC/ETH
             {
-                var deployResult = ZoroTrans.DeployNep5TokenAsync(coinType, json).Result;
+                var deployResult = ZoroTrans.DeployNep5Coin(coinType, json);
+
                 if (deployResult != null && deployResult.Contains("result"))
                 {
                     var res = JObject.Parse(deployResult)["result"] as JArray;
 
                     if (!string.IsNullOrEmpty((string)res[0]["txid"]))
                     {
-                        if (coinType == "cneo" || coinType == "bct")
-                        {
-                            var transInfo = new TransactionInfo();
-                            transInfo.coinType = coinType;
-                            transInfo.txid = oldTxid;
-                            transInfo.deployTxid = (string)res[0]["txid"];
-                            transInfo.confirmcount = 1;
-                            transInfo.value = (decimal)json["value"];
-                            transInfo.toAddress = json["address"].ToString();
-                            transInfo.height = Config.GetNeoHeight() + 1;
-                            transInfo.deployTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                            DbHelper.SaveDeployInfo(transInfo);
-                        }
-                        else
-                            DbHelper.SaveDeployInfo(res[0]["txid"].ToString(), oldTxid, coinType);
-                        return new RspInfo { state = true, msg = new DeployInfo() { CoinType = coinType, OldTxid = oldTxid, DeployTxid = (string)res[0]["txid"] } };
+                        DbHelper.SaveDeployInfo(res[0]["txid"].ToString(), oldTxid, coinType);
+                        return new RspInfo { state = true, msg = new TransResult() { coinType = coinType, key = oldTxid, transTxid = (string)res[0]["txid"] } };
                     }
 
                     else //转账出错
-                        return new RspInfo { state = false, msg = new Error() { error = deployResult } };
+                        return new RspInfo { state = false, msg = deployResult };
 
                 }
             }
-            return new RspInfo { state = true, msg = new DeployInfo() { CoinType = coinType, OldTxid = oldTxid, DeployTxid = deployTxid } };
+            return new RspInfo { state = true, msg = new TransResult() { coinType = coinType, key = oldTxid, transTxid = deployTxid } };
 
         }
 
-        private static RspInfo GetAccount(string coinType)
+        private static RspInfo GetAccountRsp(string coinType)
         {
             string address = string.Empty;
             string priKey = string.Empty;
@@ -246,13 +262,13 @@ namespace CES
                 default:
                     break;
             }
-            return new RspInfo { state = true, msg = new AccountInfo() { CoinType = coinType, PriKey = priKey, Address = address } };
+            return new RspInfo { state = true, msg = new AccountInfo() { coinType = coinType, prikey = priKey, address = address } };
         }
 
-        private static RspInfo GetNep5Balance(string coinType)
+        private static RspInfo GetBalanceRsp(string coinType)
         {
-            var balance = ZoroTrans.GetBalanceAsync(coinType).Result;
-            return new RspInfo { state = true, msg = new CoinInfon() { CoinType = coinType, Balance = balance } };
+            var balance = ZoroTrans.GetBalance(coinType);
+            return new RspInfo { state = true, msg = new CoinInfon() { coinType = coinType, balance = balance } };
         }
 
         /// <summary>

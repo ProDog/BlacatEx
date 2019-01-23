@@ -30,7 +30,7 @@ namespace CES
                             Logger.Info("Parse NEO Height:" + Config.neoIndex);
                         }
                         var transRspList = ParseNeoBlock(Config.neoIndex, Config.myAccountDic["cneo"]);
-                        MyHelper.SendTransInfo(transRspList);
+                        Helper.SendTransInfo(transRspList);
                         DbHelper.SaveIndex(Config.neoIndex, "neo");
                         Config.neoIndex++;
                     }
@@ -72,7 +72,7 @@ namespace CES
                             var value = n["state"] as JObject;
                             var method = (value["value"] as JArray)[0] as JObject;
                             var name = Encoding.UTF8.GetString(
-                                Helper.HexString2Bytes((string) method["value"]));
+                                ThinNeo.Helper.HexString2Bytes((string) method["value"]));
 
                             if (name == "transfer")
                             {
@@ -80,18 +80,18 @@ namespace CES
                                 if (string.IsNullOrEmpty((string) to["value"]))
                                     continue;
                                 var to_address =
-                                    Helper_NEO.GetAddress_FromScriptHash(Helper.HexString2Bytes((string) to["value"]));
+                                    Helper_NEO.GetAddress_FromScriptHash(ThinNeo.Helper.HexString2Bytes((string) to["value"]));
                                 if (to_address == address)
                                 {
                                     var neoTrans = new TransactionInfo();
                                     var from = (value["value"] as JArray)[1] as JObject;
                                     var from_address =
                                         Helper_NEO.GetAddress_FromScriptHash(
-                                            Helper.HexString2Bytes((string) from["value"]));
+                                            ThinNeo.Helper.HexString2Bytes((string) from["value"]));
                                     var amount = (value["value"] as JArray)[3] as JObject;
                                     var transAmount =
                                         (decimal) new BigInteger(
-                                            Helper.HexString2Bytes((string) amount["value"])) /
+                                            ThinNeo.Helper.HexString2Bytes((string) amount["value"])) /
                                         Config.factorDic["cneo"];
                                     neoTrans.toAddress = address;
                                     neoTrans.coinType = "cneo";

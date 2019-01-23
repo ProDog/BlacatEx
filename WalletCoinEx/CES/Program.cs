@@ -35,7 +35,7 @@ namespace CES
             var btcTask = Task.Run(() => BtcWatcher.Start());
             var ethTask = Task.Run(() => EthWatcher.Start());
             var neoTask = Task.Run(() => NeoWatcher.Start());
-            var httpTask = Task.Run(() => HttpHelper.Start());
+            var httpTask = Task.Run(() => HttpServer.Start());
 
             Logger.Info("CES Start.");
         }

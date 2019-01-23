@@ -12,7 +12,6 @@
         public decimal value;  //金额
         public string deployTxid;//nep5发行txid
         public string deployTime; //nep5发行时间
-
     }
 
 
@@ -42,33 +41,23 @@
         public dynamic msg;
     }
 
-    public class Txid
-    {
-        public string txid;
-    }
-
-    public class Error
-    {
-        public string error;
-    }
-
     public class CoinInfon
     {
-        public string CoinType { get; set; }
-        public decimal Balance { get; set; }
+        public string coinType { get; set; }
+        public decimal balance { get; set; }
     }
 
-    public class DeployInfo
+    public class TransResult
     {
-        public string CoinType { get; set; }
-        public string OldTxid { get; set; }
-        public string DeployTxid { get; set; }
+        public string coinType { get; set; }
+        public string key { get; set; }
+        public string transTxid { get; set; }
     }
 
     public class AccountInfo
     {
-        public string CoinType { get; set; }
-        public string PriKey { get; set; }
-        public string Address { get; set; }
+        public string coinType { get; set; }
+        public string prikey { get; set; }
+        public string address { get; set; }
     }
 }
