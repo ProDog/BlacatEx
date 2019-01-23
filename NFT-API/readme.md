@@ -4,25 +4,25 @@
  NFT 合约实现了 BlaCat 合伙人推广的证书功能
 
 证书属性包括：
-证书 ID，所有者，等级，贡献值，邀请者证书 ID。
+证书 ID，所有者，等级，累计贡献值，可用贡献值，邀请者证书 ID。
 
 每个 NFT 证书有唯一 ID；所有特权属于证书，证书拥有者可以享有特权。
 
 主要功能：
 
-* 初始发行：为首批证书持有者发行，内部使用；
 * 购买：每个地址可以拥有多个 NFT 证书，购买时需要填写邀请人证书地址，每个证书只有一个邀请人；
 * 升级：证书可以根据邀请的人数增加贡献值，积分达到升级要求后可以选择升级，总共有四个等级；
 * 交易：证书可以转卖给其他人，转卖后证书的积分和等级特权等会跟着转移；
 * 加分：证书持有者邀请一个普通会员可以获得相应的贡献值。
 
 辅助功能有：
-* NFT 证书信息，查询 NFT 证书所有信息的接口。
+* NFT 证书信息，查询 NFT 证书所有信息的接口;
+* 获取某地址下所有的证书 ID。
 
 ## 调用接口
 
 ### buy 
-购买发行：POST，传入付钱的 txid 和邀请者 TokenId，购买数量
+购买发行：POST，传入付钱的 txid 和邀请者 TokenId，购买数量 count
 
 http://xxx.xxx:xxxx/buy
 ```
@@ -37,7 +37,7 @@ http://xxx.xxx:xxxx/buy
 ```
 {
     "state":true,
-    "msg":"0x604c5a37520a3a114015026735faddae6d16c4d972d75309519a3bcb0545847f"   
+    "msg":"0x604c5a37520a3a114015026735faddae6d16c4d972d75309519a3bcb0545847f"
 }
 ```
 ### upgrade
@@ -186,7 +186,7 @@ http://xxx.xxx:xxxx/getBindNft
 }
 ```
 ### getUserNfts 
-查询所有证书ID：POST，接口和参数如下：
+查询该地址下所有证书ID：POST，接口和参数如下：
 
 http://xxx.xxx:xxxx/getUserNfts
 ```
@@ -218,10 +218,10 @@ http://xxx.xxx:xxxx/getUserNfts
 
 产生 ApplicationLog 的接口：
 
-* buy 会产生 addpoint 和 create 的 notify；
-* upgrade 会产生 upgrade 的 notify；
-* exchange 会产生 exchange 的 notify；
-* addPoint 会产生 addPoint 的 notify。
+* buy 会产生 addpoint 和 create 的 ApplicationLog；
+* upgrade 会产生 upgrade 的 ApplicationLog；
+* exchange 会产生 exchange 的 ApplicationLog；
+* addPoint 会产生 addPoint 的 ApplicationLog。
 
 POST，接口：http://xxx.xxx:xxxx/getApplicationLog
 ```
@@ -265,6 +265,12 @@ POST，接口：http://xxx.xxx:xxxx/getApplicationLog
 }
 ```
 下面是一笔 upgrade 交易产生的 ApplicationLog
+```
+{
+    "txid":"0x99161a1b53342f0f3abc6f6e93513ce09eb7b3caf63fce2d0a7e566147591c",
+    "method":"upgrade"
+}
+```
 ```
 {  
     "state": true,

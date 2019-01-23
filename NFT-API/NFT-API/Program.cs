@@ -18,7 +18,7 @@ namespace NFT_API
         static void Main(string[] args)
         {
             DbHelper.CreateDb();
-            Config.init("Config.json");
+            Config.init("config.json");
 
             var logRepository = LogManager.GetRepository(Assembly.GetExecutingAssembly());
             XmlConfigurator.Configure(logRepository, new FileInfo(@"log4net.config"));
