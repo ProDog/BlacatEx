@@ -76,6 +76,7 @@ namespace NFT_API
                     break;
                 case "exchange":
                     sb = ExchangeBulider(json);
+                    gas = 10;
                     break;
             }
 
@@ -206,7 +207,7 @@ namespace NFT_API
                         applicationLog.applicationLog = GetExchange(notificationsArray[0] as JObject);
                         break;
                     case "upgrade":
-                        applicationLog.applicationLog = GetUpgradeLog(notificationsArray[0] as JObject);
+                        applicationLog.applicationLog = GetUpgradeLog(notificationsArray);
                         break;
                     case "addPoint":
                         applicationLog.applicationLog = GetAddPointLog(notificationsArray[0] as JObject);
@@ -263,15 +264,15 @@ namespace NFT_API
             if (value != null && value.Count > 5)
             {
                 if (value[0]["type"].ToString() == "ByteArray")
-                    nftInfo.TokenId = value[0]["value"].ToString();
+                    nftInfo.tokenId = value[0]["value"].ToString();
 
-                nftInfo.Owner = Helper.GetJsonAddress((JObject)value[1]);
-                nftInfo.Grade = Helper.GetJsonInteger((JObject)value[2]);
-                nftInfo.AllPoint = Helper.GetJsonInteger((JObject)value[3]);
-                nftInfo.AvailablePoint = Helper.GetJsonInteger((JObject)value[4]);
+                nftInfo.owner = Helper.GetJsonAddress((JObject)value[1]);
+                nftInfo.grade = Helper.GetJsonInteger((JObject)value[2]);
+                nftInfo.allPoint = Helper.GetJsonInteger((JObject)value[3]);
+                nftInfo.availablePoint = Helper.GetJsonInteger((JObject)value[4]);
 
                 if (value[5]["type"].ToString() == "ByteArray")
-                    nftInfo.InviterTokenId = value[5]["value"].ToString();
+                    nftInfo.inviterTokenId = value[5]["value"].ToString();
             }
             return new RspInfo() { state = true, msg = nftInfo };
         }
@@ -296,15 +297,21 @@ namespace NFT_API
             return new RspInfo() { state = true, msg = stack["value"].ToString() };
         }
 
-        private static UpgradeLog GetUpgradeLog(JObject notification)
+        private static AddGradeLog GetUpgradeLog(JArray notificationsArray)
         {
+            var addGradeLog = new AddGradeLog();
             var upgradeLog = new UpgradeLog();
+            var notification = notificationsArray[0] as JObject;
             var jValue = notification["state"]["value"] as JArray;
             upgradeLog.tokenId = jValue[1]["value"].ToString();
             upgradeLog.ownerAddress = Helper.GetJsonAddress((JObject)jValue[2]);
             upgradeLog.lastGrade= (int)jValue[3]["value"];
             upgradeLog.nowGrade = (int)jValue[4]["value"];
-            return upgradeLog;
+
+            addGradeLog.upgradeLog = upgradeLog;
+            addGradeLog.addPointLog = GetAddPointLog(notificationsArray[1] as JObject);
+
+            return addGradeLog;
         }
 
         private static ExchangeLog GetExchange(JObject notification)
@@ -321,7 +328,7 @@ namespace NFT_API
         {
             var bindLog = new BindLog();
             var jValue = notification["state"]["value"] as JArray;
-            bindLog.ownerAddress = Helper.GetJsonAddress((JObject)jValue[2]);
+            bindLog.ownerAddress = Helper.GetJsonAddress((JObject)jValue[1]);
             bindLog.tokenId= jValue[2]["value"].ToString();
             return bindLog;
         }
@@ -329,19 +336,19 @@ namespace NFT_API
         private static BuyNftLog GetBuyLog(JArray notificationsArray)
         {
             var buyNftLog = new BuyNftLog();
-            buyNftLog.addPointLogs = new List<AddPointLog>();
-            buyNftLog.createNftLogs = new CreateNftLog();
+            buyNftLog.addPointLog = new List<AddPointLog>();
+            buyNftLog.createNftLog = new CreateNftLog();
 
             if (notificationsArray.Count == 3)
             {
-                buyNftLog.addPointLogs.Add(GetAddPointLog(notificationsArray[0] as JObject));
-                buyNftLog.addPointLogs.Add(GetAddPointLog(notificationsArray[1] as JObject));
-                buyNftLog.createNftLogs = GetCreateLog(notificationsArray[2] as JObject);
+                buyNftLog.addPointLog.Add(GetAddPointLog(notificationsArray[0] as JObject));
+                buyNftLog.addPointLog.Add(GetAddPointLog(notificationsArray[1] as JObject));
+                buyNftLog.createNftLog = GetCreateLog(notificationsArray[2] as JObject);
             }
             else if (notificationsArray.Count == 2)
             {
-                buyNftLog.addPointLogs.Add(GetAddPointLog(notificationsArray[0] as JObject));
-                buyNftLog.createNftLogs = GetCreateLog(notificationsArray[1] as JObject);
+                buyNftLog.addPointLog.Add(GetAddPointLog(notificationsArray[0] as JObject));
+                buyNftLog.createNftLog = GetCreateLog(notificationsArray[1] as JObject);
             }
             else
                 throw new Exception("ApplicationLog error.");

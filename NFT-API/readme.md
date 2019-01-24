@@ -1,6 +1,5 @@
 ﻿# NFT证书 合约说明
 
-## 介绍
  NFT 合约实现了 BlaCat 合伙人推广的证书功能
 
 证书属性包括：
@@ -29,7 +28,9 @@ http://xxx.xxx:xxxx/buy
 {
     "txid":"0x1e23bdfa643c2c9595766d93ddebbee46446d2acd6f67d005989db1ade883fc9",
     "count":10,
-    "inviterTokenId":"e4658581f20649c32314326f180c7ec89587b786bc29ab2a9a8ce4b7c96d7418"
+    "inviterTokenId":"e4658581f20649c32314326f180c7ec89587b786bc29ab2a9a8ce4b7c96d7418",
+    "transferValue":3999,
+	"gatherAddress":"AM5ho5nEodQiai1mCTFDV3YUNYApCorMCX"
 }
 ```
 返回 txid：
@@ -48,7 +49,9 @@ http://xxx.xxx:xxxx/upgrade
 {
     "txid":"0x1e23bdfa643c2c9595766d93ddebbee46446d2acd6f67d005989db1ade883fc9",
     "tokenId":"e4658581f20649c32314326f180c7ec89587b786bc29ab2a9a8ce4b7c96d7418",
-    "nowGrade":2
+    "nowGrade":1,
+    "transferValue":1999,
+	"gatherAddress":"AM5ho5nEodQiai1mCTFDV3YUNYApCorMCX"
 }
 ```
 返回 txid：
@@ -159,12 +162,12 @@ http://xxx.xxx:xxxx/getNftInfo
 {
     "state": true,
     "msg": {
-        "TokenId": "e4658581f20649c32314326f180c7ec89587b786bc29ab2a9a8ce4b7c96d7418",
-        "Owner": "AbN2K2trYzgx8WMg2H7U7JHH6RQVzz2fnx",
-        "Rank": 2,
-        "AllPoint": 620,
-        "AvailablePoint": 220,
-        "InviterTokenId": "0x9fad4cfa9b87dcf442d3768c2d229d99db436a6ea2b86927c49fa426f3676266"
+        "tokenId": "e4658581f20649c32314326f180c7ec89587b786bc29ab2a9a8ce4b7c96d7418",
+        "owner": "AbN2K2trYzgx8WMg2H7U7JHH6RQVzz2fnx",
+        "rank": 2,
+        "allPoint": 620,
+        "availablePoint": 220,
+        "inviterTokenId": "0x9fad4cfa9b87dcf442d3768c2d229d99db436a6ea2b86927c49fa426f3676266"
     }
 }
 ```
@@ -219,7 +222,7 @@ http://xxx.xxx:xxxx/getUserNfts
 产生 ApplicationLog 的接口：
 
 * buy 会产生 addpoint 和 create 的 ApplicationLog；
-* upgrade 会产生 upgrade 的 ApplicationLog；
+* upgrade 会产生 upgrade 和 addPoint 的 ApplicationLog；
 * exchange 会产生 exchange 的 ApplicationLog；
 * addPoint 会产生 addPoint 的 ApplicationLog。
 
@@ -238,7 +241,7 @@ POST，接口：http://xxx.xxx:xxxx/getApplicationLog
     "msg": {
         "height": 21123,
         "applicationLog": {
-            "addPointLogs": [
+            "addPointLog": [
                 {
                     "tokenId": "d23fe468f6e698d2957d228cc07b275a448348bbd9da542df510d61a7dda030a",
                     "ownerAddress": "AbN2K2trYzgx8WMg2H7U7JHH6RQVzz2fnx",
@@ -250,7 +253,7 @@ POST，接口：http://xxx.xxx:xxxx/getApplicationLog
                     "addPoint": 40
                 }
             ],
-            "createNftLogs": {
+            "createNftLog": {
                 "ownerAddress": "AcQLYjGbQU2bEQ8RKFXUcf8XvromfUQodq",
                 "buyCount": 10,
                 "payValue": 35991,
@@ -274,20 +277,27 @@ POST，接口：http://xxx.xxx:xxxx/getApplicationLog
 下面是一笔 upgrade 交易产生的 ApplicationLog
 ```
 {
-    "txid":"0x99161a1b53342f0f3abc6f6e93513ce09eb7b3caf63fce2d0a7e566147591c",
+    "txid":"0x5587fc0895f1c723359058a71d6320a9fe99feacf45c98c0b99aa9eebad33cd8",
     "method":"upgrade"
 }
 ```
 ```
-{  
+{
     "state": true,
     "msg": {
-        "height": 17842,
+        "height": 22715,
         "applicationLog": {
-            "tokenId": "e4658581f20649c32314326f180c7ec89587b786bc29ab2a9a8ce4b7c96d7418",
-            "ownerAddress": "AbN2K2trYzgx8WMg2H7U7JHH6RQVzz2fnx",
-            "lastGrade": 1,
-            "nowGrade": 2
+            "upgradeLog": {
+                "tokenId": "a969e7eb208f6a30bbd1d7a3d27299e0d5958bcf23bd6cee1c8862b090fd565f",
+                "ownerAddress": "AQXPAKF7uD5rYbBnqikGDVcsP1Ukpkopg5",
+                "lastGrade": 1,
+                "nowGrade": 2
+            },
+            "addPointLog": {
+                "tokenId": "a969e7eb208f6a30bbd1d7a3d27299e0d5958bcf23bd6cee1c8862b090fd565f",
+                "ownerAddress": "AQXPAKF7uD5rYbBnqikGDVcsP1Ukpkopg5",
+                "addPoint": -400
+            }
         }
     }
 }

@@ -23,12 +23,12 @@ namespace NFT_API
 
     public class NFTInfo
     {
-        public string TokenId; //tokenid 证书ID
-        public string Owner; //所有者 address
-        public int Grade; //等级
-        public int AllPoint; //贡献值
-        public int AvailablePoint; //可用贡献值
-        public string InviterTokenId; //邀请者证书ID
+        public string tokenId; //tokenid 证书ID
+        public string owner; //所有者 address
+        public int grade; //等级
+        public int allPoint; //贡献值
+        public int availablePoint; //可用贡献值
+        public string inviterTokenId; //邀请者证书ID
     }
 
     public class ApplicationLog
@@ -75,15 +75,16 @@ namespace NFT_API
 
     public class BuyNftLog
     {
-        public List<AddPointLog> addPointLogs;
-        public CreateNftLog createNftLogs;
+        public List<AddPointLog> addPointLog;
+        public CreateNftLog createNftLog;
     }
 
-    public class BlockDataHeight
+    public class AddGradeLog
     {
-        public BigInteger NotifyDataHeight;
-        public BigInteger Nep5DataHeight;
+        public UpgradeLog upgradeLog;
+        public AddPointLog addPointLog;
     }
+
 
     public enum ContractState
     {
