@@ -29,6 +29,7 @@ namespace NFT_API
         public int allPoint; //贡献值
         public int availablePoint; //可用贡献值
         public string inviterTokenId; //邀请者证书ID
+        public bool IsActivated; //是否激活
     }
 
     public class ApplicationLog
@@ -65,7 +66,7 @@ namespace NFT_API
         public BigInteger addPoint;
     }
 
-    public class CreateNftLog
+    public class BuyNftLog
     {
         public string ownerAddress;
         public BigInteger buyCount;
@@ -73,10 +74,10 @@ namespace NFT_API
         public List<string> tokenIdList;
     }
 
-    public class BuyNftLog
+    public class ActivateLog
     {
         public List<AddPointLog> addPointLog;
-        public CreateNftLog createNftLog;
+        public string tokenId;
     }
 
     public class AddGradeLog

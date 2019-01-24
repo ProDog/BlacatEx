@@ -32,30 +32,35 @@ namespace NFT_API
             if (!string.IsNullOrEmpty(data))
                 json = JObject.Parse(data);
 
-            RspInfo rspInfo = new RspInfo();
-
-            if (reqMethod == "buy" || reqMethod == "bind" || reqMethod == "upgrade" || reqMethod == "addPoint" || reqMethod == "exchange" || reqMethod == "reduceGrade" || reqMethod == "reducePoint")
-                rspInfo = GetSendrawRsp(reqMethod, json);
-
-            else if (reqMethod == "getMoney")
-                rspInfo = SendMoney(json);
-            else
-                rspInfo = GetInvokeRsp(reqMethod, json);
-
-            Logger.Info($"Have a request:{reqMethod}; return data:{JsonConvert.SerializeObject(rspInfo)}");
+            RspInfo rspInfo = GetRsp(reqMethod, json);
 
             buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(rspInfo));
 
             return buffer;
         }
 
-        private static RspInfo GetSendrawRsp(string reqMethod, JObject json)
+        private static RspInfo GetRsp(string reqMethod, JObject json)
         {
+            RspInfo rspInfo = new RspInfo() { state = false, msg = "Input data error!" };
             ScriptBuilder sb = new ScriptBuilder();
-            RspInfo rspInfo = new RspInfo();
-            decimal gas = 5;
+            decimal gas = 7;
             switch (reqMethod)
             {
+                case "getState":
+                    return GetStateRsp();
+                case "getBindNft":
+                    return GetBindNftRsp(json);
+                case "getNftInfo":
+                    return GetNftInfoRsp(json);
+                case "getUserNfts":
+                    return GetUserNftsRsp(json);
+                case "getApplicationLog":
+                    return GetApplicationLog(json);
+                case "getNftCount":
+                    return GetNftCount();
+
+                case "getMoney":
+                    return SendMoney(json);
                 case "addPoint":
                     sb = AddPointBuilder(json);
                     break;
@@ -70,6 +75,10 @@ namespace NFT_API
                     break;
                 case "buy":
                     sb = BuyBulider(json, ref gas);
+                    break;
+                case "activate":
+                    sb = ActivateBuilder(json);
+                    gas = 10;
                     break;
                 case "upgrade":
                     sb = UpgradeBuilder(json);
@@ -97,6 +106,16 @@ namespace NFT_API
                 rspInfo = new RspInfo() { state = false, msg = "Transfer verification failed" };
             }
             return rspInfo;
+        }
+
+        private static RspInfo GetNftCount()
+        {
+            ScriptBuilder sb = new ScriptBuilder();
+            sb.EmitAppCall(UInt160.Parse(Config.getStrValue("nftHash")), "getNftCount");
+            var result = ZoroHelper.InvokeScript(sb.ToArray(), "");
+            var stack = (JObject.Parse(result)["result"]["stack"] as JArray)[0] as JObject;
+
+            return new RspInfo() { state = true, msg = Helper.GetJsonBigInteger(stack) };
         }
 
         private static RspInfo SendMoney(JObject json)
@@ -159,34 +178,11 @@ namespace NFT_API
             return rspInfo;
         }
 
-        private static RspInfo GetInvokeRsp(string reqMethod, JObject json)
+        private static RspInfo GetApplicationLog(JObject json)
         {
-            RspInfo rspInfo = new RspInfo() { state = false, msg = "Input data error!" };
-            switch (reqMethod)
-            {
-                case "getState":
-                    rspInfo = GetStateRsp();
-                    break;
-                case "getBindNft":
-                    rspInfo = GetBindNftRsp(json);
-                    break;
-                case "getNftInfo":
-                    rspInfo = GetNftInfoRsp(json);
-                    break;
-                case "getUserNfts":
-                    rspInfo = GetUserNftsRsp(json);
-                    break;
-                case "getApplicationLog":
-                    var txid = json["txid"].ToString();
-                    var method = json["method"].ToString();
-                    rspInfo = GetApplicationLog(txid, method);
-                    break;
-            }
-            return rspInfo;
-        }
+            var txid = json["txid"].ToString();
+            var method = json["method"].ToString();
 
-        private static RspInfo GetApplicationLog(string txid, string method)
-        {
             ApplicationLog applicationLog = new ApplicationLog();
             applicationLog.height = ZoroHelper.GetHeight();
             string url = Config.getStrValue("myApi") + $"?jsonrpc=2.0&id=1&method=getapplicationlog&params=['',\"{txid}\"]";
@@ -198,7 +194,10 @@ namespace NFT_API
                 switch (method)
                 {
                     case "buy":
-                        applicationLog.applicationLog = GetBuyLog(notificationsArray);
+                        applicationLog.applicationLog = GetBuyLog(notificationsArray[0] as JObject);
+                        break;
+                    case "activate":
+                        applicationLog.applicationLog = GetActivateLog(notificationsArray);
                         break;
                     case "bind":
                         applicationLog.applicationLog = GetBindLog(notificationsArray[0] as JObject);
@@ -254,7 +253,7 @@ namespace NFT_API
         {
             ScriptBuilder sb = new ScriptBuilder();
             var addr = ZoroHelper.GetParamBytes("(bytes)" + json["tokenId"].ToString());
-            sb.EmitAppCall(UInt160.Parse(Config.getStrValue("nftHash")), "getNftInfoById", addr);
+            sb.EmitAppCall(UInt160.Parse(Config.getStrValue("nftHash")), "getNftInfo", addr);
             var result = ZoroHelper.InvokeScript(sb.ToArray(), "");
             var stack = (JObject.Parse(result)["result"]["stack"] as JArray)[0] as JObject;
 
@@ -273,6 +272,8 @@ namespace NFT_API
 
                 if (value[5]["type"].ToString() == "ByteArray")
                     nftInfo.inviterTokenId = value[5]["value"].ToString();
+
+                nftInfo.IsActivated = string.IsNullOrEmpty(((JObject)value[6])["value"].ToString()) ? false : true;
             }
             return new RspInfo() { state = true, msg = nftInfo };
         }
@@ -324,6 +325,32 @@ namespace NFT_API
             return exchangeLog;
         }
 
+        private static ActivateLog GetActivateLog(JArray notificationsArray)
+        {
+            ActivateLog activateLog = new ActivateLog();
+            activateLog.addPointLog = new List<AddPointLog>();
+            if (notificationsArray.Count == 2)
+            {
+                activateLog.addPointLog.Add(GetAddPointLog(notificationsArray[0] as JObject));
+                activateLog.tokenId = GetActivateTokenId(notificationsArray[1] as JObject);
+            }
+            else if (notificationsArray.Count == 3)
+            {
+                activateLog.addPointLog.Add(GetAddPointLog(notificationsArray[0] as JObject));
+                activateLog.addPointLog.Add(GetAddPointLog(notificationsArray[1] as JObject));
+                activateLog.tokenId = GetActivateTokenId(notificationsArray[2] as JObject);
+            }
+            else
+                throw new Exception("ApplicationLog error.");
+            return activateLog;
+        }
+
+        private static string GetActivateTokenId(JObject notification)
+        {
+            var jValue = notification["state"]["value"] as JArray;           
+            return jValue[2]["value"].ToString();
+        }
+
         private static BindLog GetBindLog(JObject notification)
         {
             var bindLog = new BindLog();
@@ -333,25 +360,16 @@ namespace NFT_API
             return bindLog;
         }
 
-        private static BuyNftLog GetBuyLog(JArray notificationsArray)
+        private static BuyNftLog GetBuyLog(JObject notification)
         {
             var buyNftLog = new BuyNftLog();
-            buyNftLog.addPointLog = new List<AddPointLog>();
-            buyNftLog.createNftLog = new CreateNftLog();
+            var jValue = notification["state"]["value"] as JArray;
+            buyNftLog.ownerAddress = Helper.GetJsonAddress((JObject)jValue[1]);
+            buyNftLog.buyCount = Helper.GetJsonBigInteger((JObject)jValue[2]);
+            buyNftLog.payValue = (long)Helper.GetJsonBigInteger((JObject)jValue[3]) / 100000000;
 
-            if (notificationsArray.Count == 3)
-            {
-                buyNftLog.addPointLog.Add(GetAddPointLog(notificationsArray[0] as JObject));
-                buyNftLog.addPointLog.Add(GetAddPointLog(notificationsArray[1] as JObject));
-                buyNftLog.createNftLog = GetCreateLog(notificationsArray[2] as JObject);
-            }
-            else if (notificationsArray.Count == 2)
-            {
-                buyNftLog.addPointLog.Add(GetAddPointLog(notificationsArray[0] as JObject));
-                buyNftLog.createNftLog = GetCreateLog(notificationsArray[1] as JObject);
-            }
-            else
-                throw new Exception("ApplicationLog error.");
+            buyNftLog.tokenIdList = GetTokenList((JObject)jValue[4]);
+            
             return buyNftLog;
         }
 
@@ -364,18 +382,6 @@ namespace NFT_API
             addPointLog.addPoint = Helper.GetJsonBigInteger((JObject)jValue[3]);
 
             return addPointLog;
-        }
-
-        private static CreateNftLog GetCreateLog(JObject notification)
-        {
-            var createLog = new CreateNftLog();
-            var jValue = notification["state"]["value"] as JArray;
-            createLog.ownerAddress = Helper.GetJsonAddress((JObject)jValue[1]);
-            createLog.buyCount = Helper.GetJsonBigInteger((JObject)jValue[2]);
-            createLog.payValue = (long)Helper.GetJsonBigInteger((JObject)jValue[3]) / 100000000;
-
-            createLog.tokenIdList = GetTokenList((JObject)jValue[4]);
-            return createLog;
         }
 
         private static ScriptBuilder ExchangeBulider(JObject json)
@@ -420,6 +426,23 @@ namespace NFT_API
             return sb;
         }
 
+        private static ScriptBuilder ActivateBuilder(JObject json)
+        {
+            int pointValue = Config.getIntValue("silverPoint");
+            int twoLevelInviterPoint = pointValue * Config.getIntValue("twoLevelPercent") / 100;
+
+            ScriptBuilder sb = new ScriptBuilder();
+            List<dynamic> paraList = new List<dynamic>();
+            string tokenId = json["tokenId"].ToString();
+
+            paraList.Add(ZoroHelper.GetParamBytes("(bytes)" + tokenId));
+            paraList.Add(ZoroHelper.GetParamBytes("(int)" + pointValue));
+            paraList.Add(ZoroHelper.GetParamBytes("(int)" + twoLevelInviterPoint));
+
+            sb.EmitAppCall(UInt160.Parse(Config.getStrValue("nftHash")), "activate", paraList.ToArray());
+            return sb;
+        }
+
         private static ScriptBuilder BuyBulider(JObject json, ref decimal gas)
         {
             ScriptBuilder sb = new ScriptBuilder();
@@ -427,24 +450,19 @@ namespace NFT_API
             string inviterTokenId = json["inviterTokenId"].ToString();
 
             int count = int.Parse(json["count"].ToString());
-            gas = 12 * count;
+            if (count == 2) gas = 10;
+            if (count > 2) gas = 10 + 2 * (count - 2);
             long receivableValue = GetReceivableValue(count);
-            if (long.Parse(json["transferValue"].ToString()) * 100000000 < receivableValue)
+            if (decimal.Parse(json["transferValue"].ToString()) * 100000000 < receivableValue)
                 return null;
             if (json["gatherAddress"].ToString() != Config.getStrValue("gatherAddress"))
                 return null;
-
-            int pointValue = Config.getIntValue("silverPoint") * count;
-            int twoLevelInviterPoint = pointValue * Config.getIntValue("twoLevelPercent") / 100;
 
             paraList.Add(ZoroHelper.GetParamBytes("(hex160)" + Config.getStrValue("bctHash")));
             paraList.Add(ZoroHelper.GetParamBytes("(hex256)" + json["txid"].ToString()));
             paraList.Add(ZoroHelper.GetParamBytes("(int)" + json["count"].ToString()));
             paraList.Add(ZoroHelper.GetParamBytes("(bytes)" + inviterTokenId));
             paraList.Add(ZoroHelper.GetParamBytes("(int)" + receivableValue.ToString()));
-            paraList.Add(ZoroHelper.GetParamBytes("(int)" + pointValue));
-            paraList.Add(ZoroHelper.GetParamBytes("(int)" + twoLevelInviterPoint));
-            paraList.Add(ZoroHelper.GetParamBytes("(int)" + 0));
 
             sb.EmitAppCall(UInt160.Parse(Config.getStrValue("nftHash")), "buy", paraList.ToArray());
             return sb;
@@ -516,16 +534,16 @@ namespace NFT_API
 
         private static long GetReceivableValue(int count)
         {
-            long receivableValue =Config.getLongValue("silverPrice") * count;
-            if (count > Config.getIntValue("oneDiscountCount"))
-            {
-                if (count > Config.getIntValue("twoDiscountCount"))
-                    receivableValue = receivableValue * Config.getIntValue("twoDiscountPercent") / 100;
-                else
-                    receivableValue = receivableValue * Config.getIntValue("oneDiscountPercent") / 100;
-            }
+            long receivableValue = Config.getLongValue("silverPrice") * count;
 
-            return receivableValue;
+            if (count >= Config.getIntValue("threeDiscountCount"))
+                return receivableValue * Config.getIntValue("threeDiscountPercent") / 100;
+            else if (count >= Config.getIntValue("twoDiscountCount"))
+                return receivableValue * Config.getIntValue("twoDiscountPercent") / 100;
+            else if (count >= Config.getIntValue("oneDiscountCount"))
+                return receivableValue * Config.getIntValue("oneDiscountPercent") / 100;
+            else
+                return receivableValue;
         }
 
     }
