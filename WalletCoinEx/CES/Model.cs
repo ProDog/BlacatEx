@@ -6,7 +6,7 @@
         public string coinType; //币种
         public int confirmcount;  //确认次数
         public int height; //高度
-        public string fromAddress = "0";//付款人
+        public string fromAddress = " ";//付款人
         public string toAddress;  //收款地址
         public string txid;  //txid
         public decimal value;  //金额
@@ -51,7 +51,7 @@
     {
         public string coinType { get; set; }
         public string key { get; set; }
-        public string transTxid { get; set; }
+        public string txid { get; set; }
     }
 
     public class AccountInfo

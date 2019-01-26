@@ -21,7 +21,7 @@ namespace CES
             GlobalContext.Properties["pid"] = Process.GetCurrentProcess().Id;
             Console.OutputEncoding = Encoding.UTF8;
 
-            DbHelper.CreateDb();
+            Helper.DbHelper.CreateDb();
 
             Config.Init("config.json");
             
@@ -32,9 +32,9 @@ namespace CES
 
         private static void AppStart()
         {
-            var btcTask = Task.Run(() => BtcWatcher.Start());
-            var ethTask = Task.Run(() => EthWatcher.Start());
-            var neoTask = Task.Run(() => NeoWatcher.Start());
+            var btcTask = Task.Run(() => BtcServer.Start());
+            var ethTask = Task.Run(() => EthServer.Start());
+            var neoTask = Task.Run(() => NeoServer.Start());
             var httpTask = Task.Run(() => HttpServer.Start());
 
             Logger.Info("CES Start.");

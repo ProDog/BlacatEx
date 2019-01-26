@@ -37,85 +37,130 @@
 ]
 ```
 
-### 创建钱包
-为用户创建各币种的钱包，调用接口：http://xx.xx.xx.xx:xxxx/getaccount/{type}，  参数 type 是币种简称，如 btc，eth 等，调用方式：GET，返回格式：
+### 创建钱包 getAccount
+为用户创建各币种的钱包，调用接口：getAccount
+
+POST，参数：
 ```
 {
-    "priKey":"Ky9hKMaG2cg6fMvDju91K5PUrnm8boQcRojQ84xGYid9KxCkrWu8",
-    "address":"1PweQ2GtDzregsXshCyU2Vj8QWMb8T5tmc"
+	"coinType": "eth"
+}
+```
+返回：
+```
+{
+    "state": true,
+    "msg": {
+        "coinType": "eth",
+        "prikey": "68e801d08d9185659f36b4f23ff097af7a30ac7b4ef60f313b25554f1da87ba0",
+        "address": "0xFf7c2eE88acb17Cc16976d370CC715Efd58F1ea0"
+    }
 }
 ```
 
-### 发送交易
-发送转账交易，调用接口：http://xx.xx.xx.xx:xxxx/trans/，  参数 type 是币种简称，如 btc，eth 等，txid 是充值 BTC 的 txid，支持多个 txid，用,隔开，调用方式：POST，发送数据格式：
+### 汇总转账 gatherCoin
+将用户充值的其他链币种汇总，调用接口：gatherCoin
+
+POST，参数：
 ```
 {
-    "type": btc,
-    "account": "1PweQ2GtDzregsXshCyU2Vj8QWMb8T5tmc",
+	"coinType": "btc"，
     "txid" : "73d82f176a2b357256138bd0a6aeddd2131829dadccdee18f98a65da19282228,aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c",
     "priKey": "Ky9hKMaG2cg6fMvDju91K5PUrnm8boQcRojQ84xGYid9KxCkrWu8"
 }
 ```
-返回 txid
+返回：
 ```
 {
-    "state": "true",
-    "txid": "aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c"
+    "state": true,
+    "msg": {        
+        "aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c"
+    }
 }
 ```
 
-### 接收新地址
-当有用户创建了新地址时，发送给监控程序，url：http://xx.xx.xx.xx:xxxx/addr/，  发送方式：POST，type 是币种简称，如 btc，eth 等，发送数据格式：
+### 接收新地址 addAddress
+当有用户创建了新地址时，发送给监控程序，调用接口：addAddress
+
+POST，参数：
 ```
 {
-    "type":"btc",
-    "address":"1PweQ2GtDzregsXshCyU2Vj8QWMb8T5tmc"
+	"coinType": "eth"，
+    "address": "0xFf7c2eE88acb17Cc16976d370CC715Efd58F1ea0"
+}
+```
+返回：
+```
+{
+    "state": true,
+    "msg": "Add a new eth address: 0xFf7c2eE88acb17Cc16976d370CC715Efd58F1ea0"
 }
 ```
 
-### 发行 Nep5 BTC/ETH 代币
-钱包中使用 Nep5 Token 代替 BTC、ETH 进行交易兑换等操作，提高效率节省费用，收到 BTC ETH 后请求发行，除此之外购买 BCT,CNEO 的发放也通过该接口。 发行请求：url：http://xx.xx.xx.xx:xxxx/deploy/{coinType}，coinType 是币种简称，如 btc，eth 等,发送数据格式：
-txid 为收到 BTC ETH 转账的 txid，用来判断是否已经发行过相应的 nep5 BTC ETH
+### 发行 Nep5 BTC/ETH 代币 deployNep5
+钱包中使用 Nep5 Token 代替 BTC、ETH 进行交易兑换等操作，提高效率节省费用，收到 BTC ETH 后请求发行，除此之外购买 BCT,BCP 的发放也通过该接口。调用接口：deployNep5
+
+POST，参数：
 ```
 {
-    "txid":"74d63daa4df7b0791e6a6df816765f59018f6eab314e3e82b343299789153d9b",
-    "address":"AUWYsHRi1xv584DswcQKkz1UXJf8G3se4Y",
-    "value":0.3005
+	"coinType": "eth",
+    "key": "63e5dfd274d49f5c61a482547c5be0f5a345c7c3b72ae35969f99dbe9411613d",
+    "value":10.833,
+    "address": "AVPed2aiZjmrBV2C6ej3H7T49TbhpovQbh"
 }
 ```
-返回 txid
+返回：
 ```
 {
-    "state": "true",
-    "txid": "aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c"
+    "state": true,
+    "msg": {
+        "coinType": "eth",
+        "key": "63e5dfd274d49f5c61a482547c5be0f5a345c7c3b72ae35969f99dbe9411613d",
+        "txid": "0x0c311e6a8f5d18c19d3b1c20efdbc871cf060ec0df4467088808900f961c41fe"
+    }
 }
 ```
 
-### 购买 Nep5 资产的转账接口
-钱包中将 BTC ETH 等兑换成 Nep5 资产，请求 url：http://xx.xx.xx.xx:xxxx/exchange，发送数据格式：
-txid 为购买时 nep5 BTC ETH 付款的 txid，用来检测是否已经发放了购买的 token
+### 购买 Nep5 资产的转账接口 exchange
+钱包中将 BTC ETH 等兑换成 Nep5 资产，调用接口：exchange
+
+POST，参数：
 ```
 {
-    "txid": "aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c",
-    "type":"gas",
-    "address":"AWN6jngST5ytpNnY1dhBQG7QHd7V8SqSCp",
-    "value":360.23
+	"coinType": "bcp",
+    "key": "63e5dfd274d49f5c61a482547c5be0f5a345c7c3b72ae35969f99dbe9411613d",
+    "value":10.833,
+    "address": "AVPed2aiZjmrBV2C6ej3H7T49TbhpovQbh"
 }
 ```
-返回 txid
+返回：
 ```
 {
-    "state": "true",
-    "txid": "aeb32459b4c5d979690838f99927165c0ce92c75ed71f3783e68d9f89600fe2c"
+    "state": true,
+    "msg": {
+        "coinType": "bcp",
+        "key": "63e5dfd274d49f5c61a482547c5be0f5a345c7c3b72ae35969f99dbe9411613d",
+        "txid": "0x0c311e6a8f5d18c19d3b1c20efdbc871cf060ec0df4467088808900f961c41fe"
+    }
 }
 ```
 
-### 查询账户余额
-查询发币账户的余额、余额不足时暂停接收购买请求，请求 url：http://xx.xx.xx.xx:xxxx/getbalance/{coinType}:
-返回余额：
+### 查询账户余额 getBalance
+查询发币账户的余额、余额不足时暂停接收购买请求, 调用接口： getBalance
+
+POST，参数：
 ```
 {
-    "state": "true",
-    "balance": 36.838
+	"coinType": "bcp"
+}
+```
+返回：
+```
+{
+    "state": true,
+    "msg": {
+        "coinType": "bcp",
+        "balance": 80962
+    }
 }
 ```

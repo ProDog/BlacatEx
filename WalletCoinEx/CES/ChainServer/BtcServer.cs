@@ -4,10 +4,13 @@ using System.Reflection;
 using System.Threading;
 using log4net;
 using NBitcoin;
+using Newtonsoft.Json.Linq;
+using QBitNinja.Client;
+using QBitNinja.Client.Models;
 
 namespace CES
 {
-    public class BtcWatcher
+    public class BtcServer
     {
         private static List<TransactionInfo> btcTransRspList = new List<TransactionInfo>(); //BTC 交易列表
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -16,7 +19,7 @@ namespace CES
         /// </summary>
         public static void Start()
         {
-            DbHelper.GetRspList(ref btcTransRspList, Config.confirmCountDic["btc"], "btc");
+            Helper.DbHelper.GetRspList(ref btcTransRspList, Config.confirmCountDic["btc"], "btc");
             Logger.Info("Btc Watcher Start! Index: " + Config.btcIndex);
             
             var key = new System.Net.NetworkCredential("1", "1");
@@ -36,7 +39,7 @@ namespace CES
                             Logger.Info("Parse BTC Height:" + Config.btcIndex);
                         }
                         ParseBtcBlock(rpcC, Config.btcIndex);
-                        DbHelper.SaveIndex(Config.btcIndex, "btc");
+                        Helper.DbHelper.SaveIndex(Config.btcIndex, "btc");
                         Config.btcIndex++;
                     }
 
@@ -72,7 +75,7 @@ namespace CES
                     for (var vo = 0; vo < tran.Outputs.Count; vo++)
                     {
                         var vout = tran.Outputs[vo];
-                        var address = vout.ScriptPubKey.GetDestinationAddress(Config.nettype); //比特币地址和网络有关，testnet 和 mainnet 地址不通用
+                        var address = vout.ScriptPubKey.GetDestinationAddress(Config.nettype); //比特币地址和网络有关
 
                         for (int j = 0; j < Config.btcAddrList.Count; j++)
                         {
@@ -100,7 +103,7 @@ namespace CES
                 //更新确认次数
                 CheckBtcConfirm(Config.confirmCountDic["btc"], btcTransRspList, index, rpcC);
                 //发送和保存交易信息
-                Helper.SendTransInfo(btcTransRspList);
+                Helper.Helper.SendTransInfo(btcTransRspList);
                 //移除确认次数为 设定数量 和 0 的交易
                 btcTransRspList.RemoveAll(x => x.confirmcount >= Config.confirmCountDic["btc"] || x.confirmcount == 0);
             }
@@ -131,5 +134,73 @@ namespace CES
             }
         }
 
+        /// <summary>
+        /// 发送比特币交易
+        /// </summary>
+        /// <param name="json"></param>
+        /// <returns></returns>
+        public static string SendBtcTrans(JObject json)
+        {
+            var result = string.Empty;
+            var uri = new Uri(Config.apiDic["btc"]);
+
+            var btcPriKey = new BitcoinSecret(json["priKey"].ToString());
+            var client = new QBitNinjaClient(Config.nettype);
+
+            var txidArr = json["txid"].ToString().Split(',');
+
+            var transaction = Transaction.Create(Config.nettype);
+            var minerFee = Config.minerFeeDic["btc"];
+            //BitcoinPubKeyAddress pubKeyAddress = new BitcoinPubKeyAddress(json["to"].ToString());
+            var receiveAddress = BitcoinAddress.Create(Config.myAccountDic["btc"], Config.nettype);
+            var amount = Money.Zero;
+
+            foreach (var txid in txidArr)
+            {
+                var transactionId = uint256.Parse(txid);
+                var transactionResponse = client.GetTransaction(transactionId).Result;
+                foreach (var rec in transactionResponse.ReceivedCoins)
+                {
+                    if (rec.TxOut.ScriptPubKey == btcPriKey.ScriptPubKey)
+                    {
+                        var txInAmount = (Money)transactionResponse.ReceivedCoins[(int)rec.Outpoint.N].Amount;
+                        transaction.Inputs.Add(new TxIn()
+                        {
+                            PrevOut = rec.Outpoint,
+                            ScriptSig = btcPriKey.ScriptPubKey
+                        });
+                        amount += txInAmount;
+                    }
+                }
+            }
+
+            transaction.Outputs.Add(new TxOut()
+            {
+                Value = Money.Coins(amount.ToDecimal(MoneyUnit.BTC) - minerFee),
+                ScriptPubKey = receiveAddress.ScriptPubKey
+            });
+
+            transaction.Sign(btcPriKey, false);
+
+            BroadcastResponse broadcastResponse = client.Broadcast(transaction).Result;
+            if (!broadcastResponse.Success)
+            {
+                result = "Error message: " + broadcastResponse.Error.Reason;
+            }
+            else
+            {
+                result = transaction.GetHash().ToString();
+            }
+
+            return result;
+        }
+
+        public static AccountInfo GetBtcAccount()
+        {
+            var btcPrikey = new Key();
+            var  priKey = btcPrikey.GetWif(Config.nettype).ToString();
+            var address = btcPrikey.PubKey.GetAddress(Config.nettype).ToString();
+            return new AccountInfo() { coinType = "btc", prikey = priKey, address = address };
+        }
     }
 }

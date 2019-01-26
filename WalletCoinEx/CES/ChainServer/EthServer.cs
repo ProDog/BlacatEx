@@ -3,13 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using log4net;
 using Nethereum.Geth;
+using Nethereum.Hex.HexConvertors.Extensions;
 using Nethereum.Hex.HexTypes;
+using Nethereum.Web3;
+using Nethereum.Web3.Accounts;
+using Newtonsoft.Json.Linq;
 
 namespace CES
 {
-    public class EthWatcher
+    public class EthServer
     {
         private static List<TransactionInfo> ethTransRspList = new List<TransactionInfo>(); //ETH 交易列表
         private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -18,7 +23,7 @@ namespace CES
         /// </summary>
         public static void Start()
         {
-            DbHelper.GetRspList(ref ethTransRspList, Config.confirmCountDic["eth"], "eth");
+            Helper.DbHelper.GetRspList(ref ethTransRspList, Config.confirmCountDic["eth"], "eth");
             Logger.Info("Eth Watcher Start! Index: " + Config.ethIndex);
 
             Web3Geth web3 = new Web3Geth(Config.apiDic["eth"]);
@@ -36,7 +41,7 @@ namespace CES
                             Logger.Info("Parse ETH Height:" + Config.ethIndex);
                         }
                         ParseEthBlock(web3, Config.ethIndex);
-                        DbHelper.SaveIndex(Config.ethIndex, "eth");
+                        Helper.DbHelper.SaveIndex(Config.ethIndex, "eth");
                         Config.ethIndex++;
                     }
                     if (height + 1 == Config.ethIndex)
@@ -98,7 +103,7 @@ namespace CES
                 //更新确认次数
                 CheckEthConfirm(Config.confirmCountDic["eth"], ethTransRspList, index, web3);
                 //发送和保存交易信息
-                Helper.SendTransInfo(ethTransRspList);
+                Helper.Helper.SendTransInfo(ethTransRspList);
                 //移除确认次数为 设定数量 和 0 的交易
                 ethTransRspList.RemoveAll(x => x.confirmcount >= Config.confirmCountDic["eth"] || x.confirmcount == 0);
             }
@@ -129,6 +134,37 @@ namespace CES
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 发送以太坊交易
+        /// </summary>
+        /// <param name="json"></param>
+        /// <returns></returns>
+        public static async Task<string> SendEthTrans(JObject json)
+        {
+            var account = new Account(json["priKey"].ToString()); // or load it from your keystore file as you are doing.
+            var web3 = new Web3(account, Config.apiDic["eth"]);
+
+            var balanceWei = await web3.Eth.GetBalance.SendRequestAsync(json["account"].ToString());
+            var balanceEther = Web3.Convert.FromWei(balanceWei);
+            var gasfee = (decimal)Config.minerFeeDic["eth"];
+            var value = balanceEther - gasfee;
+            if (value <= 0)
+                return "Error,not enougt money!";
+            var sendValue = new HexBigInteger(Web3.Convert.ToWei(value));
+            var sendTxHash = await web3.Eth.TransactionManager.SendTransactionAsync(account.Address, Config.myAccountDic["eth"], sendValue);
+            return sendTxHash;
+        }
+
+        public static AccountInfo GetEthAccount()
+        {
+            var ecKey = Nethereum.Signer.EthECKey.GenerateKey();
+            var ethPrikey = ecKey.GetPrivateKeyAsBytes().ToHex();
+            var priKey = ethPrikey.ToString();
+            var address = new Account(ethPrikey).Address;
+
+            return new AccountInfo() { coinType = "eth", prikey = priKey, address = address };
         }
     }
 }

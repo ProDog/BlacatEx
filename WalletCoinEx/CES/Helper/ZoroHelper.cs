@@ -14,7 +14,7 @@ using Zoro.IO;
 using Neo.VM;
 using System.Numerics;
 
-namespace CES
+namespace CES.Helper
 {
     class ZoroHelper
     {

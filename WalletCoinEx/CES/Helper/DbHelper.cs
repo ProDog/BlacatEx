@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using log4net;
 
-namespace CES
+namespace CES.Helper
 {
     public class DbHelper
     {
@@ -127,7 +127,7 @@ namespace CES
             return 0;
         }
 
-        public static string GetDeployStateByTxid(string coinType, string txid)
+        public static string GetDeployTxidByTxid(string coinType, string txid)
         {
             var sql = $"select DeployTxid,DeployTime from Transactions where CoinType='{coinType}' and txid='{txid}'";
             var table = ExecuSqlToDataTable(sql);

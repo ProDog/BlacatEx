@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -24,7 +23,7 @@ namespace CES
         public static List<string> btcAddrList = new List<string>(); //BTC 监听地址列表
         public static List<string> ethAddrList = new List<string>();  //ETH 监听地址列表
 
-        public static Network nettype = Network.TestNet;
+        public static Network nettype;
 
         public static void Init(string configPath)
         {
@@ -47,8 +46,8 @@ namespace CES
             if (net == "testnet")
                 nettype = Network.TestNet;
 
-            btcAddrList = DbHelper.GetBtcAddr();
-            ethAddrList = DbHelper.GetEthAddr();    
+            btcAddrList = Helper.DbHelper.GetBtcAddr();
+            ethAddrList = Helper.DbHelper.GetEthAddr();    
         }
 
         private static dynamic getValue(string name)
@@ -73,13 +72,13 @@ namespace CES
 
         private static int getIndex(string name)
         {
-            return DbHelper.GetIndex(name);
+            return Helper.DbHelper.GetIndex(name);
         }
 
         public static int  GetNeoHeight()
         {
             var url = apiDic["neo"] + "?method=getblockcount&id=1&params=[]";
-            var result = Helper.HttpGet(url);
+            var result = Helper.Helper.HttpGet(url);
             var res = JObject.Parse(result)["result"];
             int height = int.Parse(res[0]["blockcount"].ToString());
             return height;
