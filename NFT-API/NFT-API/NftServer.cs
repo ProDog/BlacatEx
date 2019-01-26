@@ -27,12 +27,16 @@ namespace NFT_API
             var reqMethod = requestContext.Request.RawUrl.Replace("/", "");
             var data = sr.ReadToEnd();
             byte[] buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new RspInfo() { }));
-            Logger.Info($"Have a request:{reqMethod}; post data:{data}");
+            Logger.Warn($"Have a request:{reqMethod}; post data:{data}");
             var json = new JObject();
             if (!string.IsNullOrEmpty(data))
                 json = JObject.Parse(data);
 
             RspInfo rspInfo = GetRsp(reqMethod, json);
+
+            var JSRspInfo = JsonConvert.SerializeObject(rspInfo);
+
+            Logger.Info($"result: {JSRspInfo}");
 
             buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(rspInfo));
 
@@ -43,7 +47,7 @@ namespace NFT_API
         {
             RspInfo rspInfo = new RspInfo() { state = false, msg = "Input data error!" };
             ScriptBuilder sb = new ScriptBuilder();
-            decimal gas = 7;
+            decimal gas = 15;
             switch (reqMethod)
             {
                 case "getState":
@@ -54,13 +58,14 @@ namespace NFT_API
                     return GetNftInfoRsp(json);
                 case "getUserNfts":
                     return GetUserNftsRsp(json);
-                case "getApplicationLog":
-                    return GetApplicationLog(json);
                 case "getNftCount":
                     return GetNftCount();
-
                 case "getMoney":
                     return SendMoney(json);
+
+                case "getApplicationLog":
+                    return GetApplicationLog(json);
+
                 case "addPoint":
                     sb = AddPointBuilder(json);
                     break;
@@ -92,6 +97,8 @@ namespace NFT_API
             if (sb != null)
             {
                 KeyPair keypair = ZoroHelper.GetKeyPairFromWIF(Config.getStrValue("adminWif"));
+
+                //gas = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
                 InvocationTransaction tx = ZoroHelper.MakeTransaction(sb.ToArray(), keypair, Fixed8.FromDecimal(gas), Fixed8.One);
                 var txid = tx.Hash.ToString();
                 var result = ZoroHelper.SendRawTransaction(tx.ToArray().ToHexString(), "");
@@ -158,11 +165,7 @@ namespace NFT_API
                 }
                 else
                 {
-                    rspInfo = new RspInfo()
-                    {
-                        state = false,
-                        msg = result
-                    };
+                    rspInfo = new RspInfo() { state = false, msg = result };
                 }
                 return rspInfo;
             }
@@ -217,7 +220,7 @@ namespace NFT_API
             catch (Exception ex)
             {
                 Logger.Error("Parse applicationLog error: " + ex.Message);
-                Logger.Info("ApplicationLog result: " + result);
+                Logger.Warn("ApplicationLog result: " + result);
                 applicationLog.applicationLog = null;
             }
 
@@ -252,8 +255,8 @@ namespace NFT_API
         private static RspInfo GetNftInfoRsp(JObject json)
         {
             ScriptBuilder sb = new ScriptBuilder();
-            var addr = ZoroHelper.GetParamBytes("(bytes)" + json["tokenId"].ToString());
-            sb.EmitAppCall(UInt160.Parse(Config.getStrValue("nftHash")), "getNftInfo", addr);
+            var tokenId = ZoroHelper.GetParamBytes("(bytes)" + json["tokenId"].ToString());
+            sb.EmitAppCall(UInt160.Parse(Config.getStrValue("nftHash")), "getNftInfo", tokenId);
             var result = ZoroHelper.InvokeScript(sb.ToArray(), "");
             var stack = (JObject.Parse(result)["result"]["stack"] as JArray)[0] as JObject;
 
@@ -450,8 +453,8 @@ namespace NFT_API
             string inviterTokenId = json["inviterTokenId"].ToString();
 
             int count = int.Parse(json["count"].ToString());
-            if (count == 2) gas = 10;
-            if (count > 2) gas = 10 + 2 * (count - 2);
+            gas = 100;
+            if (count > 2) gas += 2 * (count - 2);
             long receivableValue = GetReceivableValue(count);
             if (decimal.Parse(json["transferValue"].ToString()) * 100000000 < receivableValue)
                 return null;

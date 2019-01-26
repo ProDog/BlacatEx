@@ -20,6 +20,28 @@
 
 ## 调用接口
 
+### getMoney
+领取 bct 和 bcp：POST，传入币种 coinType, 唯一 key 和领取地址 address，领取金额 value
+http://xxx.xxx:xxxx/getMoney
+```
+{
+    "key":"0x1e23bdfa643c2c9595766d93ddebbee46446d2acd6f67d005989db1ade883fc9",
+    "value":10.659,
+    "address":"AQXPAKF7uD5rYbBnqikGDVcsP1Ukpkopg5",
+    "coinType":"bct"
+}
+```
+返回 txid：
+```
+{
+    "state": true,
+    "msg": {
+        "txid": "0x89d4f4ff97a98f4235d9fed42da09130205695dc2cb577df996b5a1e559cb078",
+        "key": "0x1bdc47d1165d9be4037ff5afc9d6229a39d3ffea8614406e06771959e2f8"
+    }
+}
+```
+
 ### buy 
 购买发行：POST，传入付钱的 txid 和邀请者 TokenId，购买数量 count
 
@@ -34,13 +56,36 @@ http://xxx.xxx:xxxx/buy
 }
 ```
 返回 txid：
-
 ```
 {
-    "state":true,
-    "msg":"0x604c5a37520a3a114015026735faddae6d16c4d972d75309519a3bcb0545847f"
+    "state": true,
+    "msg": {
+        "txid": "0x9405785113276757c65ae8963ab4529a3a9305fa22a1d5b74b9f5e05866881f0",
+        "nftHash": "0xa7edc432a605f0bf58b8a7c5a6a734883ee8adb2"
+    }
 }
 ```
+
+### activate 
+激活证书：POST，传入 tokenId
+
+http://xxx.xxx:xxxx/activate
+```
+{
+    "tokenId":"e4658581f20649c32314326f180c7ec89587b786bc29ab2a9a8ce4b7c96d7418"
+}
+```
+返回 txid：
+```
+{
+    "state": true,
+    "msg": {
+        "txid": "0x9405785113276757c65ae8963ab4529a3a9305fa22a1d5b74b9f5e05866881f0",
+        "nftHash": "0xa7edc432a605f0bf58b8a7c5a6a734883ee8adb2"
+    }
+}
+```
+
 ### upgrade
 升级接口：POST，传入付钱的 txid，tokenId，当前等级 nowGrade，接口信息如下：
 
@@ -57,8 +102,11 @@ http://xxx.xxx:xxxx/upgrade
 返回 txid：
 ```
 {
-    "state":true,
-    "msg":"0x604c5a37520a3a114015026735faddae6d16c4d972d75309519a3bcb0545847f"
+    "state": true,
+    "msg": {
+        "txid": "0x9405785113276757c65ae8963ab4529a3a9305fa22a1d5b74b9f5e05866881f0",
+        "nftHash": "0xa7edc432a605f0bf58b8a7c5a6a734883ee8adb2"
+    }
 }
 ```
 ### bind
@@ -74,8 +122,11 @@ http://xxx.xxx:xxxx/bind
 返回 txid：
 ```
 {
-    "state":true,
-    "msg":"0x604c5a37520a3a114015026735faddae6d16c4d972d75309519a3bcb0545847f"
+    "state": true,
+    "msg": {
+        "txid": "0x9405785113276757c65ae8963ab4529a3a9305fa22a1d5b74b9f5e05866881f0",
+        "nftHash": "0xa7edc432a605f0bf58b8a7c5a6a734883ee8adb2"
+    }
 }
 ```
 ### addPoint
@@ -90,8 +141,11 @@ http://xxx.xxx:xxxx/addPoint
 返回 txid：
 ```
 {
-    "state":true,
-    "msg":"0x618ff2755cbd2c3c5145d23b53abe9d98acc44b665e94d9a2297d8d0066b80de"
+    "state": true,
+    "msg": {
+        "txid": "0x9405785113276757c65ae8963ab4529a3a9305fa22a1d5b74b9f5e05866881f0",
+        "nftHash": "0xa7edc432a605f0bf58b8a7c5a6a734883ee8adb2"
+    }
 }
 ```
 
@@ -109,8 +163,11 @@ http://xxx.xxx:xxxx/exchange
 返回 txid：
 ```
 {
-    "state":true,
-    "msg":"0x618ff2755cbd2c3c5145d23b53abe9d98acc44b665e94d9a2297d8d0066b80de"
+    "state": true,
+    "msg": {
+        "txid": "0x9405785113276757c65ae8963ab4529a3a9305fa22a1d5b74b9f5e05866881f0",
+        "nftHash": "0xa7edc432a605f0bf58b8a7c5a6a734883ee8adb2"
+    }
 }
 ```
 ### reduceGrade
@@ -125,8 +182,11 @@ http://xxx.xxx:xxxx/reduceGrade
 返回 txid：
 ```
 {
-    "state":true,
-    "msg":"0x618ff2755cbd2c3c5145d23b53abe9d98acc44b665e94d9a2297d8d0066b80de"
+    "state": true,
+    "msg": {
+        "txid": "0x9405785113276757c65ae8963ab4529a3a9305fa22a1d5b74b9f5e05866881f0",
+        "nftHash": "0xa7edc432a605f0bf58b8a7c5a6a734883ee8adb2"
+    }
 }
 ```
 ### reducePoint
@@ -142,8 +202,11 @@ http://xxx.xxx:xxxx/reduceGrade
 返回 txid：
 ```
 {
-    "state":true,
-    "msg":"0x618ff2755cbd2c3c5145d23b53abe9d98acc44b665e94d9a2297d8d0066b80de"
+    "state": true,
+    "msg": {
+        "txid": "0x9405785113276757c65ae8963ab4529a3a9305fa22a1d5b74b9f5e05866881f0",
+        "nftHash": "0xa7edc432a605f0bf58b8a7c5a6a734883ee8adb2"
+    }
 }
 ```
 
@@ -221,10 +284,11 @@ http://xxx.xxx:xxxx/getUserNfts
 
 产生 ApplicationLog 的接口：
 
-* buy 会产生 addpoint 和 create 的 ApplicationLog；
+* buy 会产生 buy 的 ApplicationLog；
 * upgrade 会产生 upgrade 和 addPoint 的 ApplicationLog；
 * exchange 会产生 exchange 的 ApplicationLog；
-* addPoint 会产生 addPoint 的 ApplicationLog。
+* addPoint 会产生 addPoint 的 ApplicationLog;
+* activate 会产生 activate 和 addPoint 的 ApplicationLog；
 
 POST，接口：http://xxx.xxx:xxxx/getApplicationLog
 ```
@@ -241,35 +305,21 @@ POST，接口：http://xxx.xxx:xxxx/getApplicationLog
     "msg": {
         "height": 21123,
         "applicationLog": {
-            "addPointLog": [
-                {
-                    "tokenId": "d23fe468f6e698d2957d228cc07b275a448348bbd9da542df510d61a7dda030a",
-                    "ownerAddress": "AbN2K2trYzgx8WMg2H7U7JHH6RQVzz2fnx",
-                    "addPoint": 400
-                },
-                {
-                    "tokenId": "e4658581f20649c32314326f180c7ec89587b786bc29ab2a9a8ce4b7c96d7418",
-                    "ownerAddress": "AbN2K2trYzgx8WMg2H7U7JHH6RQVzz2fnx",
-                    "addPoint": 40
-                }
-            ],
-            "createNftLog": {
-                "ownerAddress": "AcQLYjGbQU2bEQ8RKFXUcf8XvromfUQodq",
-                "buyCount": 10,
-                "payValue": 35991,
-                "tokenIdList": [
-                    "12a52e3c6d200b4a51015d4874ed332b05ea98c5073eaf01bd285765af2922a1",
-                    "3912b77f223e71a6a0eb6d2fd88f2d26aec9a5f72b1e9e91ebc877cfe3b26d8d",
-                    "f81c7397a631f07fd2f1378f635c4c7f43ef2e069821873cb05288f5b9e18d11",
-                    "3fda1ae5a591d0a85623f740211fa028950c9b01bd5e5c2a3e0694ad749cc0c5",
-                    "e3e93f04e33b4f91539fae5083c04d2622ff3faae10844dec42e07603d282afc",
-                    "64ac19439580c549d50d2ce38b1f4b57f01f2dc85227764f712457dd82c344fa",
-                    "d0bbe82d7a8be6fbe0f2587f9da8e6d1dee3f9b2d65e42d222c0ccdad35c9091",
-                    "542867fa6a0cb3bfebc8028365e1dfe16b8ec866c65f4d793ff6ccb522b60ae2",
-                    "8ce8138eaeb40c93a664bd3cc9964cac71e0a84b04a904787b489031f70bb24d",
-                    "fe6864542a48be9798e9cea84143dedb74c7337d6caf3bf8b83c7c11f0d01e55"
-                ]
-            }
+            "ownerAddress": "AcQLYjGbQU2bEQ8RKFXUcf8XvromfUQodq",
+            "buyCount": 10,
+            "payValue": 35991,
+            "tokenIdList": [
+                "12a52e3c6d200b4a51015d4874ed332b05ea98c5073eaf01bd285765af2922a1",
+                "3912b77f223e71a6a0eb6d2fd88f2d26aec9a5f72b1e9e91ebc877cfe3b26d8d",
+                "f81c7397a631f07fd2f1378f635c4c7f43ef2e069821873cb05288f5b9e18d11",
+                "3fda1ae5a591d0a85623f740211fa028950c9b01bd5e5c2a3e0694ad749cc0c5",
+                "e3e93f04e33b4f91539fae5083c04d2622ff3faae10844dec42e07603d282afc",
+                "64ac19439580c549d50d2ce38b1f4b57f01f2dc85227764f712457dd82c344fa",
+                "d0bbe82d7a8be6fbe0f2587f9da8e6d1dee3f9b2d65e42d222c0ccdad35c9091",
+                "542867fa6a0cb3bfebc8028365e1dfe16b8ec866c65f4d793ff6ccb522b60ae2",
+                "8ce8138eaeb40c93a664bd3cc9964cac71e0a84b04a904787b489031f70bb24d",
+                "fe6864542a48be9798e9cea84143dedb74c7337d6caf3bf8b83c7c11f0d01e55"
+            ]
         }
     }
 }
@@ -298,6 +348,37 @@ POST，接口：http://xxx.xxx:xxxx/getApplicationLog
                 "ownerAddress": "AQXPAKF7uD5rYbBnqikGDVcsP1Ukpkopg5",
                 "addPoint": -400
             }
+        }
+    }
+}
+
+```
+下面是一笔 activate 交易产生的 ApplicationLog
+```
+{
+    "txid":"0x5587fc0895f1c723359058a71d6320a9fe99feacf45c98c0b99aa9eebad33cd8",
+    "method":"activate"
+}
+```
+```
+{
+    "state": true,
+    "msg": {
+        "height": 11336,
+        "applicationLog": {
+            "addPointLog": [
+                {
+                    "tokenId": "85360d1215dbbc5c67b367832a485e4cb2d0bbfff315737ed5802ac4a49d5578",
+                    "ownerAddress": "AVDHJzTDyQSTrXmJqHN5BAbR4cvckA6Ktg",
+                    "addPoint": 40
+                },
+                {
+                    "tokenId": "877962b93a78cfcf71edac9fb883541f7011d8f874d371aa933ab9761aba10de",
+                    "ownerAddress": "Ae1gzKoredBLpaaVDsYuF6kXXrouTjHUr7",
+                    "addPoint": 4
+                }
+            ],
+            "tokenId": "4896a07a02c7b0e264c93dae89e55e43100aa9352c098ee7ae52954146b108fb"
         }
     }
 }
