@@ -56,10 +56,11 @@ namespace NFT_API
                     return GetBindNftRsp(json);
                 case "getNftInfo":
                     return GetNftInfoRsp(json);
-                case "getUserNfts":
-                    return GetUserNftsRsp(json);
+                case "getUserNftCount":
+                    return GetUserNftsCountRsp(json);
                 case "getNftCount":
                     return GetNftCount();
+
                 case "getMoney":
                     return SendMoney(json);
 
@@ -99,7 +100,7 @@ namespace NFT_API
                 KeyPair keypair = ZoroHelper.GetKeyPairFromWIF(Config.getStrValue("adminWif"));
 
                 //gas = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
-                InvocationTransaction tx = ZoroHelper.MakeTransaction(sb.ToArray(), keypair, Fixed8.FromDecimal(gas), Fixed8.One);
+                InvocationTransaction tx = ZoroHelper.MakeTransaction(sb.ToArray(), keypair, Fixed8.FromDecimal(gas * 1000), Fixed8.FromDecimal(0.0001m));
                 var txid = tx.Hash.ToString();
                 var result = ZoroHelper.SendRawTransaction(tx.ToArray().ToHexString(), "");
                 var state = (bool)(JObject.Parse(result)["result"]);
@@ -149,7 +150,7 @@ namespace NFT_API
 
                 sb.EmitSysCall("Zoro.NativeNEP5.Call", "Transfer", nep5Hash, adminHash, targetscripthash, new BigInteger(value));
                 decimal gas = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
-                InvocationTransaction tx = ZoroHelper.MakeTransaction(sb.ToArray(), keypair, Fixed8.FromDecimal(gas), Fixed8.One);
+                InvocationTransaction tx = ZoroHelper.MakeTransaction(sb.ToArray(), keypair, Fixed8.FromDecimal(gas), Fixed8.FromDecimal(0.0001m));
                 var result = ZoroHelper.SendRawTransaction(tx.ToArray().ToHexString(), "");
                 txid = tx.Hash.ToString();
 
@@ -227,15 +228,15 @@ namespace NFT_API
             return new RspInfo() { state = true, msg = applicationLog };
         }
 
-        private static RspInfo GetUserNftsRsp(JObject json)
+        private static RspInfo GetUserNftsCountRsp(JObject json)
         {
             ScriptBuilder sb = new ScriptBuilder();
             var addr = ZoroHelper.GetParamBytes("(addr)" + json["address"].ToString());
-            sb.EmitAppCall(UInt160.Parse(Config.getStrValue("nftHash")), "getUserNfts", addr);
+            sb.EmitAppCall(UInt160.Parse(Config.getStrValue("nftHash")), "getUserNftCount", addr);
             var result = ZoroHelper.InvokeScript(sb.ToArray(), "");
             var stack = (JObject.Parse(result)["result"]["stack"] as JArray)[0] as JObject;
 
-            return new RspInfo() { state = true, msg = GetTokenList(stack) };
+            return new RspInfo() { state = true, msg = Helper.GetJsonBigInteger(stack) };
         }
 
         private static List<string> GetTokenList(JObject stack)
@@ -455,6 +456,7 @@ namespace NFT_API
             int count = int.Parse(json["count"].ToString());
             gas = 100;
             if (count > 2) gas += 2 * (count - 2);
+
             long receivableValue = GetReceivableValue(count);
             if (decimal.Parse(json["transferValue"].ToString()) * 100000000 < receivableValue)
                 return null;
@@ -539,9 +541,9 @@ namespace NFT_API
         {
             long receivableValue = Config.getLongValue("silverPrice") * count;
 
-            if (count >= Config.getIntValue("threeDiscountCount"))
-                return receivableValue * Config.getIntValue("threeDiscountPercent") / 100;
-            else if (count >= Config.getIntValue("twoDiscountCount"))
+            //if (count >= Config.getIntValue("threeDiscountCount"))
+            //    return receivableValue * Config.getIntValue("threeDiscountPercent") / 100;
+            if (count >= Config.getIntValue("twoDiscountCount"))
                 return receivableValue * Config.getIntValue("twoDiscountPercent") / 100;
             else if (count >= Config.getIntValue("oneDiscountCount"))
                 return receivableValue * Config.getIntValue("oneDiscountPercent") / 100;
