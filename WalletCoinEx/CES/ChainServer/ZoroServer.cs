@@ -34,7 +34,7 @@ namespace CES
 
             decimal gas = Helper.ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
 
-            InvocationTransaction tx = Helper.ZoroHelper.MakeTransaction(sb.ToArray(), keypair, Fixed8.FromDecimal(gas), Fixed8.One);
+            InvocationTransaction tx = Helper.ZoroHelper.MakeTransaction(sb.ToArray(), keypair, Fixed8.FromDecimal(gas), Fixed8.FromDecimal(0.0001m));
             var result = Helper.ZoroHelper.SendRawTransaction(tx.ToArray().ToHexString(), "");
             var sendTxid = tx.Hash.ToString();
 
@@ -70,9 +70,12 @@ namespace CES
 
             decimal gas = Helper.ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
 
-            InvocationTransaction tx = Helper.ZoroHelper.MakeTransaction(sb.ToArray(), keypair, Fixed8.FromDecimal(gas), Fixed8.One);
+            InvocationTransaction tx = Helper.ZoroHelper.MakeTransaction(sb.ToArray(), keypair, Fixed8.FromDecimal(gas), Fixed8.FromDecimal(0.0001m));
             var result = Helper.ZoroHelper.SendRawTransaction(tx.ToArray().ToHexString(), "");
             var sendTxid = tx.Hash.ToString();
+
+            if (result.Contains("Block or transaction validation failed"))
+                return null;
 
             var state = (bool)(JObject.Parse(result)["result"]);
             if (state)
