@@ -14,7 +14,7 @@ namespace Zoro_Gui
     public partial class FrmZoroGui : Form
     {
         private byte[] contractScript;
-        decimal bcpFee = 100;
+        decimal bcpFee = 10000;
 
         public FrmZoroGui()
         {
@@ -77,9 +77,13 @@ namespace Zoro_Gui
             {
                 sb.EmitSysCall("Zoro.NativeNEP5.Call", "Transfer", assetId, transAccountFrm.addressHash, targetscripthash, new BigInteger(value));
 
-                decimal gas = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
+                decimal gasLimit = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
 
-                var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), transAccountFrm.keypair, "", Fixed8.FromDecimal(gas), Fixed8.One);
+                gasLimit = Math.Max(decimal.Parse(tbxGasLimit.Text), gasLimit);
+
+                decimal gasPrice = decimal.Parse(tbxGasPrice.Text);
+
+                var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), transAccountFrm.keypair, "", Fixed8.FromDecimal(1000), Fixed8.FromDecimal(gasPrice));
 
                 rtbxTranResult.Text = result;
             }
@@ -124,7 +128,7 @@ namespace Zoro_Gui
 
                 lblBcpFee.Text = bcpFee.ToString();
 
-                var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), publishAccountFrm.keypair, "", Fixed8.FromDecimal(bcpFee), Fixed8.One);
+                var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), publishAccountFrm.keypair, "", Fixed8.FromDecimal(bcpFee), Fixed8.FromDecimal(0.0001m));
 
                 rtbxPublishReturn.Text = result;
             }
@@ -205,10 +209,12 @@ namespace Zoro_Gui
                 sb.EmitAppCall(UInt160.Parse(tbxContractScriptHash.Text), tbxMethodName.Text);
             }
 
-            decimal gas = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
-            gas = Math.Max(decimal.Parse(tbxGasFee.Text), gas);
+            decimal gasLimit = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
+            gasLimit = Math.Max(decimal.Parse(tbxGasLimit.Text), gasLimit);
 
-            var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), invokeAccountFrm.keypair, "", Fixed8.FromDecimal(gas), Fixed8.One);
+            decimal gasPrice= decimal.Parse(tbxGasPrice.Text);
+
+            var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), invokeAccountFrm.keypair, "", Fixed8.FromDecimal(gasLimit), Fixed8.FromDecimal(gasPrice));
 
             rtbxReturnJson.Text = result;
 
@@ -246,18 +252,18 @@ namespace Zoro_Gui
         private void cbxNeedNep4_CheckedChanged(object sender, EventArgs e)
         {
             if (cbxNeedNep4.CheckState == CheckState.Checked)
-                bcpFee += (decimal)500;
+                bcpFee += (decimal)50000;
             else
-                bcpFee -= (decimal)500;
+                bcpFee -= (decimal)50000;
             lblBcpFee.Text = bcpFee.ToString();
         }
 
         private void cbxNeedStorge_CheckedChanged(object sender, EventArgs e)
         {
             if (cbxNeedStorge.CheckState == CheckState.Checked)
-                bcpFee += (decimal)400;
+                bcpFee += (decimal)40000;
             else
-                bcpFee -= (decimal)400;
+                bcpFee -= (decimal)40000;
             lblBcpFee.Text = bcpFee.ToString();
         }
 

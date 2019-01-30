@@ -60,10 +60,11 @@
             this.tbxContractPath = new System.Windows.Forms.TextBox();
             this.cbxNeedNep4 = new System.Windows.Forms.CheckBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.label9 = new System.Windows.Forms.Label();
+            this.tbxGasPrice = new System.Windows.Forms.TextBox();
             this.invokeAccountFrm = new Zoro_Gui.AccountFrm();
-            this.label24 = new System.Windows.Forms.Label();
             this.label23 = new System.Windows.Forms.Label();
-            this.tbxGasFee = new System.Windows.Forms.TextBox();
+            this.tbxGasLimit = new System.Windows.Forms.TextBox();
             this.label16 = new System.Windows.Forms.Label();
             this.tbxMethodName = new System.Windows.Forms.TextBox();
             this.label15 = new System.Windows.Forms.Label();
@@ -75,6 +76,10 @@
             this.tbxContractScriptHash = new System.Windows.Forms.TextBox();
             this.rtbxParameterJson = new System.Windows.Forms.RichTextBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.label12 = new System.Windows.Forms.Label();
+            this.tbxTransGasPrice = new System.Windows.Forms.TextBox();
+            this.label17 = new System.Windows.Forms.Label();
+            this.tbxTransGasLimit = new System.Windows.Forms.TextBox();
             this.transAccountFrm = new Zoro_Gui.AccountFrm();
             this.btnCancelTran = new System.Windows.Forms.Button();
             this.btnSendTransaction = new System.Windows.Forms.Button();
@@ -100,11 +105,13 @@
             this.label26 = new System.Windows.Forms.Label();
             this.rtbxMutiSign = new System.Windows.Forms.RichTextBox();
             this.tabPage5 = new System.Windows.Forms.TabPage();
+            this.nep5AccountFrm = new Zoro_Gui.AccountFrm();
             this.tableControl.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.tabPage4.SuspendLayout();
+            this.tabPage5.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableControl
@@ -430,10 +437,11 @@
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.label9);
+            this.tabPage2.Controls.Add(this.tbxGasPrice);
             this.tabPage2.Controls.Add(this.invokeAccountFrm);
-            this.tabPage2.Controls.Add(this.label24);
             this.tabPage2.Controls.Add(this.label23);
-            this.tabPage2.Controls.Add(this.tbxGasFee);
+            this.tabPage2.Controls.Add(this.tbxGasLimit);
             this.tabPage2.Controls.Add(this.label16);
             this.tabPage2.Controls.Add(this.tbxMethodName);
             this.tabPage2.Controls.Add(this.label15);
@@ -452,6 +460,23 @@
             this.tabPage2.Text = "调用合约";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(224, 289);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(80, 20);
+            this.label9.TabIndex = 32;
+            this.label9.Text = "GasPrice：";
+            // 
+            // tbxGasPrice
+            // 
+            this.tbxGasPrice.Location = new System.Drawing.Point(309, 284);
+            this.tbxGasPrice.Name = "tbxGasPrice";
+            this.tbxGasPrice.Size = new System.Drawing.Size(77, 25);
+            this.tbxGasPrice.TabIndex = 31;
+            this.tbxGasPrice.Text = "0.0001";
+            // 
             // invokeAccountFrm
             // 
             this.invokeAccountFrm.BackColor = System.Drawing.SystemColors.ButtonHighlight;
@@ -463,32 +488,23 @@
             this.invokeAccountFrm.Size = new System.Drawing.Size(842, 99);
             this.invokeAccountFrm.TabIndex = 30;
             // 
-            // label24
-            // 
-            this.label24.AutoSize = true;
-            this.label24.Location = new System.Drawing.Point(183, 289);
-            this.label24.Name = "label24";
-            this.label24.Size = new System.Drawing.Size(36, 20);
-            this.label24.TabIndex = 29;
-            this.label24.Text = "BCP";
-            // 
             // label23
             // 
             this.label23.AutoSize = true;
             this.label23.Location = new System.Drawing.Point(39, 289);
             this.label23.Name = "label23";
-            this.label23.Size = new System.Drawing.Size(75, 20);
+            this.label23.Size = new System.Drawing.Size(80, 20);
             this.label23.TabIndex = 27;
-            this.label23.Text = "Gas费用：";
+            this.label23.Text = "GasLimit：";
             // 
-            // tbxGasFee
+            // tbxGasLimit
             // 
-            this.tbxGasFee.Location = new System.Drawing.Point(118, 286);
-            this.tbxGasFee.Name = "tbxGasFee";
-            this.tbxGasFee.Size = new System.Drawing.Size(62, 25);
-            this.tbxGasFee.TabIndex = 26;
-            this.tbxGasFee.Text = "10";
-            this.tbxGasFee.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxGasFee_KeyPress);
+            this.tbxGasLimit.Location = new System.Drawing.Point(124, 286);
+            this.tbxGasLimit.Name = "tbxGasLimit";
+            this.tbxGasLimit.Size = new System.Drawing.Size(93, 25);
+            this.tbxGasLimit.TabIndex = 26;
+            this.tbxGasLimit.Text = "1000";
+            this.tbxGasLimit.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxGasFee_KeyPress);
             // 
             // label16
             // 
@@ -595,6 +611,10 @@
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.label12);
+            this.tabPage3.Controls.Add(this.tbxTransGasPrice);
+            this.tabPage3.Controls.Add(this.label17);
+            this.tabPage3.Controls.Add(this.tbxTransGasLimit);
             this.tabPage3.Controls.Add(this.transAccountFrm);
             this.tabPage3.Controls.Add(this.btnCancelTran);
             this.tabPage3.Controls.Add(this.btnSendTransaction);
@@ -613,6 +633,40 @@
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "转账交易";
             this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(431, 273);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(80, 20);
+            this.label12.TabIndex = 36;
+            this.label12.Text = "GasPrice：";
+            // 
+            // tbxTransGasPrice
+            // 
+            this.tbxTransGasPrice.Location = new System.Drawing.Point(514, 268);
+            this.tbxTransGasPrice.Name = "tbxTransGasPrice";
+            this.tbxTransGasPrice.Size = new System.Drawing.Size(77, 25);
+            this.tbxTransGasPrice.TabIndex = 35;
+            this.tbxTransGasPrice.Text = "0.0001";
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(246, 273);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(80, 20);
+            this.label17.TabIndex = 34;
+            this.label17.Text = "GasLimit：";
+            // 
+            // tbxTransGasLimit
+            // 
+            this.tbxTransGasLimit.Location = new System.Drawing.Point(328, 270);
+            this.tbxTransGasLimit.Name = "tbxTransGasLimit";
+            this.tbxTransGasLimit.Size = new System.Drawing.Size(93, 25);
+            this.tbxTransGasLimit.TabIndex = 33;
+            this.tbxTransGasLimit.Text = "1000";
             // 
             // transAccountFrm
             // 
@@ -633,7 +687,7 @@
             this.btnCancelTran.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnCancelTran.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnCancelTran.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.btnCancelTran.Location = new System.Drawing.Point(463, 271);
+            this.btnCancelTran.Location = new System.Drawing.Point(463, 323);
             this.btnCancelTran.Name = "btnCancelTran";
             this.btnCancelTran.Size = new System.Drawing.Size(99, 29);
             this.btnCancelTran.TabIndex = 27;
@@ -649,7 +703,7 @@
             this.btnSendTransaction.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSendTransaction.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnSendTransaction.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.btnSendTransaction.Location = new System.Drawing.Point(290, 271);
+            this.btnSendTransaction.Location = new System.Drawing.Point(290, 323);
             this.btnSendTransaction.Name = "btnSendTransaction";
             this.btnSendTransaction.Size = new System.Drawing.Size(99, 29);
             this.btnSendTransaction.TabIndex = 26;
@@ -660,7 +714,7 @@
             // label22
             // 
             this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(44, 313);
+            this.label22.Location = new System.Drawing.Point(44, 365);
             this.label22.Name = "label22";
             this.label22.Size = new System.Drawing.Size(79, 20);
             this.label22.TabIndex = 25;
@@ -670,7 +724,7 @@
             // 
             this.rtbxTranResult.BackColor = System.Drawing.Color.AliceBlue;
             this.rtbxTranResult.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.rtbxTranResult.Location = new System.Drawing.Point(49, 345);
+            this.rtbxTranResult.Location = new System.Drawing.Point(49, 397);
             this.rtbxTranResult.Name = "rtbxTranResult";
             this.rtbxTranResult.ReadOnly = true;
             this.rtbxTranResult.Size = new System.Drawing.Size(748, 77);
@@ -679,7 +733,7 @@
             // 
             // tbxValue
             // 
-            this.tbxValue.Location = new System.Drawing.Point(491, 160);
+            this.tbxValue.Location = new System.Drawing.Point(491, 170);
             this.tbxValue.Name = "tbxValue";
             this.tbxValue.Size = new System.Drawing.Size(185, 25);
             this.tbxValue.TabIndex = 22;
@@ -688,7 +742,7 @@
             // label21
             // 
             this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(406, 163);
+            this.label21.Location = new System.Drawing.Point(406, 173);
             this.label21.Name = "label21";
             this.label21.Size = new System.Drawing.Size(79, 20);
             this.label21.TabIndex = 23;
@@ -697,7 +751,7 @@
             // label20
             // 
             this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(141, 161);
+            this.label20.Location = new System.Drawing.Point(141, 171);
             this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(79, 20);
             this.label20.TabIndex = 8;
@@ -709,7 +763,7 @@
             this.cmbxTokenType.Items.AddRange(new object[] {
             "BCP",
             "BCT"});
-            this.cmbxTokenType.Location = new System.Drawing.Point(226, 160);
+            this.cmbxTokenType.Location = new System.Drawing.Point(226, 170);
             this.cmbxTokenType.Name = "cmbxTokenType";
             this.cmbxTokenType.Size = new System.Drawing.Size(163, 27);
             this.cmbxTokenType.TabIndex = 7;
@@ -717,7 +771,7 @@
             // label18
             // 
             this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(141, 219);
+            this.label18.Location = new System.Drawing.Point(141, 229);
             this.label18.Name = "label18";
             this.label18.Size = new System.Drawing.Size(79, 20);
             this.label18.TabIndex = 6;
@@ -726,7 +780,7 @@
             // tbxTargetAddress
             // 
             this.tbxTargetAddress.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.tbxTargetAddress.Location = new System.Drawing.Point(226, 216);
+            this.tbxTargetAddress.Location = new System.Drawing.Point(226, 226);
             this.tbxTargetAddress.Name = "tbxTargetAddress";
             this.tbxTargetAddress.Size = new System.Drawing.Size(450, 25);
             this.tbxTargetAddress.TabIndex = 5;
@@ -877,13 +931,25 @@
             // 
             // tabPage5
             // 
+            this.tabPage5.Controls.Add(this.nep5AccountFrm);
             this.tabPage5.Location = new System.Drawing.Point(4, 28);
             this.tabPage5.Name = "tabPage5";
             this.tabPage5.Padding = new System.Windows.Forms.Padding(3);
             this.tabPage5.Size = new System.Drawing.Size(848, 508);
             this.tabPage5.TabIndex = 4;
-            this.tabPage5.Text = "创建地址";
+            this.tabPage5.Text = "Nep5";
             this.tabPage5.UseVisualStyleBackColor = true;
+            // 
+            // nep5AccountFrm
+            // 
+            this.nep5AccountFrm.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.nep5AccountFrm.Dock = System.Windows.Forms.DockStyle.Top;
+            this.nep5AccountFrm.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.nep5AccountFrm.Location = new System.Drawing.Point(3, 3);
+            this.nep5AccountFrm.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.nep5AccountFrm.Name = "nep5AccountFrm";
+            this.nep5AccountFrm.Size = new System.Drawing.Size(842, 107);
+            this.nep5AccountFrm.TabIndex = 0;
             // 
             // FrmZoroGui
             // 
@@ -908,6 +974,7 @@
             this.tabPage3.PerformLayout();
             this.tabPage4.ResumeLayout(false);
             this.tabPage4.PerformLayout();
+            this.tabPage5.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -963,9 +1030,8 @@
         private System.Windows.Forms.TextBox tbxValue;
         private System.Windows.Forms.Label label21;
         private System.Windows.Forms.Button btnLoadContract;
-        private System.Windows.Forms.Label label24;
         private System.Windows.Forms.Label label23;
-        private System.Windows.Forms.TextBox tbxGasFee;
+        private System.Windows.Forms.TextBox tbxGasLimit;
         private System.Windows.Forms.Label label25;
         private System.Windows.Forms.RichTextBox rtbxPublishReturn;
         private System.Windows.Forms.TabPage tabPage4;
@@ -983,8 +1049,15 @@
         private System.Windows.Forms.RichTextBox rtbxMutiSign;
         private AccountFrm publishAccountFrm;
         private AccountFrm invokeAccountFrm;
-        private AccountFrm transAccountFrm;
         private System.Windows.Forms.TabPage tabPage5;
+        private AccountFrm nep5AccountFrm;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.TextBox tbxGasPrice;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.TextBox tbxTransGasPrice;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.TextBox tbxTransGasLimit;
+        private AccountFrm transAccountFrm;
     }
 }
 

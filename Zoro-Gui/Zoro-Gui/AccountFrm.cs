@@ -50,6 +50,7 @@ namespace Zoro_Gui
         {
             UInt160 bcpAssetId = Genesis.BcpContractAddress;
             UInt160 bctAssetId = Genesis.BctContractAddress;
+            UInt160 bcsAssetId = UInt160.Parse("0xbca3d3be47bd966fddd2702ac0dac1a3bdaf317e");
 
             using (ScriptBuilder sb = new ScriptBuilder())
             {
@@ -72,6 +73,18 @@ namespace Zoro_Gui
                 var value = GetBalanceFromJson(info);
 
                 lblBctBalance.Text = value;
+
+            }
+
+            using (ScriptBuilder sb = new ScriptBuilder())
+            {
+                sb.EmitSysCall("Zoro.NativeNEP5.Call", "BalanceOf", bcsAssetId, addressHash);
+                sb.EmitSysCall("Zoro.NativeNEP5.Call", "Decimals", bcsAssetId);
+
+                var info = ZoroHelper.InvokeScript(sb.ToArray(), "");
+                var value = GetBalanceFromJson(info);
+
+                lblBcsBalance.Text = value;
 
             }
         }

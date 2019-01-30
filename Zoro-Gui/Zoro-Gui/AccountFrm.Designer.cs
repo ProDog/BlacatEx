@@ -37,6 +37,8 @@
             this.tbxAccountWif = new System.Windows.Forms.TextBox();
             this.tbxAccountAddress = new System.Windows.Forms.TextBox();
             this.label48 = new System.Windows.Forms.Label();
+            this.lblBcsBalance = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btnAccountRefresh
@@ -47,7 +49,7 @@
             this.btnAccountRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnAccountRefresh.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnAccountRefresh.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.btnAccountRefresh.Location = new System.Drawing.Point(756, 34);
+            this.btnAccountRefresh.Location = new System.Drawing.Point(771, 38);
             this.btnAccountRefresh.Name = "btnAccountRefresh";
             this.btnAccountRefresh.Size = new System.Drawing.Size(47, 29);
             this.btnAccountRefresh.TabIndex = 41;
@@ -59,7 +61,7 @@
             // 
             this.lblBctBalance.AutoSize = true;
             this.lblBctBalance.ForeColor = System.Drawing.Color.DodgerBlue;
-            this.lblBctBalance.Location = new System.Drawing.Point(587, 61);
+            this.lblBctBalance.Location = new System.Drawing.Point(587, 42);
             this.lblBctBalance.Name = "lblBctBalance";
             this.lblBctBalance.Size = new System.Drawing.Size(140, 20);
             this.lblBctBalance.TabIndex = 40;
@@ -68,7 +70,7 @@
             // label44
             // 
             this.label44.AutoSize = true;
-            this.label44.Location = new System.Drawing.Point(518, 61);
+            this.label44.Location = new System.Drawing.Point(518, 42);
             this.label44.Name = "label44";
             this.label44.Size = new System.Drawing.Size(77, 20);
             this.label44.TabIndex = 39;
@@ -78,7 +80,7 @@
             // 
             this.lblBcpBalance.AutoSize = true;
             this.lblBcpBalance.ForeColor = System.Drawing.Color.DodgerBlue;
-            this.lblBcpBalance.Location = new System.Drawing.Point(587, 22);
+            this.lblBcpBalance.Location = new System.Drawing.Point(587, 12);
             this.lblBcpBalance.Name = "lblBcpBalance";
             this.lblBcpBalance.Size = new System.Drawing.Size(140, 20);
             this.lblBcpBalance.TabIndex = 38;
@@ -87,7 +89,7 @@
             // label46
             // 
             this.label46.AutoSize = true;
-            this.label46.Location = new System.Drawing.Point(518, 21);
+            this.label46.Location = new System.Drawing.Point(518, 11);
             this.label46.Name = "label46";
             this.label46.Size = new System.Drawing.Size(78, 20);
             this.label46.TabIndex = 37;
@@ -96,7 +98,7 @@
             // label47
             // 
             this.label47.AutoSize = true;
-            this.label47.Location = new System.Drawing.Point(39, 62);
+            this.label47.Location = new System.Drawing.Point(39, 64);
             this.label47.Name = "label47";
             this.label47.Size = new System.Drawing.Size(79, 20);
             this.label47.TabIndex = 36;
@@ -104,7 +106,7 @@
             // 
             // tbxAccountWif
             // 
-            this.tbxAccountWif.Location = new System.Drawing.Point(122, 17);
+            this.tbxAccountWif.Location = new System.Drawing.Point(122, 19);
             this.tbxAccountWif.Name = "tbxAccountWif";
             this.tbxAccountWif.PasswordChar = '*';
             this.tbxAccountWif.Size = new System.Drawing.Size(391, 25);
@@ -114,7 +116,7 @@
             // tbxAccountAddress
             // 
             this.tbxAccountAddress.BackColor = System.Drawing.Color.AliceBlue;
-            this.tbxAccountAddress.Location = new System.Drawing.Point(122, 59);
+            this.tbxAccountAddress.Location = new System.Drawing.Point(122, 61);
             this.tbxAccountAddress.Name = "tbxAccountAddress";
             this.tbxAccountAddress.ReadOnly = true;
             this.tbxAccountAddress.Size = new System.Drawing.Size(391, 25);
@@ -123,17 +125,38 @@
             // label48
             // 
             this.label48.AutoSize = true;
-            this.label48.Location = new System.Drawing.Point(39, 20);
+            this.label48.Location = new System.Drawing.Point(39, 22);
             this.label48.Name = "label48";
             this.label48.Size = new System.Drawing.Size(78, 20);
             this.label48.TabIndex = 34;
             this.label48.Text = "钱包 Wif：";
+            // 
+            // lblBcsBalance
+            // 
+            this.lblBcsBalance.AutoSize = true;
+            this.lblBcsBalance.ForeColor = System.Drawing.Color.DodgerBlue;
+            this.lblBcsBalance.Location = new System.Drawing.Point(587, 72);
+            this.lblBcsBalance.Name = "lblBcsBalance";
+            this.lblBcsBalance.Size = new System.Drawing.Size(140, 20);
+            this.lblBcsBalance.TabIndex = 46;
+            this.lblBcsBalance.Text = "00000000.00000000";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(517, 72);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(77, 20);
+            this.label1.TabIndex = 45;
+            this.label1.Text = "BCS余额：";
             // 
             // AccountFrm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.Controls.Add(this.lblBcsBalance);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.btnAccountRefresh);
             this.Controls.Add(this.lblBctBalance);
             this.Controls.Add(this.label44);
@@ -146,7 +169,7 @@
             this.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "AccountFrm";
-            this.Size = new System.Drawing.Size(853, 107);
+            this.Size = new System.Drawing.Size(853, 111);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -163,5 +186,7 @@
         private System.Windows.Forms.TextBox tbxAccountWif;
         private System.Windows.Forms.TextBox tbxAccountAddress;
         private System.Windows.Forms.Label label48;
+        private System.Windows.Forms.Label lblBcsBalance;
+        private System.Windows.Forms.Label label1;
     }
 }
