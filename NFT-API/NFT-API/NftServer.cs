@@ -58,8 +58,10 @@ namespace NFT_API
                     return GetNftInfoRsp(json);
                 case "getUserNftCount":
                     return GetUserNftsCountRsp(json);
-                case "getNftCount":
+                case "getAllNftCount":
                     return GetNftCount();
+                case "getActivatedCount":
+                    return GetActivatedCount();
 
                 case "getMoney":
                     return SendMoney(json);
@@ -68,8 +70,8 @@ namespace NFT_API
                     return GetApplicationLog(json);
 
                 case "addPoint":
-                    sb = AddPointBuilder(json);
-                    break;
+                    return AddPointRsp(json);
+
                 case "reduceGrade":
                     sb = ReduceGradeBuilder(json);
                     break;
@@ -93,33 +95,29 @@ namespace NFT_API
                     sb = ExchangeBulider(json);
                     gas = 10;
                     break;
+                default:
+                    return new RspInfo() { state = false, msg = "Input data error!" };
             }
 
-            if (sb != null)
-            {
-                KeyPair keypair = ZoroHelper.GetKeyPairFromWIF(Config.getStrValue("adminWif"));
+            rspInfo = ExecuTransaction(sb, gas);
 
-                //gas = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
-                InvocationTransaction tx = ZoroHelper.MakeTransaction(sb.ToArray(), keypair, Fixed8.FromDecimal(gas * 1000), Fixed8.FromDecimal(0.0001m));
-                var txid = tx.Hash.ToString();
-                var result = ZoroHelper.SendRawTransaction(tx.ToArray().ToHexString(), "");
-                var state = (bool)(JObject.Parse(result)["result"]);
-                if (state)
-                    rspInfo = new RspInfo() { state = true, msg = new SendRawResult() { txid = txid, nftHash = Config.nftHash } };
-                else
-                    rspInfo = new RspInfo() { state = false, msg = result };
-            }
-            else
-            {
-                rspInfo = new RspInfo() { state = false, msg = "Transfer verification failed" };
-            }
             return rspInfo;
+        }
+
+        private static RspInfo GetActivatedCount()
+        {
+            ScriptBuilder sb = new ScriptBuilder();
+            sb.EmitAppCall(UInt160.Parse(Config.getStrValue("nftHash")), "getActivatedCount");
+            var result = ZoroHelper.InvokeScript(sb.ToArray(), "");
+            var stack = (JObject.Parse(result)["result"]["stack"] as JArray)[0] as JObject;
+
+            return new RspInfo() { state = true, msg = Helper.GetJsonBigInteger(stack) };
         }
 
         private static RspInfo GetNftCount()
         {
             ScriptBuilder sb = new ScriptBuilder();
-            sb.EmitAppCall(UInt160.Parse(Config.getStrValue("nftHash")), "getNftCount");
+            sb.EmitAppCall(UInt160.Parse(Config.getStrValue("nftHash")), "getAllNftCount");
             var result = ZoroHelper.InvokeScript(sb.ToArray(), "");
             var stack = (JObject.Parse(result)["result"]["stack"] as JArray)[0] as JObject;
 
@@ -182,6 +180,142 @@ namespace NFT_API
             return rspInfo;
         }
 
+        private static RspInfo AddPointRsp(JObject json)
+        {
+            RspInfo rspInfo = new RspInfo() { state = false, msg = "Input data error!" };
+            string opType = "addPoint";
+            string txid = DbHelper.GetOpRecordTxid(opType, json["key"].ToString());
+            if (string.IsNullOrEmpty(txid))
+            {
+                ScriptBuilder sb = new ScriptBuilder();
+                List<dynamic> paraList = new List<dynamic>();
+                paraList.Add(ZoroHelper.GetParamBytes("(bytes)" + json["tokenId"].ToString()));
+                paraList.Add(ZoroHelper.GetParamBytes("(int)" + Config.getIntValue("memberPoint")));
+                sb.EmitAppCall(UInt160.Parse(Config.getStrValue("nftHash")), "addPoint", paraList.ToArray());
+
+                KeyPair keypair = ZoroHelper.GetKeyPairFromWIF(Config.getStrValue("adminWif"));
+                //gas = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
+                InvocationTransaction tx = ZoroHelper.MakeTransaction(sb.ToArray(), keypair, Fixed8.FromDecimal(15 * 1000), Fixed8.FromDecimal(0.0001m));
+                txid = tx.Hash.ToString();
+                var result = ZoroHelper.SendRawTransaction(tx.ToArray().ToHexString(), "");
+                try
+                {
+                    var state = (bool)(JObject.Parse(result)["result"]);
+                    if (state)
+                    {
+                        rspInfo = new RspInfo() { state = true, msg = new SendRawResult() { txid = txid, nftHash = Config.nftHash } };
+                        DbHelper.SaveOpRecordResult(opType, json["key"].ToString(), txid);
+                    }
+                    else
+                        rspInfo = new RspInfo() { state = false, msg = result };
+                }
+                catch
+                {
+                    Logger.Error("Trans Error: " + result);
+                    rspInfo = new RspInfo() { state = false, msg = result };
+                }
+            }
+            else
+            {
+                rspInfo= new RspInfo() { state = true, msg = new SendRawResult() { txid = txid, nftHash = Config.nftHash } };
+            }
+            return rspInfo;
+        }
+
+        private static RspInfo ExecuTransaction(ScriptBuilder sb, decimal gas)
+        {
+            RspInfo rspInfo;
+            KeyPair keypair = ZoroHelper.GetKeyPairFromWIF(Config.getStrValue("adminWif"));
+
+            //gas = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
+            InvocationTransaction tx = ZoroHelper.MakeTransaction(sb.ToArray(), keypair, Fixed8.FromDecimal(gas * 1000), Fixed8.FromDecimal(0.0001m));
+            var txid = tx.Hash.ToString();
+            var result = ZoroHelper.SendRawTransaction(tx.ToArray().ToHexString(), "");
+            try
+            {
+                var state = (bool)(JObject.Parse(result)["result"]);
+                if (state)
+                    rspInfo = new RspInfo() { state = true, msg = new SendRawResult() { txid = txid, nftHash = Config.nftHash } };
+                else
+                    rspInfo = new RspInfo() { state = false, msg = result };
+            }
+            catch
+            {
+                Logger.Error("Trans Error: " + result);
+                rspInfo = new RspInfo() { state = false, msg = result };
+            }
+
+            return rspInfo;
+        }
+
+        private static RspInfo GetApplicationLogs(JObject json)
+        {
+            var paramsArr = json["params"] as JArray;
+            List<ApplicationLog> applicationLogList = new List<ApplicationLog>();
+
+            for (int i = 0; i < paramsArr.Count; i++)
+            {
+                var txid= paramsArr[i]["txid"].ToString();
+                var method = paramsArr[i]["method"].ToString();
+
+                ApplicationLog applicationLog = new ApplicationLog();
+                applicationLog.txid = txid;
+                applicationLog.method = method;
+                applicationLog.height = ZoroHelper.GetHeight();
+
+                string url = Config.getStrValue("myApi") + $"?jsonrpc=2.0&id=1&method=getapplicationlog&params=['',\"{txid}\"]";
+                //string url = "http://127.0.0.1:20333" + $"?jsonrpc=2.0&id=1&method=getapplicationlog&params=['',\"{txid}\"]";
+                var result = Helper.HttpGet(url);
+                if (result.Contains("error"))
+                {
+                    applicationLog.transExisted = false;
+                }
+                else
+                {
+                    try
+                    {
+                        applicationLog.transExisted = true;
+                        var executions = (JObject.Parse(result)["result"]["executions"] as JArray)[0] as JObject;
+                        applicationLog.vmstate = executions["vmstate"].ToString();
+                        applicationLog.gas_consumed = int.Parse(executions["gas_consumed"].ToString());
+
+                        var notificationsArray = executions["notifications"] as JArray;
+                        switch (method)
+                        {
+                            case "buy":
+                                applicationLog.applicationLog = GetBuyLog(notificationsArray[0] as JObject);
+                                break;
+                            case "activate":
+                                applicationLog.applicationLog = GetActivateLog(notificationsArray);
+                                break;
+                            case "bind":
+                                applicationLog.applicationLog = GetBindLog(notificationsArray[0] as JObject);
+                                break;
+                            case "exchange":
+                                applicationLog.applicationLog = GetExchange(notificationsArray[0] as JObject);
+                                break;
+                            case "upgrade":
+                                applicationLog.applicationLog = GetUpgradeLog(notificationsArray);
+                                break;
+                            case "addPoint":
+                                applicationLog.applicationLog = GetAddPointLog(notificationsArray[0] as JObject);
+                                break;
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("Parse applicationLog error: " + ex.Message);
+                        Logger.Warn("ApplicationLog result: " + result);
+                        applicationLog.applicationLog = null;
+                    }
+                }
+
+                applicationLogList.Add(applicationLog);
+            }
+            return new RspInfo() { state = true, msg = applicationLogList };
+        }
+
         private static RspInfo GetApplicationLog(JObject json)
         {
             var txid = json["txid"].ToString();
@@ -189,42 +323,54 @@ namespace NFT_API
 
             ApplicationLog applicationLog = new ApplicationLog();
             applicationLog.height = ZoroHelper.GetHeight();
+            applicationLog.txid = txid;
+            applicationLog.method = method;
             string url = Config.getStrValue("myApi") + $"?jsonrpc=2.0&id=1&method=getapplicationlog&params=['',\"{txid}\"]";
             var result = Helper.HttpGet(url);
-            try
+            if (result.Contains("error"))
             {
-                var executions = (JObject.Parse(result)["result"]["executions"] as JArray)[0] as JObject;
-                var notificationsArray = executions["notifications"] as JArray;
-                switch (method)
+                applicationLog.transExisted = false;
+            }
+            else
+            {
+                try
                 {
-                    case "buy":
-                        applicationLog.applicationLog = GetBuyLog(notificationsArray[0] as JObject);
-                        break;
-                    case "activate":
-                        applicationLog.applicationLog = GetActivateLog(notificationsArray);
-                        break;
-                    case "bind":
-                        applicationLog.applicationLog = GetBindLog(notificationsArray[0] as JObject);
-                        break;
-                    case "exchange":
-                        applicationLog.applicationLog = GetExchange(notificationsArray[0] as JObject);
-                        break;
-                    case "upgrade":
-                        applicationLog.applicationLog = GetUpgradeLog(notificationsArray);
-                        break;
-                    case "addPoint":
-                        applicationLog.applicationLog = GetAddPointLog(notificationsArray[0] as JObject);
-                        break;
-                }
-               
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Parse applicationLog error: " + ex.Message);
-                Logger.Warn("ApplicationLog result: " + result);
-                applicationLog.applicationLog = null;
-            }
+                    applicationLog.transExisted = true;
+                    var executions = (JObject.Parse(result)["result"]["executions"] as JArray)[0] as JObject;
+                    applicationLog.vmstate = executions["vmstate"].ToString();
+                    applicationLog.gas_consumed = int.Parse(executions["gas_consumed"].ToString());
+                    var notificationsArray = executions["notifications"] as JArray;
 
+                    switch (method)
+                    {
+                        case "buy":
+                            applicationLog.applicationLog = GetBuyLog(notificationsArray[0] as JObject);
+                            break;
+                        case "activate":
+                            applicationLog.applicationLog = GetActivateLog(notificationsArray);
+                            break;
+                        case "bind":
+                            applicationLog.applicationLog = GetBindLog(notificationsArray[0] as JObject);
+                            break;
+                        case "exchange":
+                            applicationLog.applicationLog = GetExchange(notificationsArray[0] as JObject);
+                            break;
+                        case "upgrade":
+                            applicationLog.applicationLog = GetUpgradeLog(notificationsArray);
+                            break;
+                        case "addPoint":
+                            applicationLog.applicationLog = GetAddPointLog(notificationsArray[0] as JObject);
+                            break;
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Parse applicationLog error: " + ex.Message);
+                    Logger.Warn("ApplicationLog result: " + result);
+                    applicationLog.applicationLog = null;
+                }
+            }
             return new RspInfo() { state = true, msg = applicationLog };
         }
 
@@ -369,10 +515,11 @@ namespace NFT_API
             var buyNftLog = new BuyNftLog();
             var jValue = notification["state"]["value"] as JArray;
             buyNftLog.ownerAddress = Helper.GetJsonAddress((JObject)jValue[1]);
-            buyNftLog.buyCount = Helper.GetJsonBigInteger((JObject)jValue[2]);
-            buyNftLog.payValue = (long)Helper.GetJsonBigInteger((JObject)jValue[3]) / 100000000;
+            buyNftLog.inviterTokenId = jValue[2]["value"].ToString();
+            buyNftLog.buyCount = Helper.GetJsonBigInteger((JObject)jValue[3]);
+            buyNftLog.payValue = (long)Helper.GetJsonBigInteger((JObject)jValue[4]) / 100000000;
 
-            buyNftLog.tokenIdList = GetTokenList((JObject)jValue[4]);
+            buyNftLog.tokenIdList = GetTokenList((JObject)jValue[5]);
             
             return buyNftLog;
         }
@@ -497,16 +644,6 @@ namespace NFT_API
         {
             ScriptBuilder sb = new ScriptBuilder();
             sb.EmitAppCall(UInt160.Parse(Config.getStrValue("nftHash")), "reduceGrade", ZoroHelper.GetParamBytes("(bytes)" + json["tokenId"].ToString()));
-            return sb;
-        }
-
-        private static ScriptBuilder AddPointBuilder(JObject json)
-        {
-            ScriptBuilder sb = new ScriptBuilder();
-            List<dynamic> paraList = new List<dynamic>();
-            paraList.Add(ZoroHelper.GetParamBytes("(bytes)" + json["tokenId"].ToString()));
-            paraList.Add(ZoroHelper.GetParamBytes("(int)" + Config.getIntValue("memberPoint")));
-            sb.EmitAppCall(UInt160.Parse(Config.getStrValue("nftHash")), "addPoint", paraList.ToArray());
             return sb;
         }
 

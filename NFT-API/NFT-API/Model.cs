@@ -35,6 +35,11 @@ namespace NFT_API
     public class ApplicationLog
     {
         public int height;
+        public bool transExisted;
+        public string vmstate;
+        public int gas_consumed;
+        public string method;
+        public string txid;
         public dynamic applicationLog;
     }
 
@@ -69,6 +74,7 @@ namespace NFT_API
     public class BuyNftLog
     {
         public string ownerAddress;
+        public string inviterTokenId;
         public BigInteger buyCount;
         public long payValue;
         public List<string> tokenIdList;
