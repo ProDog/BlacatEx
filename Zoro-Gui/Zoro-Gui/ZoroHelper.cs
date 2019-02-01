@@ -20,7 +20,7 @@ namespace Zoro_Gui
     {
         //private static string api = "http://47.91.210.16:20333";
         //private static string api = "http://127.0.0.1:20332";
-        private static string api = "http://47.52.100.172:20331";
+        //private static string api = "http://47.52.100.172:20331";
 
         public static UInt160 Parse(string value)
         {
@@ -173,7 +173,7 @@ namespace Zoro_Gui
             foreach (var w in wit)
             {
                 if (w.ScriptHash == newwit.ScriptHash)
-                    throw new Exception("alread have this witness");
+                    throw new Exception("already have this witness");
             }
 
             wit.Add(newwit);
@@ -192,7 +192,7 @@ namespace Zoro_Gui
             return outd;
         }    
 
-        public static string SendRawTransaction(string rawdata, string chainHash)
+        public static string SendRawTransaction(string api, string rawdata, string chainHash)
         {
             byte[] postdata;
             string url;
@@ -209,7 +209,7 @@ namespace Zoro_Gui
         }
 
 
-        public static string InvokeScript(byte[] script, string chainHash)
+        public static string InvokeScript(string api, byte[] script, string chainHash)
         {
             byte[] postdata;
             string url;
@@ -236,9 +236,9 @@ namespace Zoro_Gui
             return sb.ToString();
         }
 
-        public static  decimal GetScriptGasConsumed(byte[] script, string chainHash)
+        public static  decimal GetScriptGasConsumed(string api, byte[] script, string chainHash)
         {
-            var info =  InvokeScript(script, chainHash);
+            var info =  InvokeScript(api, script, chainHash);
 
             JObject json_result_array = JObject.Parse(info);
             JObject json_result_obj = json_result_array["result"] as JObject;
@@ -315,19 +315,73 @@ namespace Zoro_Gui
         }
 
        
-        public static string SendInvocationTransaction(byte[] script, KeyPair keypair, string chainHash, Fixed8 gasLimit, Fixed8 gasPrice)
+        public static string SendInvocationTransaction(string api, byte[] script, KeyPair keypair, string chainHash, Fixed8 gasLimit, Fixed8 gasPrice)
         {
             InvocationTransaction tx = MakeTransaction(script, keypair, gasLimit, gasPrice);
 
-            return SendRawTransaction(tx.ToArray().ToHexString(), chainHash) + "\r\n txid: " + tx.Hash;
+            return SendRawTransaction(api, tx.ToArray().ToHexString(), chainHash) + "\r\n txid: " + tx.Hash;
         }
 
-        public static string SendInvocationTransaction(byte[] script, int m, KeyPair[] keypairs, string chainHash, Fixed8 gasLimit, Fixed8 gasPrice)
+        public static string SendInvocationTransaction(string api, byte[] script, int m, KeyPair[] keypairs, string chainHash, Fixed8 gasLimit, Fixed8 gasPrice)
         {
             InvocationTransaction tx = MakeMultiSignatureTransaction(script, m, keypairs, gasLimit, gasPrice);
 
-            return SendRawTransaction(tx.ToArray().ToHexString(), chainHash);
+            return SendRawTransaction(api, tx.ToArray().ToHexString(), chainHash);
         }
+
+
+        public static string SendInvocationTransaction(string api, byte[] script, KeyPair keypair, string chainHash, Fixed8 gasPrice)
+        {
+            InvocationTransaction tx = MakeTransaction(script, keypair, Fixed8.Zero, gasPrice);
+
+            decimal gas_consumed = EstimateGas(api, tx, chainHash);
+
+            tx = MakeTransaction(script, keypair, Fixed8.FromDecimal(gas_consumed), gasPrice);
+
+            return SendRawTransaction(api, tx, chainHash) + " gas_consumed: " + gas_consumed + "\r\n txid: " + tx.Hash;
+        }
+
+        public static string SendRawTransaction(string api, Transaction tx, string chainHash)
+        {
+            return PostHttpRequest(api, "sendrawtransaction", tx.ToArray().ToHexString(), chainHash);
+        }
+
+        public static decimal EstimateGas(string api, Transaction tx, string chainHash)
+        {
+            var response = PostHttpRequest(api, "estimategas", tx.ToArray().ToHexString(), chainHash);
+            JObject json_response = JObject.Parse(response);
+            JObject json_result = json_response["result"] as JObject;
+            string json_gas_consumed = json_result["gas_consumed"].ToString();
+            decimal gas_consumed = decimal.Parse(json_gas_consumed);
+            return gas_consumed;
+        }
+
+        public static string PostHttpRequest(string api, string method, string rawdata, string chainHash)
+        {
+            string url;
+            byte[] postdata;
+
+            JArray postRawArray = new JArray();
+            postRawArray.Add(chainHash);
+            postRawArray.Add(rawdata);
+
+            url = Helper.MakeRpcUrlPost(api, method, out postdata, postRawArray);
+
+            string result = "";
+            try
+            {
+                result = Helper.HttpPost(url, postdata);
+
+            }
+            catch (Exception)
+            {
+                //Console.WriteLine(e.Message);
+            }
+
+            return result;
+        }
+
+
 
         //如果参数为string,其实是特殊值
         //(string) or(str) 开头，表示是个字符串，utf8编码为bytes

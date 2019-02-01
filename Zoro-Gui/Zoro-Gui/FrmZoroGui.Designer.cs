@@ -31,7 +31,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmZoroGui));
             this.tableControl = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.publishAccountFrm = new Zoro_Gui.AccountFrm();
             this.label25 = new System.Windows.Forms.Label();
             this.rtbxPublishReturn = new System.Windows.Forms.RichTextBox();
             this.btnLoadContract = new System.Windows.Forms.Button();
@@ -62,7 +61,6 @@
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.label9 = new System.Windows.Forms.Label();
             this.tbxGasPrice = new System.Windows.Forms.TextBox();
-            this.invokeAccountFrm = new Zoro_Gui.AccountFrm();
             this.label23 = new System.Windows.Forms.Label();
             this.tbxGasLimit = new System.Windows.Forms.TextBox();
             this.label16 = new System.Windows.Forms.Label();
@@ -80,7 +78,6 @@
             this.tbxTransGasPrice = new System.Windows.Forms.TextBox();
             this.label17 = new System.Windows.Forms.Label();
             this.tbxTransGasLimit = new System.Windows.Forms.TextBox();
-            this.transAccountFrm = new Zoro_Gui.AccountFrm();
             this.btnCancelTran = new System.Windows.Forms.Button();
             this.btnSendTransaction = new System.Windows.Forms.Button();
             this.label22 = new System.Windows.Forms.Label();
@@ -105,6 +102,9 @@
             this.label26 = new System.Windows.Forms.Label();
             this.rtbxMutiSign = new System.Windows.Forms.RichTextBox();
             this.tabPage5 = new System.Windows.Forms.TabPage();
+            this.publishAccountFrm = new Zoro_Gui.AccountFrm();
+            this.invokeAccountFrm = new Zoro_Gui.AccountFrm();
+            this.transAccountFrm = new Zoro_Gui.AccountFrm();
             this.nep5AccountFrm = new Zoro_Gui.AccountFrm();
             this.tableControl.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -168,17 +168,6 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "发布合约";
             // 
-            // publishAccountFrm
-            // 
-            this.publishAccountFrm.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.publishAccountFrm.Dock = System.Windows.Forms.DockStyle.Top;
-            this.publishAccountFrm.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.publishAccountFrm.Location = new System.Drawing.Point(3, 3);
-            this.publishAccountFrm.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.publishAccountFrm.Name = "publishAccountFrm";
-            this.publishAccountFrm.Size = new System.Drawing.Size(842, 98);
-            this.publishAccountFrm.TabIndex = 29;
-            // 
             // label25
             // 
             this.label25.AutoSize = true;
@@ -207,7 +196,7 @@
             this.btnLoadContract.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnLoadContract.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnLoadContract.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.btnLoadContract.Location = new System.Drawing.Point(355, 117);
+            this.btnLoadContract.Location = new System.Drawing.Point(355, 130);
             this.btnLoadContract.Name = "btnLoadContract";
             this.btnLoadContract.Size = new System.Drawing.Size(47, 29);
             this.btnLoadContract.TabIndex = 26;
@@ -218,7 +207,7 @@
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(147, 316);
+            this.label10.Location = new System.Drawing.Point(147, 329);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(79, 20);
             this.label10.TabIndex = 25;
@@ -226,7 +215,7 @@
             // 
             // tbxParameterType
             // 
-            this.tbxParameterType.Location = new System.Drawing.Point(232, 312);
+            this.tbxParameterType.Location = new System.Drawing.Point(232, 325);
             this.tbxParameterType.Name = "tbxParameterType";
             this.tbxParameterType.Size = new System.Drawing.Size(170, 25);
             this.tbxParameterType.TabIndex = 24;
@@ -235,7 +224,7 @@
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(427, 313);
+            this.label11.Location = new System.Drawing.Point(427, 326);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(79, 20);
             this.label11.TabIndex = 23;
@@ -243,7 +232,7 @@
             // 
             // tbxReturnType
             // 
-            this.tbxReturnType.Location = new System.Drawing.Point(512, 312);
+            this.tbxReturnType.Location = new System.Drawing.Point(512, 325);
             this.tbxReturnType.Name = "tbxReturnType";
             this.tbxReturnType.Size = new System.Drawing.Size(170, 25);
             this.tbxReturnType.TabIndex = 22;
@@ -308,7 +297,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(427, 121);
+            this.label7.Location = new System.Drawing.Point(427, 134);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(79, 20);
             this.label7.TabIndex = 14;
@@ -316,7 +305,7 @@
             // 
             // tbxContractName
             // 
-            this.tbxContractName.Location = new System.Drawing.Point(512, 119);
+            this.tbxContractName.Location = new System.Drawing.Point(512, 132);
             this.tbxContractName.Name = "tbxContractName";
             this.tbxContractName.Size = new System.Drawing.Size(170, 25);
             this.tbxContractName.TabIndex = 13;
@@ -325,7 +314,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(147, 221);
+            this.label6.Location = new System.Drawing.Point(147, 234);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(55, 20);
             this.label6.TabIndex = 12;
@@ -333,7 +322,7 @@
             // 
             // tbxVersion
             // 
-            this.tbxVersion.Location = new System.Drawing.Point(232, 217);
+            this.tbxVersion.Location = new System.Drawing.Point(232, 230);
             this.tbxVersion.Name = "tbxVersion";
             this.tbxVersion.Size = new System.Drawing.Size(170, 25);
             this.tbxVersion.TabIndex = 11;
@@ -342,7 +331,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(147, 268);
+            this.label5.Location = new System.Drawing.Point(147, 281);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(55, 20);
             this.label5.TabIndex = 10;
@@ -350,7 +339,7 @@
             // 
             // tbxAuthor
             // 
-            this.tbxAuthor.Location = new System.Drawing.Point(232, 264);
+            this.tbxAuthor.Location = new System.Drawing.Point(232, 277);
             this.tbxAuthor.Name = "tbxAuthor";
             this.tbxAuthor.Size = new System.Drawing.Size(170, 25);
             this.tbxAuthor.TabIndex = 9;
@@ -359,7 +348,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(427, 217);
+            this.label4.Location = new System.Drawing.Point(427, 230);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(55, 20);
             this.label4.TabIndex = 8;
@@ -367,7 +356,7 @@
             // 
             // tbxEmail
             // 
-            this.tbxEmail.Location = new System.Drawing.Point(512, 216);
+            this.tbxEmail.Location = new System.Drawing.Point(512, 229);
             this.tbxEmail.Name = "tbxEmail";
             this.tbxEmail.Size = new System.Drawing.Size(170, 25);
             this.tbxEmail.TabIndex = 7;
@@ -376,7 +365,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(427, 265);
+            this.label3.Location = new System.Drawing.Point(427, 278);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(55, 20);
             this.label3.TabIndex = 6;
@@ -384,7 +373,7 @@
             // 
             // tbxDescri
             // 
-            this.tbxDescri.Location = new System.Drawing.Point(512, 264);
+            this.tbxDescri.Location = new System.Drawing.Point(512, 277);
             this.tbxDescri.Name = "tbxDescri";
             this.tbxDescri.Size = new System.Drawing.Size(170, 25);
             this.tbxDescri.TabIndex = 5;
@@ -393,7 +382,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(147, 169);
+            this.label2.Location = new System.Drawing.Point(147, 182);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(57, 20);
             this.label2.TabIndex = 4;
@@ -402,7 +391,7 @@
             // tbxContractHash
             // 
             this.tbxContractHash.BackColor = System.Drawing.Color.AliceBlue;
-            this.tbxContractHash.Location = new System.Drawing.Point(232, 166);
+            this.tbxContractHash.Location = new System.Drawing.Point(232, 179);
             this.tbxContractHash.Name = "tbxContractHash";
             this.tbxContractHash.ReadOnly = true;
             this.tbxContractHash.Size = new System.Drawing.Size(450, 25);
@@ -411,7 +400,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(147, 124);
+            this.label1.Location = new System.Drawing.Point(147, 137);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(79, 20);
             this.label1.TabIndex = 2;
@@ -419,7 +408,7 @@
             // 
             // tbxContractPath
             // 
-            this.tbxContractPath.Location = new System.Drawing.Point(232, 119);
+            this.tbxContractPath.Location = new System.Drawing.Point(232, 132);
             this.tbxContractPath.Name = "tbxContractPath";
             this.tbxContractPath.Size = new System.Drawing.Size(117, 25);
             this.tbxContractPath.TabIndex = 1;
@@ -439,7 +428,6 @@
             // 
             this.tabPage2.Controls.Add(this.label9);
             this.tabPage2.Controls.Add(this.tbxGasPrice);
-            this.tabPage2.Controls.Add(this.invokeAccountFrm);
             this.tabPage2.Controls.Add(this.label23);
             this.tabPage2.Controls.Add(this.tbxGasLimit);
             this.tabPage2.Controls.Add(this.label16);
@@ -452,6 +440,7 @@
             this.tabPage2.Controls.Add(this.label13);
             this.tabPage2.Controls.Add(this.tbxContractScriptHash);
             this.tabPage2.Controls.Add(this.rtbxParameterJson);
+            this.tabPage2.Controls.Add(this.invokeAccountFrm);
             this.tabPage2.Location = new System.Drawing.Point(4, 28);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
@@ -463,7 +452,7 @@
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(224, 289);
+            this.label9.Location = new System.Drawing.Point(224, 299);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(80, 20);
             this.label9.TabIndex = 32;
@@ -471,27 +460,16 @@
             // 
             // tbxGasPrice
             // 
-            this.tbxGasPrice.Location = new System.Drawing.Point(309, 284);
+            this.tbxGasPrice.Location = new System.Drawing.Point(309, 294);
             this.tbxGasPrice.Name = "tbxGasPrice";
             this.tbxGasPrice.Size = new System.Drawing.Size(77, 25);
             this.tbxGasPrice.TabIndex = 31;
             this.tbxGasPrice.Text = "0.0001";
             // 
-            // invokeAccountFrm
-            // 
-            this.invokeAccountFrm.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.invokeAccountFrm.Dock = System.Windows.Forms.DockStyle.Top;
-            this.invokeAccountFrm.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.invokeAccountFrm.Location = new System.Drawing.Point(3, 3);
-            this.invokeAccountFrm.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.invokeAccountFrm.Name = "invokeAccountFrm";
-            this.invokeAccountFrm.Size = new System.Drawing.Size(842, 99);
-            this.invokeAccountFrm.TabIndex = 30;
-            // 
             // label23
             // 
             this.label23.AutoSize = true;
-            this.label23.Location = new System.Drawing.Point(39, 289);
+            this.label23.Location = new System.Drawing.Point(39, 299);
             this.label23.Name = "label23";
             this.label23.Size = new System.Drawing.Size(80, 20);
             this.label23.TabIndex = 27;
@@ -499,7 +477,7 @@
             // 
             // tbxGasLimit
             // 
-            this.tbxGasLimit.Location = new System.Drawing.Point(124, 286);
+            this.tbxGasLimit.Location = new System.Drawing.Point(124, 296);
             this.tbxGasLimit.Name = "tbxGasLimit";
             this.tbxGasLimit.Size = new System.Drawing.Size(93, 25);
             this.tbxGasLimit.TabIndex = 26;
@@ -509,7 +487,7 @@
             // label16
             // 
             this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(550, 115);
+            this.label16.Location = new System.Drawing.Point(550, 135);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(79, 20);
             this.label16.TabIndex = 25;
@@ -517,7 +495,7 @@
             // 
             // tbxMethodName
             // 
-            this.tbxMethodName.Location = new System.Drawing.Point(635, 112);
+            this.tbxMethodName.Location = new System.Drawing.Point(635, 132);
             this.tbxMethodName.Name = "tbxMethodName";
             this.tbxMethodName.Size = new System.Drawing.Size(167, 25);
             this.tbxMethodName.TabIndex = 24;
@@ -525,7 +503,7 @@
             // label15
             // 
             this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(39, 320);
+            this.label15.Location = new System.Drawing.Point(39, 330);
             this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(79, 20);
             this.label15.TabIndex = 23;
@@ -535,10 +513,10 @@
             // 
             this.rtbxReturnJson.BackColor = System.Drawing.Color.AliceBlue;
             this.rtbxReturnJson.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.rtbxReturnJson.Location = new System.Drawing.Point(44, 352);
+            this.rtbxReturnJson.Location = new System.Drawing.Point(44, 364);
             this.rtbxReturnJson.Name = "rtbxReturnJson";
             this.rtbxReturnJson.ReadOnly = true;
-            this.rtbxReturnJson.Size = new System.Drawing.Size(758, 132);
+            this.rtbxReturnJson.Size = new System.Drawing.Size(758, 120);
             this.rtbxReturnJson.TabIndex = 22;
             this.rtbxReturnJson.Text = "";
             // 
@@ -550,7 +528,7 @@
             this.btnSendRaw.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSendRaw.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnSendRaw.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.btnSendRaw.Location = new System.Drawing.Point(671, 289);
+            this.btnSendRaw.Location = new System.Drawing.Point(671, 299);
             this.btnSendRaw.Name = "btnSendRaw";
             this.btnSendRaw.Size = new System.Drawing.Size(99, 29);
             this.btnSendRaw.TabIndex = 21;
@@ -566,7 +544,7 @@
             this.btnInvoke.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnInvoke.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnInvoke.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.btnInvoke.Location = new System.Drawing.Point(495, 289);
+            this.btnInvoke.Location = new System.Drawing.Point(495, 299);
             this.btnInvoke.Name = "btnInvoke";
             this.btnInvoke.Size = new System.Drawing.Size(99, 29);
             this.btnInvoke.TabIndex = 20;
@@ -577,7 +555,7 @@
             // label14
             // 
             this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(39, 158);
+            this.label14.Location = new System.Drawing.Point(39, 165);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(198, 20);
             this.label14.TabIndex = 7;
@@ -586,7 +564,7 @@
             // label13
             // 
             this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(35, 115);
+            this.label13.Location = new System.Drawing.Point(35, 135);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(89, 20);
             this.label13.TabIndex = 6;
@@ -594,7 +572,7 @@
             // 
             // tbxContractScriptHash
             // 
-            this.tbxContractScriptHash.Location = new System.Drawing.Point(125, 112);
+            this.tbxContractScriptHash.Location = new System.Drawing.Point(125, 132);
             this.tbxContractScriptHash.Name = "tbxContractScriptHash";
             this.tbxContractScriptHash.Size = new System.Drawing.Size(391, 25);
             this.tbxContractScriptHash.TabIndex = 5;
@@ -603,7 +581,7 @@
             // 
             this.rtbxParameterJson.BackColor = System.Drawing.Color.Azure;
             this.rtbxParameterJson.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.rtbxParameterJson.Location = new System.Drawing.Point(44, 191);
+            this.rtbxParameterJson.Location = new System.Drawing.Point(44, 200);
             this.rtbxParameterJson.Name = "rtbxParameterJson";
             this.rtbxParameterJson.Size = new System.Drawing.Size(758, 80);
             this.rtbxParameterJson.TabIndex = 0;
@@ -615,7 +593,6 @@
             this.tabPage3.Controls.Add(this.tbxTransGasPrice);
             this.tabPage3.Controls.Add(this.label17);
             this.tabPage3.Controls.Add(this.tbxTransGasLimit);
-            this.tabPage3.Controls.Add(this.transAccountFrm);
             this.tabPage3.Controls.Add(this.btnCancelTran);
             this.tabPage3.Controls.Add(this.btnSendTransaction);
             this.tabPage3.Controls.Add(this.label22);
@@ -626,6 +603,7 @@
             this.tabPage3.Controls.Add(this.cmbxTokenType);
             this.tabPage3.Controls.Add(this.label18);
             this.tabPage3.Controls.Add(this.tbxTargetAddress);
+            this.tabPage3.Controls.Add(this.transAccountFrm);
             this.tabPage3.Location = new System.Drawing.Point(4, 28);
             this.tabPage3.Name = "tabPage3";
             this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
@@ -667,17 +645,6 @@
             this.tbxTransGasLimit.Size = new System.Drawing.Size(93, 25);
             this.tbxTransGasLimit.TabIndex = 33;
             this.tbxTransGasLimit.Text = "1000";
-            // 
-            // transAccountFrm
-            // 
-            this.transAccountFrm.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.transAccountFrm.Dock = System.Windows.Forms.DockStyle.Top;
-            this.transAccountFrm.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.transAccountFrm.Location = new System.Drawing.Point(3, 3);
-            this.transAccountFrm.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.transAccountFrm.Name = "transAccountFrm";
-            this.transAccountFrm.Size = new System.Drawing.Size(842, 95);
-            this.transAccountFrm.TabIndex = 28;
             // 
             // btnCancelTran
             // 
@@ -762,7 +729,8 @@
             this.cmbxTokenType.FormattingEnabled = true;
             this.cmbxTokenType.Items.AddRange(new object[] {
             "BCP",
-            "BCT"});
+            "BCT",
+            "BCS"});
             this.cmbxTokenType.Location = new System.Drawing.Point(226, 170);
             this.cmbxTokenType.Name = "cmbxTokenType";
             this.cmbxTokenType.Size = new System.Drawing.Size(163, 27);
@@ -939,6 +907,39 @@
             this.tabPage5.TabIndex = 4;
             this.tabPage5.Text = "Nep5";
             this.tabPage5.UseVisualStyleBackColor = true;
+            // 
+            // publishAccountFrm
+            // 
+            this.publishAccountFrm.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.publishAccountFrm.Dock = System.Windows.Forms.DockStyle.Top;
+            this.publishAccountFrm.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.publishAccountFrm.Location = new System.Drawing.Point(3, 3);
+            this.publishAccountFrm.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.publishAccountFrm.Name = "publishAccountFrm";
+            this.publishAccountFrm.Size = new System.Drawing.Size(842, 120);
+            this.publishAccountFrm.TabIndex = 29;
+            // 
+            // invokeAccountFrm
+            // 
+            this.invokeAccountFrm.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.invokeAccountFrm.Dock = System.Windows.Forms.DockStyle.Top;
+            this.invokeAccountFrm.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.invokeAccountFrm.Location = new System.Drawing.Point(3, 3);
+            this.invokeAccountFrm.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.invokeAccountFrm.Name = "invokeAccountFrm";
+            this.invokeAccountFrm.Size = new System.Drawing.Size(842, 115);
+            this.invokeAccountFrm.TabIndex = 30;
+            // 
+            // transAccountFrm
+            // 
+            this.transAccountFrm.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.transAccountFrm.Dock = System.Windows.Forms.DockStyle.Top;
+            this.transAccountFrm.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.transAccountFrm.Location = new System.Drawing.Point(3, 3);
+            this.transAccountFrm.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.transAccountFrm.Name = "transAccountFrm";
+            this.transAccountFrm.Size = new System.Drawing.Size(842, 117);
+            this.transAccountFrm.TabIndex = 28;
             // 
             // nep5AccountFrm
             // 

@@ -14,6 +14,22 @@ namespace Zoro_Gui
         public KeyPair keypair;
         public UInt160 addressHash;
         public string address;
+        public UInt160 bcsAssetId = UInt160.Parse("0xbca3d3be47bd966fddd2702ac0dac1a3bdaf317e");
+        //public UInt160 bcsAssetId = UInt160.Parse("0x035b4986a751666c56aa8d966f2d14e82a1a6756");
+        private string rpcUrl;
+        public string RpcUrl
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(rpcUrl))
+                    return rpcUrl;
+                return null;
+            }
+            set
+            {
+                rpcUrl = value;
+            }
+        }
 
         public AccountFrm()
         {
@@ -48,44 +64,51 @@ namespace Zoro_Gui
 
         private void GetBalance()
         {
-            UInt160 bcpAssetId = Genesis.BcpContractAddress;
-            UInt160 bctAssetId = Genesis.BctContractAddress;
-            UInt160 bcsAssetId = UInt160.Parse("0xbca3d3be47bd966fddd2702ac0dac1a3bdaf317e");
-
-            using (ScriptBuilder sb = new ScriptBuilder())
+            try
             {
-                sb.EmitSysCall("Zoro.NativeNEP5.Call", "BalanceOf", bcpAssetId, addressHash);
-                sb.EmitSysCall("Zoro.NativeNEP5.Call", "Decimals", bcpAssetId);
+                UInt160 bcpAssetId = Genesis.BcpContractAddress;
+                UInt160 bctAssetId = Genesis.BctContractAddress;
 
-                var info = ZoroHelper.InvokeScript(sb.ToArray(), "");
-                var value = GetBalanceFromJson(info);
+                using (ScriptBuilder sb = new ScriptBuilder())
+                {
+                    sb.EmitSysCall("Zoro.NativeNEP5.Call", "BalanceOf", bcpAssetId, addressHash);
+                    sb.EmitSysCall("Zoro.NativeNEP5.Call", "Decimals", bcpAssetId);
 
-                lblBcpBalance.Text = value;
+                    var info = ZoroHelper.InvokeScript(RpcUrl, sb.ToArray(), "");
+                    var value = GetBalanceFromJson(info);
 
+                    lblBcpBalance.Text = value;
+
+                }
+
+                using (ScriptBuilder sb = new ScriptBuilder())
+                {
+                    sb.EmitSysCall("Zoro.NativeNEP5.Call", "BalanceOf", bctAssetId, addressHash);
+                    sb.EmitSysCall("Zoro.NativeNEP5.Call", "Decimals", bctAssetId);
+
+                    var info = ZoroHelper.InvokeScript(RpcUrl, sb.ToArray(), "");
+                    var value = GetBalanceFromJson(info);
+
+                    lblBctBalance.Text = value;
+
+                }
+
+                using (ScriptBuilder sb = new ScriptBuilder())
+                {
+                    sb.EmitSysCall("Zoro.NativeNEP5.Call", "BalanceOf", bcsAssetId, addressHash);
+                    sb.EmitSysCall("Zoro.NativeNEP5.Call", "Decimals", bcsAssetId);
+
+                    var info = ZoroHelper.InvokeScript(RpcUrl, sb.ToArray(), "");
+                    var value = GetBalanceFromJson(info);
+
+                    lblBcsBalance.Text = value;
+
+                }
             }
-
-            using (ScriptBuilder sb = new ScriptBuilder())
+            catch(Exception ex)
             {
-                sb.EmitSysCall("Zoro.NativeNEP5.Call", "BalanceOf", bctAssetId, addressHash);
-                sb.EmitSysCall("Zoro.NativeNEP5.Call", "Decimals", bctAssetId);
-
-                var info = ZoroHelper.InvokeScript(sb.ToArray(), "");
-                var value = GetBalanceFromJson(info);
-
-                lblBctBalance.Text = value;
-
-            }
-
-            using (ScriptBuilder sb = new ScriptBuilder())
-            {
-                sb.EmitSysCall("Zoro.NativeNEP5.Call", "BalanceOf", bcsAssetId, addressHash);
-                sb.EmitSysCall("Zoro.NativeNEP5.Call", "Decimals", bcsAssetId);
-
-                var info = ZoroHelper.InvokeScript(sb.ToArray(), "");
-                var value = GetBalanceFromJson(info);
-
-                lblBcsBalance.Text = value;
-
+                MessageBox.Show("获取余额出错！" + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
         }
 
@@ -122,6 +145,16 @@ namespace Zoro_Gui
         {
             if (GetAccount())
                 GetBalance();
+        }
+
+        private void tbxRpcUrl_TextChanged(object sender, EventArgs e)
+        {
+            rpcUrl = tbxRpcUrl.Text;
+        }
+
+        private void AccountFrm_Load(object sender, EventArgs e)
+        {
+            rpcUrl = tbxRpcUrl.Text;
         }
     }
 }

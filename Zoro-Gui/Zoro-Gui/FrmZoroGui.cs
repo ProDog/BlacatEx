@@ -38,6 +38,7 @@ namespace Zoro_Gui
         private void btnSendTransaction_Click(object sender, EventArgs e)
         {
             UInt160 assetId;
+            string api = transAccountFrm.RpcUrl;
             if (cmbxTokenType.Text == "BCP")
             {
                 assetId = Genesis.BcpContractAddress;
@@ -45,6 +46,10 @@ namespace Zoro_Gui
             else if (cmbxTokenType.Text == "BCT")
             {
                 assetId = Genesis.BctContractAddress;
+            }
+            else if(cmbxTokenType.Text == "BCS")
+            {
+                assetId = transAccountFrm.bcsAssetId;
             }
             else
             {
@@ -77,13 +82,13 @@ namespace Zoro_Gui
             {
                 sb.EmitSysCall("Zoro.NativeNEP5.Call", "Transfer", assetId, transAccountFrm.addressHash, targetscripthash, new BigInteger(value));
 
-                decimal gasLimit = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
+                decimal gasLimit = ZoroHelper.GetScriptGasConsumed(api, sb.ToArray(), "");
 
                 gasLimit = Math.Max(decimal.Parse(tbxGasLimit.Text), gasLimit);
 
                 decimal gasPrice = decimal.Parse(tbxGasPrice.Text);
 
-                var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), transAccountFrm.keypair, "", Fixed8.FromDecimal(1000), Fixed8.FromDecimal(gasPrice));
+                var result = ZoroHelper.SendInvocationTransaction(api,sb.ToArray(), transAccountFrm.keypair, "", Fixed8.FromDecimal(1000), Fixed8.FromDecimal(gasPrice));
 
                 rtbxTranResult.Text = result;
             }
@@ -92,6 +97,7 @@ namespace Zoro_Gui
         //发布合约
         private void btnPublish_Click(object sender, EventArgs e)
         {
+            string api = publishAccountFrm.RpcUrl;
             if (string.IsNullOrEmpty(publishAccountFrm.wif))
             {
                 MessageBox.Show("请输入钱包 wif ！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -124,11 +130,11 @@ namespace Zoro_Gui
                 sb.EmitPush(contractScript);
                 sb.EmitSysCall("Zoro.Contract.Create");
 
-                bcpFee = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
+                bcpFee = ZoroHelper.GetScriptGasConsumed(api, sb.ToArray(), "");
 
                 lblBcpFee.Text = bcpFee.ToString();
 
-                var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), publishAccountFrm.keypair, "", Fixed8.FromDecimal(bcpFee), Fixed8.FromDecimal(0.0001m));
+                var result = ZoroHelper.SendInvocationTransaction(api, sb.ToArray(), publishAccountFrm.keypair, "", Fixed8.FromDecimal(bcpFee), Fixed8.FromDecimal(0.0001m));
 
                 rtbxPublishReturn.Text = result;
             }
@@ -137,6 +143,7 @@ namespace Zoro_Gui
         //Invoke
         private void btnInvoke_Click(object sender, EventArgs e)
         {
+            string api = invokeAccountFrm.RpcUrl;
             if (string.IsNullOrEmpty(tbxContractScriptHash.Text))
             {
                 MessageBox.Show("合约 Hash 不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -169,7 +176,7 @@ namespace Zoro_Gui
                 sb.EmitAppCall(UInt160.Parse(tbxContractScriptHash.Text), tbxMethodName.Text);
             }
 
-            var info = ZoroHelper.InvokeScript(sb.ToArray(), "");
+            var info = ZoroHelper.InvokeScript(api, sb.ToArray(), "");
 
             rtbxReturnJson.Text = info;
         }
@@ -177,6 +184,7 @@ namespace Zoro_Gui
         //SendRaw
         private void btnSendRaw_Click(object sender, EventArgs e)
         {
+            string api = invokeAccountFrm.RpcUrl;
             if (string.IsNullOrEmpty(invokeAccountFrm.wif))
             {
                 MessageBox.Show("请输入钱包 wif ！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -209,12 +217,14 @@ namespace Zoro_Gui
                 sb.EmitAppCall(UInt160.Parse(tbxContractScriptHash.Text), tbxMethodName.Text);
             }
 
-            decimal gasLimit = ZoroHelper.GetScriptGasConsumed(sb.ToArray(), "");
+            decimal gasLimit = ZoroHelper.GetScriptGasConsumed(api, sb.ToArray(), "");
             gasLimit = Math.Max(decimal.Parse(tbxGasLimit.Text), gasLimit);
 
             decimal gasPrice= decimal.Parse(tbxGasPrice.Text);
 
-            var result = ZoroHelper.SendInvocationTransaction(sb.ToArray(), invokeAccountFrm.keypair, "", Fixed8.FromDecimal(gasLimit), Fixed8.FromDecimal(gasPrice));
+            //var result = ZoroHelper.SendInvocationTransaction(api, sb.ToArray(), invokeAccountFrm.keypair, "", Fixed8.FromDecimal(gasLimit), Fixed8.FromDecimal(gasPrice));
+
+            var result = ZoroHelper.SendInvocationTransaction(api, sb.ToArray(), invokeAccountFrm.keypair, "", Fixed8.FromDecimal(gasPrice));
 
             rtbxReturnJson.Text = result;
 
