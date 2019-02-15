@@ -78,19 +78,31 @@ namespace Zoro_Gui
             Decimal value = Decimal.Parse(tbxValue.Text, NumberStyles.Float) * new Decimal(Math.Pow(10, 8));
             UInt160 targetscripthash = ZoroHelper.GetPublicKeyHashFromAddress(tbxTargetAddress.Text);
 
-            using (ScriptBuilder sb = new ScriptBuilder())
+            try
             {
-                sb.EmitSysCall("Zoro.NativeNEP5.Call", "Transfer", assetId, transAccountFrm.addressHash, targetscripthash, new BigInteger(value));
 
-                decimal gasLimit = ZoroHelper.GetScriptGasConsumed(api, sb.ToArray(), "");
+                using (ScriptBuilder sb = new ScriptBuilder())
+                {
+                    sb.EmitSysCall("Zoro.NativeNEP5.Call", "Transfer", assetId, transAccountFrm.addressHash, targetscripthash, new BigInteger(value));
 
-                gasLimit = Math.Max(decimal.Parse(tbxGasLimit.Text), gasLimit);
+                    decimal gasLimit = ZoroHelper.GetScriptGasConsumed(api, sb.ToArray(), "");
 
-                decimal gasPrice = decimal.Parse(tbxGasPrice.Text);
+                    gasLimit = Math.Max(decimal.Parse(tbxGasLimit.Text), gasLimit);
 
-                var result = ZoroHelper.SendInvocationTransaction(api,sb.ToArray(), transAccountFrm.keypair, "", Fixed8.FromDecimal(1000), Fixed8.FromDecimal(gasPrice));
+                    decimal gasPrice = decimal.Parse(tbxGasPrice.Text);
 
-                rtbxTranResult.Text = result;
+                    var tx = ZoroHelper.MakeTransaction(sb.ToArray(), transAccountFrm.keypair, Fixed8.FromDecimal(gasLimit), Fixed8.FromDecimal(gasPrice));
+
+                    //var result = ZoroHelper.SendInvocationTransaction(api, sb.ToArray(), transAccountFrm.keypair, "", Fixed8.FromDecimal(1000), Fixed8.FromDecimal(gasPrice));
+
+                    rtbxTranResult.Text = ZoroHelper.SendRawTransaction(api, tx, "") + " gas_consumed: " + gasLimit + "\r\n txid: " + tx.Hash;
+                }
+            }
+
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
         }
 
@@ -116,27 +128,40 @@ namespace Zoro_Gui
             int need_nep4 = cbxNeedNep4.Checked == true ? 2 : 0;
             int need_canCharge = cbxNeedCharge.Checked == true ? 4 : 0;
 
-            using (ScriptBuilder sb = new ScriptBuilder())
+            try
             {
-                var ss = need_storage | need_nep4 | need_canCharge;
-                sb.EmitPush(tbxDescri.Text);
-                sb.EmitPush(tbxEmail.Text);
-                sb.EmitPush(tbxAuthor.Text);
-                sb.EmitPush(tbxVersion.Text);
-                sb.EmitPush(tbxContractName.Text);
-                sb.EmitPush(ss);
-                sb.EmitPush(return_type);
-                sb.EmitPush(parameter__list);
-                sb.EmitPush(contractScript);
-                sb.EmitSysCall("Zoro.Contract.Create");
+                using (ScriptBuilder sb = new ScriptBuilder())
+                {
+                    var ss = need_storage | need_nep4 | need_canCharge;
+                    sb.EmitPush(tbxDescri.Text);
+                    sb.EmitPush(tbxEmail.Text);
+                    sb.EmitPush(tbxAuthor.Text);
+                    sb.EmitPush(tbxVersion.Text);
+                    sb.EmitPush(tbxContractName.Text);
+                    sb.EmitPush(ss);
+                    sb.EmitPush(return_type);
+                    sb.EmitPush(parameter__list);
+                    sb.EmitPush(contractScript);
+                    sb.EmitSysCall("Zoro.Contract.Create");
 
-                bcpFee = ZoroHelper.GetScriptGasConsumed(api, sb.ToArray(), "");
+                    var tx = ZoroHelper.MakeTransaction(sb.ToArray(), publishAccountFrm.keypair, Fixed8.Zero, Fixed8.FromDecimal(0.0001m));
+                    bcpFee = ZoroHelper.EstimateGas(api, tx, "");
 
-                lblBcpFee.Text = bcpFee.ToString();
+                    lblBcpFee.Text = bcpFee.ToString();
 
-                var result = ZoroHelper.SendInvocationTransaction(api, sb.ToArray(), publishAccountFrm.keypair, "", Fixed8.FromDecimal(bcpFee), Fixed8.FromDecimal(0.0001m));
+                    tx = ZoroHelper.MakeTransaction(sb.ToArray(), publishAccountFrm.keypair, Fixed8.FromDecimal(bcpFee), Fixed8.FromDecimal(0.0001m));
 
-                rtbxPublishReturn.Text = result;
+                    //var result = ZoroHelper.SendInvocationTransaction(api, sb.ToArray(), publishAccountFrm.keypair, "", Fixed8.FromDecimal(bcpFee), Fixed8.FromDecimal(0.0001m));
+
+                    var result = ZoroHelper.SendRawTransaction(api, tx, "") + " gas_consumed: " + bcpFee + "\r\n txid: " + tx.Hash;
+
+                    rtbxPublishReturn.Text = result;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
         }
 
@@ -176,9 +201,17 @@ namespace Zoro_Gui
                 sb.EmitAppCall(UInt160.Parse(tbxContractScriptHash.Text), tbxMethodName.Text);
             }
 
-            var info = ZoroHelper.InvokeScript(api, sb.ToArray(), "");
+            try
+            {
+                var info = ZoroHelper.InvokeScript(api, sb.ToArray(), "");
 
-            rtbxReturnJson.Text = info;
+                rtbxReturnJson.Text = info;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
         }
 
         //SendRaw
@@ -217,17 +250,76 @@ namespace Zoro_Gui
                 sb.EmitAppCall(UInt160.Parse(tbxContractScriptHash.Text), tbxMethodName.Text);
             }
 
-            decimal gasLimit = ZoroHelper.GetScriptGasConsumed(api, sb.ToArray(), "");
-            gasLimit = Math.Max(decimal.Parse(tbxGasLimit.Text), gasLimit);
+            try
+            {
+                //decimal gasLimit = ZoroHelper.GetScriptGasConsumed(api, sb.ToArray(), "");
+                //gasLimit = Math.Max(decimal.Parse(tbxGasLimit.Text), gasLimit);
 
-            decimal gasPrice= decimal.Parse(tbxGasPrice.Text);
+                var tx = ZoroHelper.MakeTransaction(sb.ToArray(), invokeAccountFrm.keypair, Fixed8.Zero, Fixed8.FromDecimal(0.0001m));
+                bcpFee = ZoroHelper.EstimateGas(api, tx, "");
 
-            //var result = ZoroHelper.SendInvocationTransaction(api, sb.ToArray(), invokeAccountFrm.keypair, "", Fixed8.FromDecimal(gasLimit), Fixed8.FromDecimal(gasPrice));
+                decimal gasPrice = decimal.Parse(tbxGasPrice.Text);
+                tbxGasLimit.Text = bcpFee.ToString();
 
-            var result = ZoroHelper.SendInvocationTransaction(api, sb.ToArray(), invokeAccountFrm.keypair, "", Fixed8.FromDecimal(gasPrice));
+                tx = ZoroHelper.MakeTransaction(sb.ToArray(), invokeAccountFrm.keypair, Fixed8.FromDecimal(bcpFee), Fixed8.FromDecimal(0.0001m));
 
-            rtbxReturnJson.Text = result;
+                //var result = ZoroHelper.SendInvocationTransaction(api, sb.ToArray(), invokeAccountFrm.keypair, "", Fixed8.FromDecimal(gasLimit), Fixed8.FromDecimal(gasPrice));
 
+                //var result = ZoroHelper.SendInvocationTransaction(api, sb.ToArray(), invokeAccountFrm.keypair, "", Fixed8.FromDecimal(gasPrice));
+
+                var result = ZoroHelper.SendRawTransaction(api, tx, "") + " gas_consumed: " + bcpFee + "\r\n txid: " + tx.Hash;
+
+                rtbxReturnJson.Text = result;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+        }
+
+        private void btnEstimateGas_Click(object sender, EventArgs e)
+        {
+            string api = invokeAccountFrm.RpcUrl;
+            
+            if (string.IsNullOrEmpty(tbxContractScriptHash.Text))
+            {
+                MessageBox.Show("合约 Hash 不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            ScriptBuilder sb = new ScriptBuilder();
+
+            if (!string.IsNullOrEmpty(rtbxParameterJson.Text))
+            {
+                try
+                {
+                    List<dynamic> paraList = GetParameterArray();
+                    sb.EmitAppCall(UInt160.Parse(tbxContractScriptHash.Text), tbxMethodName.Text, paraList.ToArray());
+                }
+                catch
+                {
+                    MessageBox.Show("参数格式错误！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+            else
+            {
+                sb.EmitAppCall(UInt160.Parse(tbxContractScriptHash.Text), tbxMethodName.Text);
+            }
+
+            try
+            {
+                var tx = ZoroHelper.MakeTransaction(sb.ToArray(), invokeAccountFrm.keypair, Fixed8.Zero, Fixed8.FromDecimal(0.0001m));
+                bcpFee = ZoroHelper.EstimateGas(api, tx, "");
+
+                tbxGasLimit.Text = bcpFee.ToString();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
         }
 
         //加载合约
@@ -304,5 +396,6 @@ namespace Zoro_Gui
                 }
             }
         }
+
     }
 }

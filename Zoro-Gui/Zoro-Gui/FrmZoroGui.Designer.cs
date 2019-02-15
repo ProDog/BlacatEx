@@ -31,6 +31,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmZoroGui));
             this.tableControl = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.publishAccountFrm = new Zoro_Gui.AccountFrm();
             this.label25 = new System.Windows.Forms.Label();
             this.rtbxPublishReturn = new System.Windows.Forms.RichTextBox();
             this.btnLoadContract = new System.Windows.Forms.Button();
@@ -73,6 +74,7 @@
             this.label13 = new System.Windows.Forms.Label();
             this.tbxContractScriptHash = new System.Windows.Forms.TextBox();
             this.rtbxParameterJson = new System.Windows.Forms.RichTextBox();
+            this.invokeAccountFrm = new Zoro_Gui.AccountFrm();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.label12 = new System.Windows.Forms.Label();
             this.tbxTransGasPrice = new System.Windows.Forms.TextBox();
@@ -88,6 +90,7 @@
             this.cmbxTokenType = new System.Windows.Forms.ComboBox();
             this.label18 = new System.Windows.Forms.Label();
             this.tbxTargetAddress = new System.Windows.Forms.TextBox();
+            this.transAccountFrm = new Zoro_Gui.AccountFrm();
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
@@ -102,10 +105,8 @@
             this.label26 = new System.Windows.Forms.Label();
             this.rtbxMutiSign = new System.Windows.Forms.RichTextBox();
             this.tabPage5 = new System.Windows.Forms.TabPage();
-            this.publishAccountFrm = new Zoro_Gui.AccountFrm();
-            this.invokeAccountFrm = new Zoro_Gui.AccountFrm();
-            this.transAccountFrm = new Zoro_Gui.AccountFrm();
             this.nep5AccountFrm = new Zoro_Gui.AccountFrm();
+            this.btnEstimateGas = new System.Windows.Forms.Button();
             this.tableControl.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -167,6 +168,18 @@
             this.tabPage1.Size = new System.Drawing.Size(848, 508);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "发布合约";
+            // 
+            // publishAccountFrm
+            // 
+            this.publishAccountFrm.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.publishAccountFrm.Dock = System.Windows.Forms.DockStyle.Top;
+            this.publishAccountFrm.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.publishAccountFrm.Location = new System.Drawing.Point(3, 3);
+            this.publishAccountFrm.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.publishAccountFrm.Name = "publishAccountFrm";
+            this.publishAccountFrm.RpcUrl = "http://127.0.0.1:20333";
+            this.publishAccountFrm.Size = new System.Drawing.Size(842, 120);
+            this.publishAccountFrm.TabIndex = 29;
             // 
             // label25
             // 
@@ -426,6 +439,7 @@
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.btnEstimateGas);
             this.tabPage2.Controls.Add(this.label9);
             this.tabPage2.Controls.Add(this.tbxGasPrice);
             this.tabPage2.Controls.Add(this.label23);
@@ -528,7 +542,7 @@
             this.btnSendRaw.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSendRaw.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnSendRaw.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.btnSendRaw.Location = new System.Drawing.Point(671, 299);
+            this.btnSendRaw.Location = new System.Drawing.Point(703, 292);
             this.btnSendRaw.Name = "btnSendRaw";
             this.btnSendRaw.Size = new System.Drawing.Size(99, 29);
             this.btnSendRaw.TabIndex = 21;
@@ -544,7 +558,7 @@
             this.btnInvoke.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnInvoke.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnInvoke.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.btnInvoke.Location = new System.Drawing.Point(495, 299);
+            this.btnInvoke.Location = new System.Drawing.Point(571, 292);
             this.btnInvoke.Name = "btnInvoke";
             this.btnInvoke.Size = new System.Drawing.Size(99, 29);
             this.btnInvoke.TabIndex = 20;
@@ -586,6 +600,18 @@
             this.rtbxParameterJson.Size = new System.Drawing.Size(758, 80);
             this.rtbxParameterJson.TabIndex = 0;
             this.rtbxParameterJson.Text = "";
+            // 
+            // invokeAccountFrm
+            // 
+            this.invokeAccountFrm.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.invokeAccountFrm.Dock = System.Windows.Forms.DockStyle.Top;
+            this.invokeAccountFrm.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.invokeAccountFrm.Location = new System.Drawing.Point(3, 3);
+            this.invokeAccountFrm.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.invokeAccountFrm.Name = "invokeAccountFrm";
+            this.invokeAccountFrm.RpcUrl = "http://127.0.0.1:20333";
+            this.invokeAccountFrm.Size = new System.Drawing.Size(842, 115);
+            this.invokeAccountFrm.TabIndex = 30;
             // 
             // tabPage3
             // 
@@ -753,6 +779,18 @@
             this.tbxTargetAddress.Size = new System.Drawing.Size(450, 25);
             this.tbxTargetAddress.TabIndex = 5;
             // 
+            // transAccountFrm
+            // 
+            this.transAccountFrm.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.transAccountFrm.Dock = System.Windows.Forms.DockStyle.Top;
+            this.transAccountFrm.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.transAccountFrm.Location = new System.Drawing.Point(3, 3);
+            this.transAccountFrm.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.transAccountFrm.Name = "transAccountFrm";
+            this.transAccountFrm.RpcUrl = "http://127.0.0.1:20333";
+            this.transAccountFrm.Size = new System.Drawing.Size(842, 117);
+            this.transAccountFrm.TabIndex = 28;
+            // 
             // tabPage4
             // 
             this.tabPage4.Controls.Add(this.button1);
@@ -908,39 +946,6 @@
             this.tabPage5.Text = "Nep5";
             this.tabPage5.UseVisualStyleBackColor = true;
             // 
-            // publishAccountFrm
-            // 
-            this.publishAccountFrm.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.publishAccountFrm.Dock = System.Windows.Forms.DockStyle.Top;
-            this.publishAccountFrm.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.publishAccountFrm.Location = new System.Drawing.Point(3, 3);
-            this.publishAccountFrm.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.publishAccountFrm.Name = "publishAccountFrm";
-            this.publishAccountFrm.Size = new System.Drawing.Size(842, 120);
-            this.publishAccountFrm.TabIndex = 29;
-            // 
-            // invokeAccountFrm
-            // 
-            this.invokeAccountFrm.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.invokeAccountFrm.Dock = System.Windows.Forms.DockStyle.Top;
-            this.invokeAccountFrm.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.invokeAccountFrm.Location = new System.Drawing.Point(3, 3);
-            this.invokeAccountFrm.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.invokeAccountFrm.Name = "invokeAccountFrm";
-            this.invokeAccountFrm.Size = new System.Drawing.Size(842, 115);
-            this.invokeAccountFrm.TabIndex = 30;
-            // 
-            // transAccountFrm
-            // 
-            this.transAccountFrm.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.transAccountFrm.Dock = System.Windows.Forms.DockStyle.Top;
-            this.transAccountFrm.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.transAccountFrm.Location = new System.Drawing.Point(3, 3);
-            this.transAccountFrm.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.transAccountFrm.Name = "transAccountFrm";
-            this.transAccountFrm.Size = new System.Drawing.Size(842, 117);
-            this.transAccountFrm.TabIndex = 28;
-            // 
             // nep5AccountFrm
             // 
             this.nep5AccountFrm.BackColor = System.Drawing.SystemColors.ButtonHighlight;
@@ -949,8 +954,25 @@
             this.nep5AccountFrm.Location = new System.Drawing.Point(3, 3);
             this.nep5AccountFrm.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.nep5AccountFrm.Name = "nep5AccountFrm";
+            this.nep5AccountFrm.RpcUrl = "http://127.0.0.1:20333";
             this.nep5AccountFrm.Size = new System.Drawing.Size(842, 107);
             this.nep5AccountFrm.TabIndex = 0;
+            // 
+            // btnEstimateGas
+            // 
+            this.btnEstimateGas.BackColor = System.Drawing.SystemColors.Highlight;
+            this.btnEstimateGas.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.btnEstimateGas.FlatAppearance.BorderSize = 0;
+            this.btnEstimateGas.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnEstimateGas.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnEstimateGas.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.btnEstimateGas.Location = new System.Drawing.Point(436, 292);
+            this.btnEstimateGas.Name = "btnEstimateGas";
+            this.btnEstimateGas.Size = new System.Drawing.Size(106, 29);
+            this.btnEstimateGas.TabIndex = 33;
+            this.btnEstimateGas.Text = "EstimateGas";
+            this.btnEstimateGas.UseVisualStyleBackColor = false;
+            this.btnEstimateGas.Click += new System.EventHandler(this.btnEstimateGas_Click);
             // 
             // FrmZoroGui
             // 
@@ -1059,6 +1081,7 @@
         private System.Windows.Forms.Label label17;
         private System.Windows.Forms.TextBox tbxTransGasLimit;
         private AccountFrm transAccountFrm;
+        private System.Windows.Forms.Button btnEstimateGas;
     }
 }
 
