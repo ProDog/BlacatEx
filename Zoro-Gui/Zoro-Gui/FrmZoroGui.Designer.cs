@@ -60,6 +60,7 @@
             this.tbxContractPath = new System.Windows.Forms.TextBox();
             this.cbxNeedNep4 = new System.Windows.Forms.CheckBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.btnEstimateGas = new System.Windows.Forms.Button();
             this.label9 = new System.Windows.Forms.Label();
             this.tbxGasPrice = new System.Windows.Forms.TextBox();
             this.label23 = new System.Windows.Forms.Label();
@@ -91,28 +92,44 @@
             this.label18 = new System.Windows.Forms.Label();
             this.tbxTargetAddress = new System.Windows.Forms.TextBox();
             this.transAccountFrm = new Zoro_Gui.AccountFrm();
-            this.tabPage4 = new System.Windows.Forms.TabPage();
-            this.button1 = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
-            this.label27 = new System.Windows.Forms.Label();
-            this.richTextBox2 = new System.Windows.Forms.RichTextBox();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.label28 = new System.Windows.Forms.Label();
-            this.label29 = new System.Windows.Forms.Label();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
-            this.label30 = new System.Windows.Forms.Label();
-            this.textBox2 = new System.Windows.Forms.TextBox();
-            this.label26 = new System.Windows.Forms.Label();
-            this.rtbxMutiSign = new System.Windows.Forms.RichTextBox();
             this.tabPage5 = new System.Windows.Forms.TabPage();
+            this.label35 = new System.Windows.Forms.Label();
+            this.tbxNep5GasPrice = new System.Windows.Forms.TextBox();
+            this.tbxMyAddress = new System.Windows.Forms.TextBox();
+            this.label34 = new System.Windows.Forms.Label();
+            this.btnNep5Refresh = new System.Windows.Forms.Button();
+            this.lblNep5Balance = new System.Windows.Forms.Label();
+            this.label33 = new System.Windows.Forms.Label();
+            this.tbxNep5Hash = new System.Windows.Forms.TextBox();
+            this.label31 = new System.Windows.Forms.Label();
+            this.btnNep5Cancel = new System.Windows.Forms.Button();
+            this.btnNep5SendTran = new System.Windows.Forms.Button();
+            this.label19 = new System.Windows.Forms.Label();
+            this.rtbxNep5Result = new System.Windows.Forms.RichTextBox();
+            this.tbxNep5Value = new System.Windows.Forms.TextBox();
+            this.label24 = new System.Windows.Forms.Label();
+            this.label32 = new System.Windows.Forms.Label();
+            this.tbxNep5ToAddress = new System.Windows.Forms.TextBox();
             this.nep5AccountFrm = new Zoro_Gui.AccountFrm();
-            this.btnEstimateGas = new System.Windows.Forms.Button();
+            this.tbcMutiTrans = new System.Windows.Forms.TabPage();
+            this.button3 = new System.Windows.Forms.Button();
+            this.button4 = new System.Windows.Forms.Button();
+            this.label36 = new System.Windows.Forms.Label();
+            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.label37 = new System.Windows.Forms.Label();
+            this.label38 = new System.Windows.Forms.Label();
+            this.comboBox2 = new System.Windows.Forms.ComboBox();
+            this.label39 = new System.Windows.Forms.Label();
+            this.textBox4 = new System.Windows.Forms.TextBox();
+            this.label40 = new System.Windows.Forms.Label();
+            this.richTextBox3 = new System.Windows.Forms.RichTextBox();
             this.tableControl.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage3.SuspendLayout();
-            this.tabPage4.SuspendLayout();
             this.tabPage5.SuspendLayout();
+            this.tbcMutiTrans.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableControl
@@ -120,8 +137,8 @@
             this.tableControl.Controls.Add(this.tabPage1);
             this.tableControl.Controls.Add(this.tabPage2);
             this.tableControl.Controls.Add(this.tabPage3);
-            this.tableControl.Controls.Add(this.tabPage4);
             this.tableControl.Controls.Add(this.tabPage5);
+            this.tableControl.Controls.Add(this.tbcMutiTrans);
             this.tableControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableControl.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.tableControl.Location = new System.Drawing.Point(0, 0);
@@ -463,6 +480,22 @@
             this.tabPage2.Text = "调用合约";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // btnEstimateGas
+            // 
+            this.btnEstimateGas.BackColor = System.Drawing.SystemColors.Highlight;
+            this.btnEstimateGas.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.btnEstimateGas.FlatAppearance.BorderSize = 0;
+            this.btnEstimateGas.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnEstimateGas.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnEstimateGas.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.btnEstimateGas.Location = new System.Drawing.Point(436, 292);
+            this.btnEstimateGas.Name = "btnEstimateGas";
+            this.btnEstimateGas.Size = new System.Drawing.Size(106, 29);
+            this.btnEstimateGas.TabIndex = 33;
+            this.btnEstimateGas.Text = "EstimateGas";
+            this.btnEstimateGas.UseVisualStyleBackColor = false;
+            this.btnEstimateGas.Click += new System.EventHandler(this.btnEstimateGas_Click);
+            // 
             // label9
             // 
             this.label9.AutoSize = true;
@@ -558,7 +591,7 @@
             this.btnInvoke.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnInvoke.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnInvoke.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.btnInvoke.Location = new System.Drawing.Point(571, 292);
+            this.btnInvoke.Location = new System.Drawing.Point(574, 292);
             this.btnInvoke.Name = "btnInvoke";
             this.btnInvoke.Size = new System.Drawing.Size(99, 29);
             this.btnInvoke.TabIndex = 20;
@@ -791,152 +824,25 @@
             this.transAccountFrm.Size = new System.Drawing.Size(842, 117);
             this.transAccountFrm.TabIndex = 28;
             // 
-            // tabPage4
-            // 
-            this.tabPage4.Controls.Add(this.button1);
-            this.tabPage4.Controls.Add(this.button2);
-            this.tabPage4.Controls.Add(this.label27);
-            this.tabPage4.Controls.Add(this.richTextBox2);
-            this.tabPage4.Controls.Add(this.textBox1);
-            this.tabPage4.Controls.Add(this.label28);
-            this.tabPage4.Controls.Add(this.label29);
-            this.tabPage4.Controls.Add(this.comboBox1);
-            this.tabPage4.Controls.Add(this.label30);
-            this.tabPage4.Controls.Add(this.textBox2);
-            this.tabPage4.Controls.Add(this.label26);
-            this.tabPage4.Controls.Add(this.rtbxMutiSign);
-            this.tabPage4.Location = new System.Drawing.Point(4, 28);
-            this.tabPage4.Name = "tabPage4";
-            this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage4.Size = new System.Drawing.Size(848, 508);
-            this.tabPage4.TabIndex = 3;
-            this.tabPage4.Text = "多签交易";
-            this.tabPage4.UseVisualStyleBackColor = true;
-            // 
-            // button1
-            // 
-            this.button1.BackColor = System.Drawing.SystemColors.Highlight;
-            this.button1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.button1.FlatAppearance.BorderSize = 0;
-            this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button1.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.button1.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.button1.Location = new System.Drawing.Point(461, 277);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(99, 29);
-            this.button1.TabIndex = 37;
-            this.button1.Text = "取消";
-            this.button1.UseVisualStyleBackColor = false;
-            // 
-            // button2
-            // 
-            this.button2.BackColor = System.Drawing.SystemColors.Highlight;
-            this.button2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.button2.FlatAppearance.BorderSize = 0;
-            this.button2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button2.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.button2.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.button2.Location = new System.Drawing.Point(288, 276);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(99, 29);
-            this.button2.TabIndex = 36;
-            this.button2.Text = "发送";
-            this.button2.UseVisualStyleBackColor = false;
-            // 
-            // label27
-            // 
-            this.label27.AutoSize = true;
-            this.label27.Location = new System.Drawing.Point(47, 330);
-            this.label27.Name = "label27";
-            this.label27.Size = new System.Drawing.Size(79, 20);
-            this.label27.TabIndex = 35;
-            this.label27.Text = "返回结果：";
-            // 
-            // richTextBox2
-            // 
-            this.richTextBox2.BackColor = System.Drawing.Color.AliceBlue;
-            this.richTextBox2.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.richTextBox2.Location = new System.Drawing.Point(51, 362);
-            this.richTextBox2.Name = "richTextBox2";
-            this.richTextBox2.ReadOnly = true;
-            this.richTextBox2.Size = new System.Drawing.Size(748, 53);
-            this.richTextBox2.TabIndex = 34;
-            this.richTextBox2.Text = "";
-            // 
-            // textBox1
-            // 
-            this.textBox1.Location = new System.Drawing.Point(489, 168);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(185, 25);
-            this.textBox1.TabIndex = 32;
-            // 
-            // label28
-            // 
-            this.label28.AutoSize = true;
-            this.label28.Location = new System.Drawing.Point(404, 171);
-            this.label28.Name = "label28";
-            this.label28.Size = new System.Drawing.Size(79, 20);
-            this.label28.TabIndex = 33;
-            this.label28.Text = "转账金额：";
-            // 
-            // label29
-            // 
-            this.label29.AutoSize = true;
-            this.label29.Location = new System.Drawing.Point(139, 169);
-            this.label29.Name = "label29";
-            this.label29.Size = new System.Drawing.Size(79, 20);
-            this.label29.TabIndex = 31;
-            this.label29.Text = "选择币种：";
-            // 
-            // comboBox1
-            // 
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Items.AddRange(new object[] {
-            "BCP",
-            "BCT"});
-            this.comboBox1.Location = new System.Drawing.Point(224, 168);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(163, 27);
-            this.comboBox1.TabIndex = 30;
-            // 
-            // label30
-            // 
-            this.label30.AutoSize = true;
-            this.label30.Location = new System.Drawing.Point(139, 227);
-            this.label30.Name = "label30";
-            this.label30.Size = new System.Drawing.Size(79, 20);
-            this.label30.TabIndex = 29;
-            this.label30.Text = "接收地址：";
-            // 
-            // textBox2
-            // 
-            this.textBox2.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.textBox2.Location = new System.Drawing.Point(224, 224);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(450, 25);
-            this.textBox2.TabIndex = 28;
-            // 
-            // label26
-            // 
-            this.label26.AutoSize = true;
-            this.label26.Location = new System.Drawing.Point(41, 18);
-            this.label26.Name = "label26";
-            this.label26.Size = new System.Drawing.Size(145, 20);
-            this.label26.TabIndex = 9;
-            this.label26.Text = "多签 Wif (用 ; 分隔)：";
-            // 
-            // rtbxMutiSign
-            // 
-            this.rtbxMutiSign.BackColor = System.Drawing.Color.Azure;
-            this.rtbxMutiSign.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.rtbxMutiSign.Location = new System.Drawing.Point(49, 48);
-            this.rtbxMutiSign.Name = "rtbxMutiSign";
-            this.rtbxMutiSign.Size = new System.Drawing.Size(758, 98);
-            this.rtbxMutiSign.TabIndex = 8;
-            this.rtbxMutiSign.Text = "";
-            // 
             // tabPage5
             // 
+            this.tabPage5.Controls.Add(this.label35);
+            this.tabPage5.Controls.Add(this.tbxNep5GasPrice);
+            this.tabPage5.Controls.Add(this.tbxMyAddress);
+            this.tabPage5.Controls.Add(this.label34);
+            this.tabPage5.Controls.Add(this.btnNep5Refresh);
+            this.tabPage5.Controls.Add(this.lblNep5Balance);
+            this.tabPage5.Controls.Add(this.label33);
+            this.tabPage5.Controls.Add(this.tbxNep5Hash);
+            this.tabPage5.Controls.Add(this.label31);
+            this.tabPage5.Controls.Add(this.btnNep5Cancel);
+            this.tabPage5.Controls.Add(this.btnNep5SendTran);
+            this.tabPage5.Controls.Add(this.label19);
+            this.tabPage5.Controls.Add(this.rtbxNep5Result);
+            this.tabPage5.Controls.Add(this.tbxNep5Value);
+            this.tabPage5.Controls.Add(this.label24);
+            this.tabPage5.Controls.Add(this.label32);
+            this.tabPage5.Controls.Add(this.tbxNep5ToAddress);
             this.tabPage5.Controls.Add(this.nep5AccountFrm);
             this.tabPage5.Location = new System.Drawing.Point(4, 28);
             this.tabPage5.Name = "tabPage5";
@@ -945,6 +851,174 @@
             this.tabPage5.TabIndex = 4;
             this.tabPage5.Text = "Nep5";
             this.tabPage5.UseVisualStyleBackColor = true;
+            // 
+            // label35
+            // 
+            this.label35.AutoSize = true;
+            this.label35.Location = new System.Drawing.Point(328, 279);
+            this.label35.Name = "label35";
+            this.label35.Size = new System.Drawing.Size(80, 20);
+            this.label35.TabIndex = 58;
+            this.label35.Text = "GasPrice：";
+            // 
+            // tbxNep5GasPrice
+            // 
+            this.tbxNep5GasPrice.Location = new System.Drawing.Point(411, 274);
+            this.tbxNep5GasPrice.Name = "tbxNep5GasPrice";
+            this.tbxNep5GasPrice.Size = new System.Drawing.Size(77, 25);
+            this.tbxNep5GasPrice.TabIndex = 57;
+            this.tbxNep5GasPrice.Text = "0.0001";
+            // 
+            // tbxMyAddress
+            // 
+            this.tbxMyAddress.Location = new System.Drawing.Point(124, 186);
+            this.tbxMyAddress.Name = "tbxMyAddress";
+            this.tbxMyAddress.Size = new System.Drawing.Size(393, 25);
+            this.tbxMyAddress.TabIndex = 53;
+            // 
+            // label34
+            // 
+            this.label34.AutoSize = true;
+            this.label34.Location = new System.Drawing.Point(41, 189);
+            this.label34.Name = "label34";
+            this.label34.Size = new System.Drawing.Size(79, 20);
+            this.label34.TabIndex = 54;
+            this.label34.Text = "查询地址：";
+            // 
+            // btnNep5Refresh
+            // 
+            this.btnNep5Refresh.BackColor = System.Drawing.SystemColors.Highlight;
+            this.btnNep5Refresh.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.btnNep5Refresh.FlatAppearance.BorderSize = 0;
+            this.btnNep5Refresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnNep5Refresh.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnNep5Refresh.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.btnNep5Refresh.Location = new System.Drawing.Point(772, 181);
+            this.btnNep5Refresh.Name = "btnNep5Refresh";
+            this.btnNep5Refresh.Size = new System.Drawing.Size(47, 29);
+            this.btnNep5Refresh.TabIndex = 52;
+            this.btnNep5Refresh.Text = "刷新";
+            this.btnNep5Refresh.UseVisualStyleBackColor = false;
+            this.btnNep5Refresh.Click += new System.EventHandler(this.btnNep5Refresh_Click);
+            // 
+            // lblNep5Balance
+            // 
+            this.lblNep5Balance.AutoSize = true;
+            this.lblNep5Balance.ForeColor = System.Drawing.Color.DodgerBlue;
+            this.lblNep5Balance.Location = new System.Drawing.Point(587, 186);
+            this.lblNep5Balance.Name = "lblNep5Balance";
+            this.lblNep5Balance.Size = new System.Drawing.Size(140, 20);
+            this.lblNep5Balance.TabIndex = 51;
+            this.lblNep5Balance.Text = "00000000.00000000";
+            // 
+            // label33
+            // 
+            this.label33.AutoSize = true;
+            this.label33.Location = new System.Drawing.Point(531, 186);
+            this.label33.Name = "label33";
+            this.label33.Size = new System.Drawing.Size(55, 20);
+            this.label33.TabIndex = 50;
+            this.label33.Text = "余 额：";
+            // 
+            // tbxNep5Hash
+            // 
+            this.tbxNep5Hash.Location = new System.Drawing.Point(124, 142);
+            this.tbxNep5Hash.Name = "tbxNep5Hash";
+            this.tbxNep5Hash.Size = new System.Drawing.Size(393, 25);
+            this.tbxNep5Hash.TabIndex = 48;
+            // 
+            // label31
+            // 
+            this.label31.AutoSize = true;
+            this.label31.Location = new System.Drawing.Point(41, 145);
+            this.label31.Name = "label31";
+            this.label31.Size = new System.Drawing.Size(85, 20);
+            this.label31.TabIndex = 49;
+            this.label31.Text = "合约Hash：";
+            // 
+            // btnNep5Cancel
+            // 
+            this.btnNep5Cancel.BackColor = System.Drawing.SystemColors.Highlight;
+            this.btnNep5Cancel.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.btnNep5Cancel.FlatAppearance.BorderSize = 0;
+            this.btnNep5Cancel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnNep5Cancel.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnNep5Cancel.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.btnNep5Cancel.Location = new System.Drawing.Point(720, 277);
+            this.btnNep5Cancel.Name = "btnNep5Cancel";
+            this.btnNep5Cancel.Size = new System.Drawing.Size(99, 29);
+            this.btnNep5Cancel.TabIndex = 47;
+            this.btnNep5Cancel.Text = "取消";
+            this.btnNep5Cancel.UseVisualStyleBackColor = false;
+            // 
+            // btnNep5SendTran
+            // 
+            this.btnNep5SendTran.BackColor = System.Drawing.SystemColors.Highlight;
+            this.btnNep5SendTran.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.btnNep5SendTran.FlatAppearance.BorderSize = 0;
+            this.btnNep5SendTran.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnNep5SendTran.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnNep5SendTran.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.btnNep5SendTran.Location = new System.Drawing.Point(547, 276);
+            this.btnNep5SendTran.Name = "btnNep5SendTran";
+            this.btnNep5SendTran.Size = new System.Drawing.Size(99, 29);
+            this.btnNep5SendTran.TabIndex = 46;
+            this.btnNep5SendTran.Text = "发送";
+            this.btnNep5SendTran.UseVisualStyleBackColor = false;
+            this.btnNep5SendTran.Click += new System.EventHandler(this.btnNep5SendTran_Click);
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(41, 354);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(79, 20);
+            this.label19.TabIndex = 45;
+            this.label19.Text = "返回结果：";
+            // 
+            // rtbxNep5Result
+            // 
+            this.rtbxNep5Result.BackColor = System.Drawing.Color.AliceBlue;
+            this.rtbxNep5Result.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.rtbxNep5Result.Location = new System.Drawing.Point(45, 387);
+            this.rtbxNep5Result.Name = "rtbxNep5Result";
+            this.rtbxNep5Result.ReadOnly = true;
+            this.rtbxNep5Result.Size = new System.Drawing.Size(748, 84);
+            this.rtbxNep5Result.TabIndex = 44;
+            this.rtbxNep5Result.Text = "";
+            // 
+            // tbxNep5Value
+            // 
+            this.tbxNep5Value.Location = new System.Drawing.Point(124, 274);
+            this.tbxNep5Value.Name = "tbxNep5Value";
+            this.tbxNep5Value.Size = new System.Drawing.Size(171, 25);
+            this.tbxNep5Value.TabIndex = 42;
+            // 
+            // label24
+            // 
+            this.label24.AutoSize = true;
+            this.label24.Location = new System.Drawing.Point(42, 277);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(79, 20);
+            this.label24.TabIndex = 43;
+            this.label24.Text = "转账金额：";
+            // 
+            // label32
+            // 
+            this.label32.AutoSize = true;
+            this.label32.Location = new System.Drawing.Point(42, 232);
+            this.label32.Name = "label32";
+            this.label32.Size = new System.Drawing.Size(79, 20);
+            this.label32.TabIndex = 39;
+            this.label32.Text = "接收地址：";
+            // 
+            // tbxNep5ToAddress
+            // 
+            this.tbxNep5ToAddress.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.tbxNep5ToAddress.Location = new System.Drawing.Point(124, 229);
+            this.tbxNep5ToAddress.Name = "tbxNep5ToAddress";
+            this.tbxNep5ToAddress.Size = new System.Drawing.Size(393, 25);
+            this.tbxNep5ToAddress.TabIndex = 38;
             // 
             // nep5AccountFrm
             // 
@@ -958,21 +1032,149 @@
             this.nep5AccountFrm.Size = new System.Drawing.Size(842, 107);
             this.nep5AccountFrm.TabIndex = 0;
             // 
-            // btnEstimateGas
+            // tbcMutiTrans
             // 
-            this.btnEstimateGas.BackColor = System.Drawing.SystemColors.Highlight;
-            this.btnEstimateGas.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.btnEstimateGas.FlatAppearance.BorderSize = 0;
-            this.btnEstimateGas.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnEstimateGas.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btnEstimateGas.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.btnEstimateGas.Location = new System.Drawing.Point(436, 292);
-            this.btnEstimateGas.Name = "btnEstimateGas";
-            this.btnEstimateGas.Size = new System.Drawing.Size(106, 29);
-            this.btnEstimateGas.TabIndex = 33;
-            this.btnEstimateGas.Text = "EstimateGas";
-            this.btnEstimateGas.UseVisualStyleBackColor = false;
-            this.btnEstimateGas.Click += new System.EventHandler(this.btnEstimateGas_Click);
+            this.tbcMutiTrans.Controls.Add(this.button3);
+            this.tbcMutiTrans.Controls.Add(this.button4);
+            this.tbcMutiTrans.Controls.Add(this.label36);
+            this.tbcMutiTrans.Controls.Add(this.richTextBox1);
+            this.tbcMutiTrans.Controls.Add(this.textBox3);
+            this.tbcMutiTrans.Controls.Add(this.label37);
+            this.tbcMutiTrans.Controls.Add(this.label38);
+            this.tbcMutiTrans.Controls.Add(this.comboBox2);
+            this.tbcMutiTrans.Controls.Add(this.label39);
+            this.tbcMutiTrans.Controls.Add(this.textBox4);
+            this.tbcMutiTrans.Controls.Add(this.label40);
+            this.tbcMutiTrans.Controls.Add(this.richTextBox3);
+            this.tbcMutiTrans.Location = new System.Drawing.Point(4, 28);
+            this.tbcMutiTrans.Name = "tbcMutiTrans";
+            this.tbcMutiTrans.Padding = new System.Windows.Forms.Padding(3);
+            this.tbcMutiTrans.Size = new System.Drawing.Size(848, 508);
+            this.tbcMutiTrans.TabIndex = 5;
+            this.tbcMutiTrans.Text = "多签交易";
+            this.tbcMutiTrans.UseVisualStyleBackColor = true;
+            // 
+            // button3
+            // 
+            this.button3.BackColor = System.Drawing.SystemColors.Highlight;
+            this.button3.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.button3.FlatAppearance.BorderSize = 0;
+            this.button3.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.button3.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.button3.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.button3.Location = new System.Drawing.Point(461, 315);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(99, 29);
+            this.button3.TabIndex = 49;
+            this.button3.Text = "取消";
+            this.button3.UseVisualStyleBackColor = false;
+            // 
+            // button4
+            // 
+            this.button4.BackColor = System.Drawing.SystemColors.Highlight;
+            this.button4.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.button4.FlatAppearance.BorderSize = 0;
+            this.button4.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.button4.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.button4.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.button4.Location = new System.Drawing.Point(288, 314);
+            this.button4.Name = "button4";
+            this.button4.Size = new System.Drawing.Size(99, 29);
+            this.button4.TabIndex = 48;
+            this.button4.Text = "发送";
+            this.button4.UseVisualStyleBackColor = false;
+            // 
+            // label36
+            // 
+            this.label36.AutoSize = true;
+            this.label36.Location = new System.Drawing.Point(47, 368);
+            this.label36.Name = "label36";
+            this.label36.Size = new System.Drawing.Size(79, 20);
+            this.label36.TabIndex = 47;
+            this.label36.Text = "返回结果：";
+            // 
+            // richTextBox1
+            // 
+            this.richTextBox1.BackColor = System.Drawing.Color.AliceBlue;
+            this.richTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.richTextBox1.Location = new System.Drawing.Point(51, 400);
+            this.richTextBox1.Name = "richTextBox1";
+            this.richTextBox1.ReadOnly = true;
+            this.richTextBox1.Size = new System.Drawing.Size(748, 53);
+            this.richTextBox1.TabIndex = 46;
+            this.richTextBox1.Text = "";
+            // 
+            // textBox3
+            // 
+            this.textBox3.Location = new System.Drawing.Point(489, 206);
+            this.textBox3.Name = "textBox3";
+            this.textBox3.Size = new System.Drawing.Size(185, 25);
+            this.textBox3.TabIndex = 44;
+            // 
+            // label37
+            // 
+            this.label37.AutoSize = true;
+            this.label37.Location = new System.Drawing.Point(404, 209);
+            this.label37.Name = "label37";
+            this.label37.Size = new System.Drawing.Size(79, 20);
+            this.label37.TabIndex = 45;
+            this.label37.Text = "转账金额：";
+            // 
+            // label38
+            // 
+            this.label38.AutoSize = true;
+            this.label38.Location = new System.Drawing.Point(139, 207);
+            this.label38.Name = "label38";
+            this.label38.Size = new System.Drawing.Size(79, 20);
+            this.label38.TabIndex = 43;
+            this.label38.Text = "选择币种：";
+            // 
+            // comboBox2
+            // 
+            this.comboBox2.FormattingEnabled = true;
+            this.comboBox2.Items.AddRange(new object[] {
+            "BCP",
+            "BCT"});
+            this.comboBox2.Location = new System.Drawing.Point(224, 206);
+            this.comboBox2.Name = "comboBox2";
+            this.comboBox2.Size = new System.Drawing.Size(163, 27);
+            this.comboBox2.TabIndex = 42;
+            // 
+            // label39
+            // 
+            this.label39.AutoSize = true;
+            this.label39.Location = new System.Drawing.Point(139, 265);
+            this.label39.Name = "label39";
+            this.label39.Size = new System.Drawing.Size(79, 20);
+            this.label39.TabIndex = 41;
+            this.label39.Text = "接收地址：";
+            // 
+            // textBox4
+            // 
+            this.textBox4.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.textBox4.Location = new System.Drawing.Point(224, 262);
+            this.textBox4.Name = "textBox4";
+            this.textBox4.Size = new System.Drawing.Size(450, 25);
+            this.textBox4.TabIndex = 40;
+            // 
+            // label40
+            // 
+            this.label40.AutoSize = true;
+            this.label40.Location = new System.Drawing.Point(41, 56);
+            this.label40.Name = "label40";
+            this.label40.Size = new System.Drawing.Size(145, 20);
+            this.label40.TabIndex = 39;
+            this.label40.Text = "多签 Wif (用 ; 分隔)：";
+            // 
+            // richTextBox3
+            // 
+            this.richTextBox3.BackColor = System.Drawing.Color.Azure;
+            this.richTextBox3.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.richTextBox3.Location = new System.Drawing.Point(49, 86);
+            this.richTextBox3.Name = "richTextBox3";
+            this.richTextBox3.Size = new System.Drawing.Size(758, 98);
+            this.richTextBox3.TabIndex = 38;
+            this.richTextBox3.Text = "";
             // 
             // FrmZoroGui
             // 
@@ -995,9 +1197,10 @@
             this.tabPage2.PerformLayout();
             this.tabPage3.ResumeLayout(false);
             this.tabPage3.PerformLayout();
-            this.tabPage4.ResumeLayout(false);
-            this.tabPage4.PerformLayout();
             this.tabPage5.ResumeLayout(false);
+            this.tabPage5.PerformLayout();
+            this.tbcMutiTrans.ResumeLayout(false);
+            this.tbcMutiTrans.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -1057,19 +1260,6 @@
         private System.Windows.Forms.TextBox tbxGasLimit;
         private System.Windows.Forms.Label label25;
         private System.Windows.Forms.RichTextBox rtbxPublishReturn;
-        private System.Windows.Forms.TabPage tabPage4;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.Label label27;
-        private System.Windows.Forms.RichTextBox richTextBox2;
-        private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.Label label28;
-        private System.Windows.Forms.Label label29;
-        private System.Windows.Forms.ComboBox comboBox1;
-        private System.Windows.Forms.Label label30;
-        private System.Windows.Forms.TextBox textBox2;
-        private System.Windows.Forms.Label label26;
-        private System.Windows.Forms.RichTextBox rtbxMutiSign;
         private AccountFrm publishAccountFrm;
         private AccountFrm invokeAccountFrm;
         private System.Windows.Forms.TabPage tabPage5;
@@ -1082,6 +1272,36 @@
         private System.Windows.Forms.TextBox tbxTransGasLimit;
         private AccountFrm transAccountFrm;
         private System.Windows.Forms.Button btnEstimateGas;
+        private System.Windows.Forms.TextBox tbxNep5Hash;
+        private System.Windows.Forms.Label label31;
+        private System.Windows.Forms.Button btnNep5Cancel;
+        private System.Windows.Forms.Button btnNep5SendTran;
+        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.RichTextBox rtbxNep5Result;
+        private System.Windows.Forms.TextBox tbxNep5Value;
+        private System.Windows.Forms.Label label24;
+        private System.Windows.Forms.Label label32;
+        private System.Windows.Forms.TextBox tbxNep5ToAddress;
+        private System.Windows.Forms.Label lblNep5Balance;
+        private System.Windows.Forms.Label label33;
+        private System.Windows.Forms.Button btnNep5Refresh;
+        private System.Windows.Forms.TextBox tbxMyAddress;
+        private System.Windows.Forms.Label label34;
+        private System.Windows.Forms.Label label35;
+        private System.Windows.Forms.TextBox tbxNep5GasPrice;
+        private System.Windows.Forms.TabPage tbcMutiTrans;
+        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button button4;
+        private System.Windows.Forms.Label label36;
+        private System.Windows.Forms.RichTextBox richTextBox1;
+        private System.Windows.Forms.TextBox textBox3;
+        private System.Windows.Forms.Label label37;
+        private System.Windows.Forms.Label label38;
+        private System.Windows.Forms.ComboBox comboBox2;
+        private System.Windows.Forms.Label label39;
+        private System.Windows.Forms.TextBox textBox4;
+        private System.Windows.Forms.Label label40;
+        private System.Windows.Forms.RichTextBox richTextBox3;
     }
 }
 

@@ -1,4 +1,5 @@
 ﻿using Neo.VM;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -252,20 +253,13 @@ namespace Zoro_Gui
 
             try
             {
-                //decimal gasLimit = ZoroHelper.GetScriptGasConsumed(api, sb.ToArray(), "");
-                //gasLimit = Math.Max(decimal.Parse(tbxGasLimit.Text), gasLimit);
-
-                var tx = ZoroHelper.MakeTransaction(sb.ToArray(), invokeAccountFrm.keypair, Fixed8.Zero, Fixed8.FromDecimal(0.0001m));
+                decimal gasPrice = decimal.Parse(tbxGasPrice.Text);
+                var tx = ZoroHelper.MakeTransaction(sb.ToArray(), invokeAccountFrm.keypair, Fixed8.Zero, Fixed8.FromDecimal(gasPrice));
                 bcpFee = ZoroHelper.EstimateGas(api, tx, "");
 
-                decimal gasPrice = decimal.Parse(tbxGasPrice.Text);
                 tbxGasLimit.Text = bcpFee.ToString();
 
-                tx = ZoroHelper.MakeTransaction(sb.ToArray(), invokeAccountFrm.keypair, Fixed8.FromDecimal(bcpFee), Fixed8.FromDecimal(0.0001m));
-
-                //var result = ZoroHelper.SendInvocationTransaction(api, sb.ToArray(), invokeAccountFrm.keypair, "", Fixed8.FromDecimal(gasLimit), Fixed8.FromDecimal(gasPrice));
-
-                //var result = ZoroHelper.SendInvocationTransaction(api, sb.ToArray(), invokeAccountFrm.keypair, "", Fixed8.FromDecimal(gasPrice));
+                tx = ZoroHelper.MakeTransaction(sb.ToArray(), invokeAccountFrm.keypair, Fixed8.FromDecimal(bcpFee), Fixed8.FromDecimal(gasPrice));
 
                 var result = ZoroHelper.SendRawTransaction(api, tx, "") + " gas_consumed: " + bcpFee + "\r\n txid: " + tx.Hash;
 
@@ -397,5 +391,108 @@ namespace Zoro_Gui
             }
         }
 
+        private void btnNep5Refresh_Click(object sender, EventArgs e)
+        {
+            string api = nep5AccountFrm.RpcUrl;
+            if (string.IsNullOrEmpty(tbxNep5Hash.Text))
+            {
+                MessageBox.Show("合约 Hash 不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(tbxMyAddress.Text))
+            {
+                MessageBox.Show("查询地址不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var addressHash = ZoroHelper.GetPublicKeyHashFromAddress(tbxMyAddress.Text);
+
+            ScriptBuilder sb = new ScriptBuilder();
+            sb.EmitAppCall(UInt160.Parse(tbxNep5Hash.Text), "balanceOf", addressHash);
+            
+            try
+            {
+                var info = ZoroHelper.InvokeScript(api, sb.ToArray(), "");
+
+                JObject json = JObject.Parse(info);
+                if (json.ContainsKey("result"))
+                {
+                    JObject json_result = json["result"] as JObject;
+                    JArray stack = json_result["stack"] as JArray;
+
+                    string result = ZoroHelper.GetJsonValue(stack[0] as JObject);
+                    decimal value = Math.Round(decimal.Parse(result) / (decimal)Math.Pow(10, 8), 8);
+
+                    lblNep5Balance.Text = value.ToString();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+        }
+
+        private void btnNep5SendTran_Click(object sender, EventArgs e)
+        {
+            string api = nep5AccountFrm.RpcUrl;
+            if (string.IsNullOrEmpty(nep5AccountFrm.wif))
+            {
+                MessageBox.Show("请输入钱包 wif ！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(tbxNep5Hash.Text))
+            {
+                MessageBox.Show("Nep5 合约 Hash 不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(tbxNep5ToAddress.Text))
+            {
+                MessageBox.Show("接收地址不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(tbxNep5Value.Text))
+            {
+                MessageBox.Show("转账金额不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(tbxNep5GasPrice.Text))
+            {
+                MessageBox.Show("Gas Price 不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            ScriptBuilder sb = new ScriptBuilder();
+
+            var toAddressHash = ZoroHelper.GetPublicKeyHashFromAddress(tbxNep5ToAddress.Text);
+            decimal value = Math.Round(decimal.Parse(tbxNep5Value.Text) * (decimal)Math.Pow(10, 8), 0);
+
+            Fixed8 gasPrice = Fixed8.FromDecimal(decimal.Parse(tbxNep5GasPrice.Text));
+
+            sb.EmitAppCall(UInt160.Parse(tbxNep5Hash.Text), "transfer", nep5AccountFrm.addressHash, toAddressHash, new BigInteger(value));
+
+            try
+            {
+                var tx = ZoroHelper.MakeTransaction(sb.ToArray(), nep5AccountFrm.keypair, Fixed8.Zero, gasPrice);
+                bcpFee = ZoroHelper.EstimateGas(api, tx, "");          
+
+                tx = ZoroHelper.MakeTransaction(sb.ToArray(), nep5AccountFrm.keypair, Fixed8.FromDecimal(bcpFee), gasPrice);
+
+                var result = ZoroHelper.SendRawTransaction(api, tx, "") + " gas_consumed: " + bcpFee + "\r\n txid: " + tx.Hash;
+
+                rtbxNep5Result.Text = result;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+        }
     }
 }
