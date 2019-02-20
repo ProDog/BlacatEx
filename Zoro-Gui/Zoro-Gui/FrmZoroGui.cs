@@ -75,12 +75,10 @@ namespace Zoro_Gui
                 MessageBox.Show("请输入接收地址！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-
-            Decimal value = Decimal.Parse(tbxValue.Text, NumberStyles.Float) * new Decimal(Math.Pow(10, 8));
-            UInt160 targetscripthash = ZoroHelper.GetPublicKeyHashFromAddress(tbxTargetAddress.Text);
-
             try
             {
+                Decimal value = Decimal.Parse(tbxValue.Text, NumberStyles.Float) * new Decimal(Math.Pow(10, 8));
+                UInt160 targetscripthash = ZoroHelper.GetPublicKeyHashFromAddress(tbxTargetAddress.Text);
 
                 using (ScriptBuilder sb = new ScriptBuilder())
                 {
@@ -404,15 +402,15 @@ namespace Zoro_Gui
             {
                 MessageBox.Show("查询地址不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
-            }
-
-            var addressHash = ZoroHelper.GetPublicKeyHashFromAddress(tbxMyAddress.Text);
-
-            ScriptBuilder sb = new ScriptBuilder();
-            sb.EmitAppCall(UInt160.Parse(tbxNep5Hash.Text), "balanceOf", addressHash);
+            }    
             
             try
             {
+                var addressHash = ZoroHelper.GetPublicKeyHashFromAddress(tbxMyAddress.Text);
+
+                ScriptBuilder sb = new ScriptBuilder();
+                sb.EmitAppCall(UInt160.Parse(tbxNep5Hash.Text), "balanceOf", addressHash);
+
                 var info = ZoroHelper.InvokeScript(api, sb.ToArray(), "");
 
                 JObject json = JObject.Parse(info);
@@ -469,16 +467,15 @@ namespace Zoro_Gui
             }
 
             ScriptBuilder sb = new ScriptBuilder();
-
-            var toAddressHash = ZoroHelper.GetPublicKeyHashFromAddress(tbxNep5ToAddress.Text);
-            decimal value = Math.Round(decimal.Parse(tbxNep5Value.Text) * (decimal)Math.Pow(10, 8), 0);
-
-            Fixed8 gasPrice = Fixed8.FromDecimal(decimal.Parse(tbxNep5GasPrice.Text));
-
-            sb.EmitAppCall(UInt160.Parse(tbxNep5Hash.Text), "transfer", nep5AccountFrm.addressHash, toAddressHash, new BigInteger(value));
-
             try
             {
+                var toAddressHash = ZoroHelper.GetPublicKeyHashFromAddress(tbxNep5ToAddress.Text);
+                decimal value = Math.Round(decimal.Parse(tbxNep5Value.Text) * (decimal)Math.Pow(10, 8), 0);
+
+                Fixed8 gasPrice = Fixed8.FromDecimal(decimal.Parse(tbxNep5GasPrice.Text));
+
+                sb.EmitAppCall(UInt160.Parse(tbxNep5Hash.Text), "transfer", nep5AccountFrm.addressHash, toAddressHash, new BigInteger(value));
+
                 var tx = ZoroHelper.MakeTransaction(sb.ToArray(), nep5AccountFrm.keypair, Fixed8.Zero, gasPrice);
                 bcpFee = ZoroHelper.EstimateGas(api, tx, "");          
 
