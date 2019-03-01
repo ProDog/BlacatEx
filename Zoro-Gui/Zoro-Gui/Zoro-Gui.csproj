@@ -53,7 +53,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="Zoro, Version=0.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\Zoro.dll</HintPath>
+      <HintPath>..\..\..\A-Zoro\Zoro-Cli\zoro-cli\bin\Debug\netcoreapp2.1\publish\Zoro.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

@@ -112,24 +112,44 @@
             this.tbxNep5ToAddress = new System.Windows.Forms.TextBox();
             this.nep5AccountFrm = new Zoro_Gui.AccountFrm();
             this.tbcMutiTrans = new System.Windows.Forms.TabPage();
-            this.button3 = new System.Windows.Forms.Button();
-            this.button4 = new System.Windows.Forms.Button();
+            this.label26 = new System.Windows.Forms.Label();
+            this.tbxMutiSigRpcUrl = new System.Windows.Forms.TextBox();
+            this.btcMutiSigCancel = new System.Windows.Forms.Button();
+            this.btnMutiSigSendTran = new System.Windows.Forms.Button();
             this.label36 = new System.Windows.Forms.Label();
-            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
-            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.rtbxMutiSigResult = new System.Windows.Forms.RichTextBox();
+            this.tbxMutiSigValue = new System.Windows.Forms.TextBox();
             this.label37 = new System.Windows.Forms.Label();
             this.label38 = new System.Windows.Forms.Label();
-            this.comboBox2 = new System.Windows.Forms.ComboBox();
+            this.cmbMutiSigCoinType = new System.Windows.Forms.ComboBox();
             this.label39 = new System.Windows.Forms.Label();
-            this.textBox4 = new System.Windows.Forms.TextBox();
+            this.tbxMutiSigRecAddress = new System.Windows.Forms.TextBox();
             this.label40 = new System.Windows.Forms.Label();
-            this.richTextBox3 = new System.Windows.Forms.RichTextBox();
+            this.rtbxMutiSigWifs = new System.Windows.Forms.RichTextBox();
+            this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.label42 = new System.Windows.Forms.Label();
+            this.tbxCallMethod = new System.Windows.Forms.TextBox();
+            this.btnCallEstimateGas = new System.Windows.Forms.Button();
+            this.label27 = new System.Windows.Forms.Label();
+            this.tbxCallGasPrice = new System.Windows.Forms.TextBox();
+            this.label28 = new System.Windows.Forms.Label();
+            this.tbxCallGasLimit = new System.Windows.Forms.TextBox();
+            this.label29 = new System.Windows.Forms.Label();
+            this.tbxCallInterface = new System.Windows.Forms.TextBox();
+            this.label30 = new System.Windows.Forms.Label();
+            this.rtbxCallResult = new System.Windows.Forms.RichTextBox();
+            this.btnCallSendRaw = new System.Windows.Forms.Button();
+            this.btnCallInvoke = new System.Windows.Forms.Button();
+            this.label41 = new System.Windows.Forms.Label();
+            this.rtbxCallParams = new System.Windows.Forms.RichTextBox();
+            this.otherCallAccountFrm = new Zoro_Gui.AccountFrm();
             this.tableControl.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.tabPage5.SuspendLayout();
             this.tbcMutiTrans.SuspendLayout();
+            this.tabPage4.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableControl
@@ -139,6 +159,7 @@
             this.tableControl.Controls.Add(this.tabPage3);
             this.tableControl.Controls.Add(this.tabPage5);
             this.tableControl.Controls.Add(this.tbcMutiTrans);
+            this.tableControl.Controls.Add(this.tabPage4);
             this.tableControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableControl.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.tableControl.Location = new System.Drawing.Point(0, 0);
@@ -250,6 +271,7 @@
             this.tbxParameterType.Size = new System.Drawing.Size(170, 25);
             this.tbxParameterType.TabIndex = 24;
             this.tbxParameterType.Text = "0710";
+            this.tbxParameterType.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxOnlyNumber_KeyPress);
             // 
             // label11
             // 
@@ -267,6 +289,7 @@
             this.tbxReturnType.Size = new System.Drawing.Size(170, 25);
             this.tbxReturnType.TabIndex = 22;
             this.tbxReturnType.Text = "05";
+            this.tbxReturnType.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxOnlyNumber_KeyPress);
             // 
             // btnPublish
             // 
@@ -512,6 +535,7 @@
             this.tbxGasPrice.Size = new System.Drawing.Size(77, 25);
             this.tbxGasPrice.TabIndex = 31;
             this.tbxGasPrice.Text = "0.0001";
+            this.tbxGasPrice.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxOnlyNumber_KeyPress);
             // 
             // label23
             // 
@@ -529,7 +553,7 @@
             this.tbxGasLimit.Size = new System.Drawing.Size(93, 25);
             this.tbxGasLimit.TabIndex = 26;
             this.tbxGasLimit.Text = "1000";
-            this.tbxGasLimit.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxGasFee_KeyPress);
+            this.tbxGasLimit.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxOnlyNumber_KeyPress);
             // 
             // label16
             // 
@@ -687,6 +711,7 @@
             this.tbxTransGasPrice.Size = new System.Drawing.Size(77, 25);
             this.tbxTransGasPrice.TabIndex = 35;
             this.tbxTransGasPrice.Text = "0.0001";
+            this.tbxTransGasPrice.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxOnlyNumber_KeyPress);
             // 
             // label17
             // 
@@ -704,6 +729,7 @@
             this.tbxTransGasLimit.Size = new System.Drawing.Size(93, 25);
             this.tbxTransGasLimit.TabIndex = 33;
             this.tbxTransGasLimit.Text = "1000";
+            this.tbxTransGasLimit.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxOnlyNumber_KeyPress);
             // 
             // btnCancelTran
             // 
@@ -763,7 +789,7 @@
             this.tbxValue.Name = "tbxValue";
             this.tbxValue.Size = new System.Drawing.Size(185, 25);
             this.tbxValue.TabIndex = 22;
-            this.tbxValue.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxGasFee_KeyPress);
+            this.tbxValue.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxOnlyNumber_KeyPress);
             // 
             // label21
             // 
@@ -868,6 +894,7 @@
             this.tbxNep5GasPrice.Size = new System.Drawing.Size(77, 25);
             this.tbxNep5GasPrice.TabIndex = 57;
             this.tbxNep5GasPrice.Text = "0.0001";
+            this.tbxNep5GasPrice.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxOnlyNumber_KeyPress);
             // 
             // tbxMyAddress
             // 
@@ -993,6 +1020,7 @@
             this.tbxNep5Value.Name = "tbxNep5Value";
             this.tbxNep5Value.Size = new System.Drawing.Size(171, 25);
             this.tbxNep5Value.TabIndex = 42;
+            this.tbxNep5Value.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxOnlyNumber_KeyPress);
             // 
             // label24
             // 
@@ -1034,18 +1062,20 @@
             // 
             // tbcMutiTrans
             // 
-            this.tbcMutiTrans.Controls.Add(this.button3);
-            this.tbcMutiTrans.Controls.Add(this.button4);
+            this.tbcMutiTrans.Controls.Add(this.label26);
+            this.tbcMutiTrans.Controls.Add(this.tbxMutiSigRpcUrl);
+            this.tbcMutiTrans.Controls.Add(this.btcMutiSigCancel);
+            this.tbcMutiTrans.Controls.Add(this.btnMutiSigSendTran);
             this.tbcMutiTrans.Controls.Add(this.label36);
-            this.tbcMutiTrans.Controls.Add(this.richTextBox1);
-            this.tbcMutiTrans.Controls.Add(this.textBox3);
+            this.tbcMutiTrans.Controls.Add(this.rtbxMutiSigResult);
+            this.tbcMutiTrans.Controls.Add(this.tbxMutiSigValue);
             this.tbcMutiTrans.Controls.Add(this.label37);
             this.tbcMutiTrans.Controls.Add(this.label38);
-            this.tbcMutiTrans.Controls.Add(this.comboBox2);
+            this.tbcMutiTrans.Controls.Add(this.cmbMutiSigCoinType);
             this.tbcMutiTrans.Controls.Add(this.label39);
-            this.tbcMutiTrans.Controls.Add(this.textBox4);
+            this.tbcMutiTrans.Controls.Add(this.tbxMutiSigRecAddress);
             this.tbcMutiTrans.Controls.Add(this.label40);
-            this.tbcMutiTrans.Controls.Add(this.richTextBox3);
+            this.tbcMutiTrans.Controls.Add(this.rtbxMutiSigWifs);
             this.tbcMutiTrans.Location = new System.Drawing.Point(4, 28);
             this.tbcMutiTrans.Name = "tbcMutiTrans";
             this.tbcMutiTrans.Padding = new System.Windows.Forms.Padding(3);
@@ -1054,35 +1084,54 @@
             this.tbcMutiTrans.Text = "多签交易";
             this.tbcMutiTrans.UseVisualStyleBackColor = true;
             // 
-            // button3
+            // label26
             // 
-            this.button3.BackColor = System.Drawing.SystemColors.Highlight;
-            this.button3.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.button3.FlatAppearance.BorderSize = 0;
-            this.button3.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button3.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.button3.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.button3.Location = new System.Drawing.Point(461, 315);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(99, 29);
-            this.button3.TabIndex = 49;
-            this.button3.Text = "取消";
-            this.button3.UseVisualStyleBackColor = false;
+            this.label26.AutoSize = true;
+            this.label26.Location = new System.Drawing.Point(46, 22);
+            this.label26.Name = "label26";
+            this.label26.Size = new System.Drawing.Size(82, 20);
+            this.label26.TabIndex = 51;
+            this.label26.Text = "RPC地址 ：";
             // 
-            // button4
+            // tbxMutiSigRpcUrl
             // 
-            this.button4.BackColor = System.Drawing.SystemColors.Highlight;
-            this.button4.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.button4.FlatAppearance.BorderSize = 0;
-            this.button4.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button4.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.button4.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.button4.Location = new System.Drawing.Point(288, 314);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(99, 29);
-            this.button4.TabIndex = 48;
-            this.button4.Text = "发送";
-            this.button4.UseVisualStyleBackColor = false;
+            this.tbxMutiSigRpcUrl.BackColor = System.Drawing.Color.AliceBlue;
+            this.tbxMutiSigRpcUrl.Location = new System.Drawing.Point(131, 20);
+            this.tbxMutiSigRpcUrl.Name = "tbxMutiSigRpcUrl";
+            this.tbxMutiSigRpcUrl.Size = new System.Drawing.Size(391, 25);
+            this.tbxMutiSigRpcUrl.TabIndex = 50;
+            this.tbxMutiSigRpcUrl.Text = "http://127.0.0.1:20333";
+            // 
+            // btcMutiSigCancel
+            // 
+            this.btcMutiSigCancel.BackColor = System.Drawing.SystemColors.Highlight;
+            this.btcMutiSigCancel.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.btcMutiSigCancel.FlatAppearance.BorderSize = 0;
+            this.btcMutiSigCancel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btcMutiSigCancel.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btcMutiSigCancel.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.btcMutiSigCancel.Location = new System.Drawing.Point(461, 315);
+            this.btcMutiSigCancel.Name = "btcMutiSigCancel";
+            this.btcMutiSigCancel.Size = new System.Drawing.Size(99, 29);
+            this.btcMutiSigCancel.TabIndex = 49;
+            this.btcMutiSigCancel.Text = "取消";
+            this.btcMutiSigCancel.UseVisualStyleBackColor = false;
+            // 
+            // btnMutiSigSendTran
+            // 
+            this.btnMutiSigSendTran.BackColor = System.Drawing.SystemColors.Highlight;
+            this.btnMutiSigSendTran.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.btnMutiSigSendTran.FlatAppearance.BorderSize = 0;
+            this.btnMutiSigSendTran.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnMutiSigSendTran.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnMutiSigSendTran.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.btnMutiSigSendTran.Location = new System.Drawing.Point(288, 314);
+            this.btnMutiSigSendTran.Name = "btnMutiSigSendTran";
+            this.btnMutiSigSendTran.Size = new System.Drawing.Size(99, 29);
+            this.btnMutiSigSendTran.TabIndex = 48;
+            this.btnMutiSigSendTran.Text = "发送";
+            this.btnMutiSigSendTran.UseVisualStyleBackColor = false;
+            this.btnMutiSigSendTran.Click += new System.EventHandler(this.btnMutiSigSendTran_Click);
             // 
             // label36
             // 
@@ -1093,23 +1142,24 @@
             this.label36.TabIndex = 47;
             this.label36.Text = "返回结果：";
             // 
-            // richTextBox1
+            // rtbxMutiSigResult
             // 
-            this.richTextBox1.BackColor = System.Drawing.Color.AliceBlue;
-            this.richTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.richTextBox1.Location = new System.Drawing.Point(51, 400);
-            this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.ReadOnly = true;
-            this.richTextBox1.Size = new System.Drawing.Size(748, 53);
-            this.richTextBox1.TabIndex = 46;
-            this.richTextBox1.Text = "";
+            this.rtbxMutiSigResult.BackColor = System.Drawing.Color.AliceBlue;
+            this.rtbxMutiSigResult.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.rtbxMutiSigResult.Location = new System.Drawing.Point(51, 400);
+            this.rtbxMutiSigResult.Name = "rtbxMutiSigResult";
+            this.rtbxMutiSigResult.ReadOnly = true;
+            this.rtbxMutiSigResult.Size = new System.Drawing.Size(748, 74);
+            this.rtbxMutiSigResult.TabIndex = 46;
+            this.rtbxMutiSigResult.Text = "";
             // 
-            // textBox3
+            // tbxMutiSigValue
             // 
-            this.textBox3.Location = new System.Drawing.Point(489, 206);
-            this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(185, 25);
-            this.textBox3.TabIndex = 44;
+            this.tbxMutiSigValue.Location = new System.Drawing.Point(489, 206);
+            this.tbxMutiSigValue.Name = "tbxMutiSigValue";
+            this.tbxMutiSigValue.Size = new System.Drawing.Size(185, 25);
+            this.tbxMutiSigValue.TabIndex = 44;
+            this.tbxMutiSigValue.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxOnlyNumber_KeyPress);
             // 
             // label37
             // 
@@ -1129,16 +1179,16 @@
             this.label38.TabIndex = 43;
             this.label38.Text = "选择币种：";
             // 
-            // comboBox2
+            // cmbMutiSigCoinType
             // 
-            this.comboBox2.FormattingEnabled = true;
-            this.comboBox2.Items.AddRange(new object[] {
+            this.cmbMutiSigCoinType.FormattingEnabled = true;
+            this.cmbMutiSigCoinType.Items.AddRange(new object[] {
             "BCP",
             "BCT"});
-            this.comboBox2.Location = new System.Drawing.Point(224, 206);
-            this.comboBox2.Name = "comboBox2";
-            this.comboBox2.Size = new System.Drawing.Size(163, 27);
-            this.comboBox2.TabIndex = 42;
+            this.cmbMutiSigCoinType.Location = new System.Drawing.Point(224, 206);
+            this.cmbMutiSigCoinType.Name = "cmbMutiSigCoinType";
+            this.cmbMutiSigCoinType.Size = new System.Drawing.Size(163, 27);
+            this.cmbMutiSigCoinType.TabIndex = 42;
             // 
             // label39
             // 
@@ -1149,32 +1199,226 @@
             this.label39.TabIndex = 41;
             this.label39.Text = "接收地址：";
             // 
-            // textBox4
+            // tbxMutiSigRecAddress
             // 
-            this.textBox4.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.textBox4.Location = new System.Drawing.Point(224, 262);
-            this.textBox4.Name = "textBox4";
-            this.textBox4.Size = new System.Drawing.Size(450, 25);
-            this.textBox4.TabIndex = 40;
+            this.tbxMutiSigRecAddress.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.tbxMutiSigRecAddress.Location = new System.Drawing.Point(224, 262);
+            this.tbxMutiSigRecAddress.Name = "tbxMutiSigRecAddress";
+            this.tbxMutiSigRecAddress.Size = new System.Drawing.Size(450, 25);
+            this.tbxMutiSigRecAddress.TabIndex = 40;
             // 
             // label40
             // 
             this.label40.AutoSize = true;
-            this.label40.Location = new System.Drawing.Point(41, 56);
+            this.label40.Location = new System.Drawing.Point(45, 56);
             this.label40.Name = "label40";
             this.label40.Size = new System.Drawing.Size(145, 20);
             this.label40.TabIndex = 39;
             this.label40.Text = "多签 Wif (用 ; 分隔)：";
             // 
-            // richTextBox3
+            // rtbxMutiSigWifs
             // 
-            this.richTextBox3.BackColor = System.Drawing.Color.Azure;
-            this.richTextBox3.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.richTextBox3.Location = new System.Drawing.Point(49, 86);
-            this.richTextBox3.Name = "richTextBox3";
-            this.richTextBox3.Size = new System.Drawing.Size(758, 98);
-            this.richTextBox3.TabIndex = 38;
-            this.richTextBox3.Text = "";
+            this.rtbxMutiSigWifs.BackColor = System.Drawing.Color.Azure;
+            this.rtbxMutiSigWifs.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.rtbxMutiSigWifs.Location = new System.Drawing.Point(49, 86);
+            this.rtbxMutiSigWifs.Name = "rtbxMutiSigWifs";
+            this.rtbxMutiSigWifs.Size = new System.Drawing.Size(758, 98);
+            this.rtbxMutiSigWifs.TabIndex = 38;
+            this.rtbxMutiSigWifs.Text = "";
+            // 
+            // tabPage4
+            // 
+            this.tabPage4.Controls.Add(this.label42);
+            this.tabPage4.Controls.Add(this.tbxCallMethod);
+            this.tabPage4.Controls.Add(this.btnCallEstimateGas);
+            this.tabPage4.Controls.Add(this.label27);
+            this.tabPage4.Controls.Add(this.tbxCallGasPrice);
+            this.tabPage4.Controls.Add(this.label28);
+            this.tabPage4.Controls.Add(this.tbxCallGasLimit);
+            this.tabPage4.Controls.Add(this.label29);
+            this.tabPage4.Controls.Add(this.tbxCallInterface);
+            this.tabPage4.Controls.Add(this.label30);
+            this.tabPage4.Controls.Add(this.rtbxCallResult);
+            this.tabPage4.Controls.Add(this.btnCallSendRaw);
+            this.tabPage4.Controls.Add(this.btnCallInvoke);
+            this.tabPage4.Controls.Add(this.label41);
+            this.tabPage4.Controls.Add(this.rtbxCallParams);
+            this.tabPage4.Controls.Add(this.otherCallAccountFrm);
+            this.tabPage4.Location = new System.Drawing.Point(4, 28);
+            this.tabPage4.Name = "tabPage4";
+            this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage4.Size = new System.Drawing.Size(848, 508);
+            this.tabPage4.TabIndex = 6;
+            this.tabPage4.Text = "SysCall";
+            this.tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // label42
+            // 
+            this.label42.AutoSize = true;
+            this.label42.Location = new System.Drawing.Point(335, 143);
+            this.label42.Name = "label42";
+            this.label42.Size = new System.Drawing.Size(79, 20);
+            this.label42.TabIndex = 50;
+            this.label42.Text = "调用方法：";
+            // 
+            // tbxCallMethod
+            // 
+            this.tbxCallMethod.Location = new System.Drawing.Point(416, 141);
+            this.tbxCallMethod.Name = "tbxCallMethod";
+            this.tbxCallMethod.Size = new System.Drawing.Size(190, 25);
+            this.tbxCallMethod.TabIndex = 49;
+            // 
+            // btnCallEstimateGas
+            // 
+            this.btnCallEstimateGas.BackColor = System.Drawing.SystemColors.Highlight;
+            this.btnCallEstimateGas.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.btnCallEstimateGas.FlatAppearance.BorderSize = 0;
+            this.btnCallEstimateGas.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnCallEstimateGas.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnCallEstimateGas.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.btnCallEstimateGas.Location = new System.Drawing.Point(435, 309);
+            this.btnCallEstimateGas.Name = "btnCallEstimateGas";
+            this.btnCallEstimateGas.Size = new System.Drawing.Size(106, 29);
+            this.btnCallEstimateGas.TabIndex = 48;
+            this.btnCallEstimateGas.Text = "EstimateGas";
+            this.btnCallEstimateGas.UseVisualStyleBackColor = false;
+            this.btnCallEstimateGas.Click += new System.EventHandler(this.btnCallEstimateGas_Click);
+            // 
+            // label27
+            // 
+            this.label27.AutoSize = true;
+            this.label27.Location = new System.Drawing.Point(223, 316);
+            this.label27.Name = "label27";
+            this.label27.Size = new System.Drawing.Size(80, 20);
+            this.label27.TabIndex = 47;
+            this.label27.Text = "GasPrice：";
+            // 
+            // tbxCallGasPrice
+            // 
+            this.tbxCallGasPrice.Location = new System.Drawing.Point(308, 311);
+            this.tbxCallGasPrice.Name = "tbxCallGasPrice";
+            this.tbxCallGasPrice.Size = new System.Drawing.Size(77, 25);
+            this.tbxCallGasPrice.TabIndex = 46;
+            this.tbxCallGasPrice.Text = "0.0001";
+            this.tbxCallGasPrice.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxOnlyNumber_KeyPress);
+            // 
+            // label28
+            // 
+            this.label28.AutoSize = true;
+            this.label28.Location = new System.Drawing.Point(38, 316);
+            this.label28.Name = "label28";
+            this.label28.Size = new System.Drawing.Size(80, 20);
+            this.label28.TabIndex = 45;
+            this.label28.Text = "GasLimit：";
+            // 
+            // tbxCallGasLimit
+            // 
+            this.tbxCallGasLimit.Location = new System.Drawing.Point(123, 313);
+            this.tbxCallGasLimit.Name = "tbxCallGasLimit";
+            this.tbxCallGasLimit.Size = new System.Drawing.Size(93, 25);
+            this.tbxCallGasLimit.TabIndex = 44;
+            this.tbxCallGasLimit.Text = "1000";
+            this.tbxCallGasLimit.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxOnlyNumber_KeyPress);
+            // 
+            // label29
+            // 
+            this.label29.AutoSize = true;
+            this.label29.Location = new System.Drawing.Point(40, 144);
+            this.label29.Name = "label29";
+            this.label29.Size = new System.Drawing.Size(79, 20);
+            this.label29.TabIndex = 43;
+            this.label29.Text = "调用接口：";
+            // 
+            // tbxCallInterface
+            // 
+            this.tbxCallInterface.Location = new System.Drawing.Point(123, 142);
+            this.tbxCallInterface.Name = "tbxCallInterface";
+            this.tbxCallInterface.Size = new System.Drawing.Size(190, 25);
+            this.tbxCallInterface.TabIndex = 42;
+            this.tbxCallInterface.Text = "Zoro.NativeNEP5.Call";
+            // 
+            // label30
+            // 
+            this.label30.AutoSize = true;
+            this.label30.Location = new System.Drawing.Point(38, 350);
+            this.label30.Name = "label30";
+            this.label30.Size = new System.Drawing.Size(79, 20);
+            this.label30.TabIndex = 41;
+            this.label30.Text = "返回结果：";
+            // 
+            // rtbxCallResult
+            // 
+            this.rtbxCallResult.BackColor = System.Drawing.Color.AliceBlue;
+            this.rtbxCallResult.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.rtbxCallResult.Location = new System.Drawing.Point(43, 382);
+            this.rtbxCallResult.Name = "rtbxCallResult";
+            this.rtbxCallResult.ReadOnly = true;
+            this.rtbxCallResult.Size = new System.Drawing.Size(758, 104);
+            this.rtbxCallResult.TabIndex = 40;
+            this.rtbxCallResult.Text = "";
+            // 
+            // btnCallSendRaw
+            // 
+            this.btnCallSendRaw.BackColor = System.Drawing.SystemColors.Highlight;
+            this.btnCallSendRaw.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.btnCallSendRaw.FlatAppearance.BorderSize = 0;
+            this.btnCallSendRaw.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnCallSendRaw.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnCallSendRaw.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.btnCallSendRaw.Location = new System.Drawing.Point(702, 309);
+            this.btnCallSendRaw.Name = "btnCallSendRaw";
+            this.btnCallSendRaw.Size = new System.Drawing.Size(99, 29);
+            this.btnCallSendRaw.TabIndex = 39;
+            this.btnCallSendRaw.Text = "SendRaw";
+            this.btnCallSendRaw.UseVisualStyleBackColor = false;
+            this.btnCallSendRaw.Click += new System.EventHandler(this.btnCallSendRaw_Click);
+            // 
+            // btnCallInvoke
+            // 
+            this.btnCallInvoke.BackColor = System.Drawing.SystemColors.Highlight;
+            this.btnCallInvoke.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.btnCallInvoke.FlatAppearance.BorderSize = 0;
+            this.btnCallInvoke.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnCallInvoke.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnCallInvoke.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.btnCallInvoke.Location = new System.Drawing.Point(573, 309);
+            this.btnCallInvoke.Name = "btnCallInvoke";
+            this.btnCallInvoke.Size = new System.Drawing.Size(99, 29);
+            this.btnCallInvoke.TabIndex = 38;
+            this.btnCallInvoke.Text = "Invoke";
+            this.btnCallInvoke.UseVisualStyleBackColor = false;
+            this.btnCallInvoke.Click += new System.EventHandler(this.btnCallInvoke_Click);
+            // 
+            // label41
+            // 
+            this.label41.AutoSize = true;
+            this.label41.Location = new System.Drawing.Point(38, 182);
+            this.label41.Name = "label41";
+            this.label41.Size = new System.Drawing.Size(198, 20);
+            this.label41.TabIndex = 37;
+            this.label41.Text = "调用参数(多个参数用 ; 分隔)：";
+            // 
+            // rtbxCallParams
+            // 
+            this.rtbxCallParams.BackColor = System.Drawing.Color.Azure;
+            this.rtbxCallParams.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.rtbxCallParams.Location = new System.Drawing.Point(43, 214);
+            this.rtbxCallParams.Name = "rtbxCallParams";
+            this.rtbxCallParams.Size = new System.Drawing.Size(758, 80);
+            this.rtbxCallParams.TabIndex = 34;
+            this.rtbxCallParams.Text = "";
+            // 
+            // otherCallAccountFrm
+            // 
+            this.otherCallAccountFrm.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.otherCallAccountFrm.Dock = System.Windows.Forms.DockStyle.Top;
+            this.otherCallAccountFrm.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.otherCallAccountFrm.Location = new System.Drawing.Point(3, 3);
+            this.otherCallAccountFrm.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.otherCallAccountFrm.Name = "otherCallAccountFrm";
+            this.otherCallAccountFrm.RpcUrl = "http://127.0.0.1:20333";
+            this.otherCallAccountFrm.Size = new System.Drawing.Size(842, 118);
+            this.otherCallAccountFrm.TabIndex = 0;
             // 
             // FrmZoroGui
             // 
@@ -1201,6 +1445,8 @@
             this.tabPage5.PerformLayout();
             this.tbcMutiTrans.ResumeLayout(false);
             this.tbcMutiTrans.PerformLayout();
+            this.tabPage4.ResumeLayout(false);
+            this.tabPage4.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -1290,18 +1536,37 @@
         private System.Windows.Forms.Label label35;
         private System.Windows.Forms.TextBox tbxNep5GasPrice;
         private System.Windows.Forms.TabPage tbcMutiTrans;
-        private System.Windows.Forms.Button button3;
-        private System.Windows.Forms.Button button4;
+        private System.Windows.Forms.Button btcMutiSigCancel;
+        private System.Windows.Forms.Button btnMutiSigSendTran;
         private System.Windows.Forms.Label label36;
-        private System.Windows.Forms.RichTextBox richTextBox1;
-        private System.Windows.Forms.TextBox textBox3;
+        private System.Windows.Forms.RichTextBox rtbxMutiSigResult;
+        private System.Windows.Forms.TextBox tbxMutiSigValue;
         private System.Windows.Forms.Label label37;
         private System.Windows.Forms.Label label38;
-        private System.Windows.Forms.ComboBox comboBox2;
+        private System.Windows.Forms.ComboBox cmbMutiSigCoinType;
         private System.Windows.Forms.Label label39;
-        private System.Windows.Forms.TextBox textBox4;
+        private System.Windows.Forms.TextBox tbxMutiSigRecAddress;
         private System.Windows.Forms.Label label40;
-        private System.Windows.Forms.RichTextBox richTextBox3;
+        private System.Windows.Forms.RichTextBox rtbxMutiSigWifs;
+        private System.Windows.Forms.Label label26;
+        private System.Windows.Forms.TextBox tbxMutiSigRpcUrl;
+        private System.Windows.Forms.TabPage tabPage4;
+        private System.Windows.Forms.Button btnCallEstimateGas;
+        private System.Windows.Forms.Label label27;
+        private System.Windows.Forms.TextBox tbxCallGasPrice;
+        private System.Windows.Forms.Label label28;
+        private System.Windows.Forms.TextBox tbxCallGasLimit;
+        private System.Windows.Forms.Label label29;
+        private System.Windows.Forms.TextBox tbxCallInterface;
+        private System.Windows.Forms.Label label30;
+        private System.Windows.Forms.RichTextBox rtbxCallResult;
+        private System.Windows.Forms.Button btnCallSendRaw;
+        private System.Windows.Forms.Button btnCallInvoke;
+        private System.Windows.Forms.Label label41;
+        private System.Windows.Forms.RichTextBox rtbxCallParams;
+        private AccountFrm otherCallAccountFrm;
+        private System.Windows.Forms.Label label42;
+        private System.Windows.Forms.TextBox tbxCallMethod;
     }
 }
 

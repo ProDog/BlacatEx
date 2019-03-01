@@ -186,7 +186,7 @@ namespace Zoro_Gui
                 outd[i] = byte.Parse(str.Substring(i * 2, 2), System.Globalization.NumberStyles.HexNumber);
             }
             return outd;
-        }    
+        }
 
         public static string SendRawTransaction(string api, string rawdata, string chainHash)
         {
@@ -232,9 +232,9 @@ namespace Zoro_Gui
             return sb.ToString();
         }
 
-        public static  decimal GetScriptGasConsumed(string api, byte[] script, string chainHash)
+        public static decimal GetScriptGasConsumed(string api, byte[] script, string chainHash)
         {
-            var info =  InvokeScript(api, script, chainHash);
+            var info = InvokeScript(api, script, chainHash);
 
             JObject json_result_array = JObject.Parse(info);
             JObject json_result_obj = json_result_array["result"] as JObject;
@@ -271,7 +271,6 @@ namespace Zoro_Gui
                 GasLimit = gasLimit.Ceiling(),
                 Account = GetPublicKeyHash(keypair.PublicKey)
             };
-
             tx.Attributes = new TransactionAttribute[0];
 
             byte[] data = GetHashData(tx);
@@ -308,33 +307,6 @@ namespace Zoro_Gui
 
             AddWitness(tx, signatures, m, pubkeys);
             return tx;
-        }
-
-       
-        public static string SendInvocationTransaction(string api, byte[] script, KeyPair keypair, string chainHash, Fixed8 gasLimit, Fixed8 gasPrice)
-        {
-            InvocationTransaction tx = MakeTransaction(script, keypair, gasLimit, gasPrice);
-
-            return SendRawTransaction(api, tx.ToArray().ToHexString(), chainHash) + "\r\n txid: " + tx.Hash;
-        }
-
-        public static string SendInvocationTransaction(string api, byte[] script, int m, KeyPair[] keypairs, string chainHash, Fixed8 gasLimit, Fixed8 gasPrice)
-        {
-            InvocationTransaction tx = MakeMultiSignatureTransaction(script, m, keypairs, gasLimit, gasPrice);
-
-            return SendRawTransaction(api, tx.ToArray().ToHexString(), chainHash);
-        }
-
-
-        public static string SendInvocationTransaction(string api, byte[] script, KeyPair keypair, string chainHash, Fixed8 gasPrice)
-        {
-            InvocationTransaction tx = MakeTransaction(script, keypair, Fixed8.Zero, gasPrice);
-
-            decimal gas_consumed = EstimateGas(api, tx, chainHash);
-
-            tx = MakeTransaction(script, keypair, Fixed8.FromDecimal(gas_consumed), gasPrice);
-
-            return SendRawTransaction(api, tx, chainHash) + " gas_consumed: " + gas_consumed + "\r\n txid: " + tx.Hash;
         }
 
         public static string SendRawTransaction(string api, Transaction tx, string chainHash)
@@ -376,8 +348,6 @@ namespace Zoro_Gui
 
             return result;
         }
-
-
 
         //如果参数为string,其实是特殊值
         //(string) or(str) 开头，表示是个字符串，utf8编码为bytes

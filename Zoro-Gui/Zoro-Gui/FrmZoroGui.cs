@@ -3,10 +3,12 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Numerics;
 using System.Windows.Forms;
 using Zoro;
 using Zoro.Ledger;
+using Zoro.Network.P2P.Payloads;
 using Zoro.SmartContract;
 using Zoro.Wallets;
 
@@ -33,6 +35,7 @@ namespace Zoro_Gui
             lblBcpFee.Text = bcpFee.ToString();
 
             cmbxTokenType.SelectedIndex = 0;
+            cmbMutiSigCoinType.SelectedIndex = 0;
         }
 
         //转账交易
@@ -48,7 +51,7 @@ namespace Zoro_Gui
             {
                 assetId = Genesis.BctContractAddress;
             }
-            else if(cmbxTokenType.Text == "BCS")
+            else if (cmbxTokenType.Text == "BCS")
             {
                 assetId = transAccountFrm.bcsAssetId;
             }
@@ -98,7 +101,7 @@ namespace Zoro_Gui
                 }
             }
 
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -186,7 +189,7 @@ namespace Zoro_Gui
             {
                 try
                 {
-                    List<dynamic> paraList = GetParameterArray();
+                    List<dynamic> paraList = GetParameterArray(rtbxParameterJson.Text);
                     sb.EmitAppCall(UInt160.Parse(tbxContractScriptHash.Text), tbxMethodName.Text, paraList.ToArray());
                 }
                 catch
@@ -235,7 +238,7 @@ namespace Zoro_Gui
             {
                 try
                 {
-                    List<dynamic> paraList = GetParameterArray();
+                    List<dynamic> paraList = GetParameterArray(rtbxParameterJson.Text);
                     sb.EmitAppCall(UInt160.Parse(tbxContractScriptHash.Text), tbxMethodName.Text, paraList.ToArray());
                 }
                 catch
@@ -273,7 +276,7 @@ namespace Zoro_Gui
         private void btnEstimateGas_Click(object sender, EventArgs e)
         {
             string api = invokeAccountFrm.RpcUrl;
-            
+
             if (string.IsNullOrEmpty(tbxContractScriptHash.Text))
             {
                 MessageBox.Show("合约 Hash 不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -286,7 +289,7 @@ namespace Zoro_Gui
             {
                 try
                 {
-                    List<dynamic> paraList = GetParameterArray();
+                    List<dynamic> paraList = GetParameterArray(rtbxParameterJson.Text);
                     sb.EmitAppCall(UInt160.Parse(tbxContractScriptHash.Text), tbxMethodName.Text, paraList.ToArray());
                 }
                 catch
@@ -361,11 +364,11 @@ namespace Zoro_Gui
             lblBcpFee.Text = bcpFee.ToString();
         }
 
-        private List<dynamic> GetParameterArray()
+        private List<dynamic> GetParameterArray(string str)
         {
             List<dynamic> paraList = new List<dynamic>();
 
-            string[] parameterArray = rtbxParameterJson.Text.Split(';');
+            string[] parameterArray = str.Split(';');
             for (int i = 0; i < parameterArray.Length; i++)
             {
                 paraList.Add(ZoroHelper.GetParamBytes(parameterArray[i]));
@@ -374,7 +377,7 @@ namespace Zoro_Gui
             return paraList;
         }
 
-        private void tbxGasFee_KeyPress(object sender, KeyPressEventArgs e)
+        private void tbxOnlyNumber_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (!Char.IsNumber(e.KeyChar) && !Char.IsPunctuation(e.KeyChar) && !Char.IsControl(e.KeyChar))
             {
@@ -382,7 +385,7 @@ namespace Zoro_Gui
             }
             else if (Char.IsPunctuation(e.KeyChar))
             {
-                if (e.KeyChar != '.' )//小数点
+                if (e.KeyChar != '.')//小数点
                 {
                     e.Handled = true;
                 }
@@ -402,8 +405,8 @@ namespace Zoro_Gui
             {
                 MessageBox.Show("查询地址不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
-            }    
-            
+            }
+
             try
             {
                 var addressHash = ZoroHelper.GetPublicKeyHashFromAddress(tbxMyAddress.Text);
@@ -477,13 +480,211 @@ namespace Zoro_Gui
                 sb.EmitAppCall(UInt160.Parse(tbxNep5Hash.Text), "transfer", nep5AccountFrm.addressHash, toAddressHash, new BigInteger(value));
 
                 var tx = ZoroHelper.MakeTransaction(sb.ToArray(), nep5AccountFrm.keypair, Fixed8.Zero, gasPrice);
-                bcpFee = ZoroHelper.EstimateGas(api, tx, "");          
+                bcpFee = ZoroHelper.EstimateGas(api, tx, "");
 
                 tx = ZoroHelper.MakeTransaction(sb.ToArray(), nep5AccountFrm.keypair, Fixed8.FromDecimal(bcpFee), gasPrice);
 
                 var result = ZoroHelper.SendRawTransaction(api, tx, "") + " gas_consumed: " + bcpFee + "\r\n txid: " + tx.Hash;
 
                 rtbxNep5Result.Text = result;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+        }
+
+        private void btnMutiSigSendTran_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(tbxMutiSigRpcUrl.Text))
+            {
+                MessageBox.Show("RpcUrl 不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (string.IsNullOrEmpty(tbxMutiSigValue.Text))
+            {
+                MessageBox.Show("金额不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (string.IsNullOrEmpty(tbxMutiSigRecAddress.Text))
+            {
+                MessageBox.Show("接收地址不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            UInt160 assetId;
+            string api = tbxMutiSigRpcUrl.Text;
+            if (cmbMutiSigCoinType.Text == "BCP")
+            {
+                assetId = Genesis.BcpContractAddress;
+            }
+            else if (cmbMutiSigCoinType.Text == "BCT")
+            {
+                assetId = Genesis.BctContractAddress;
+            }
+            else
+            {
+                MessageBox.Show("请选择币种！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                Decimal value = Decimal.Parse(tbxMutiSigValue.Text, NumberStyles.Float) * new Decimal(Math.Pow(10, 8));
+
+                var wifArray = rtbxMutiSigWifs.Text.Split(';');
+                KeyPair[] keypairs = wifArray.Select(p => ZoroHelper.GetKeyPairFromWIF(p)).ToArray();
+                int m = keypairs.Length - (keypairs.Length - 1) / 3;
+
+                UInt160 scriptHash = ZoroHelper.GetMultiSigRedeemScriptHash(m, keypairs);
+
+                UInt160 targetscripthash = ZoroHelper.GetPublicKeyHashFromAddress(tbxMutiSigRecAddress.Text);
+
+                using (ScriptBuilder sb = new ScriptBuilder())
+                {
+                    if (cmbMutiSigCoinType.Text == "BCP")
+                        sb.EmitSysCall("Zoro.NativeNEP5.Call", "Transfer", assetId, scriptHash, targetscripthash, new BigInteger(value));
+                    if (cmbMutiSigCoinType.Text == "BCT")
+                        sb.EmitSysCall("Zoro.NativeNEP5.Call", "MintToken", assetId, targetscripthash, new BigInteger(value));
+
+                    decimal gasLimit = ZoroHelper.GetScriptGasConsumed(api, sb.ToArray(), "");
+
+                    gasLimit = Math.Max(decimal.Parse(tbxGasLimit.Text), gasLimit);
+
+                    InvocationTransaction tx = ZoroHelper.MakeMultiSignatureTransaction(sb.ToArray(), m, keypairs, Fixed8.FromDecimal(gasLimit), Fixed8.FromDecimal(0.0001m));
+
+                    rtbxMutiSigResult.Text = ZoroHelper.SendRawTransaction(api, tx, "") + " gas_consumed: " + gasLimit + "\r\n txid: " + tx.Hash;
+                }
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+        }
+
+        private void btnCallEstimateGas_Click(object sender, EventArgs e)
+        {
+            string api = otherCallAccountFrm.RpcUrl;
+            if (string.IsNullOrEmpty(otherCallAccountFrm.wif))
+            {
+                MessageBox.Show("请输入钱包 wif ！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (string.IsNullOrEmpty(tbxCallInterface.Text))
+            {
+                MessageBox.Show("调用接口不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+           
+            ScriptBuilder sb = new ScriptBuilder();
+            if (!string.IsNullOrEmpty(rtbxCallParams.Text))
+            {
+                try
+                {
+                    List<dynamic> paraList = GetParameterArray(rtbxCallParams.Text);
+                    
+                    sb.EmitSysCall(tbxCallInterface.Text, paraList.ToArray());
+                }
+                catch
+                {
+                    MessageBox.Show("参数格式错误！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+
+            try
+            {                
+                bcpFee = ZoroHelper.GetScriptGasConsumed(api, sb.ToArray(), "");
+
+                tbxCallGasLimit.Text = bcpFee.ToString();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+        }
+
+        private void btnCallSendRaw_Click(object sender, EventArgs e)
+        {
+            string api = otherCallAccountFrm.RpcUrl;
+            if (string.IsNullOrEmpty(otherCallAccountFrm.wif))
+            {
+                MessageBox.Show("请输入钱包 wif ！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (string.IsNullOrEmpty(tbxCallInterface.Text))
+            {
+                MessageBox.Show("调用接口不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            ScriptBuilder sb = new ScriptBuilder();
+            if (!string.IsNullOrEmpty(rtbxCallParams.Text))
+            {
+                try
+                {
+                    List<dynamic> paraList = GetParameterArray(rtbxCallParams.Text);
+                    sb.EmitSysCall(tbxCallInterface.Text, paraList.ToArray());
+                }
+                catch
+                {
+                    MessageBox.Show("参数格式错误！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+            try
+            {               
+                bcpFee = ZoroHelper.GetScriptGasConsumed(api, sb.ToArray(), "");
+                tbxCallGasLimit.Text = bcpFee.ToString();
+
+                var tx = ZoroHelper.MakeTransaction(sb.ToArray(), otherCallAccountFrm.keypair, Fixed8.FromDecimal(bcpFee), Fixed8.FromDecimal(0.0001m));
+
+                var result = ZoroHelper.SendRawTransaction(api, tx, "") + " gas_consumed: " + bcpFee + "\r\n txid: " + tx.Hash;
+
+                rtbxCallResult.Text = result;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+        }
+
+        private void btnCallInvoke_Click(object sender, EventArgs e)
+        {
+            string api = otherCallAccountFrm.RpcUrl;
+            if (string.IsNullOrEmpty(otherCallAccountFrm.wif))
+            {
+                MessageBox.Show("请输入钱包 wif ！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (string.IsNullOrEmpty(tbxCallInterface.Text))
+            {
+                MessageBox.Show("调用接口不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            ScriptBuilder sb = new ScriptBuilder();
+            if (!string.IsNullOrEmpty(rtbxCallParams.Text))
+            {
+                try
+                {
+                    List<dynamic> paraList = GetParameterArray(rtbxCallParams.Text);
+                    sb.EmitSysCall(tbxCallInterface.Text, paraList.ToArray());
+                }
+                catch
+                {
+                    MessageBox.Show("参数格式错误！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+            try
+            {
+                var info = ZoroHelper.InvokeScript(api, sb.ToArray(), "");
+                rtbxCallResult.Text = info;
             }
             catch (Exception ex)
             {
