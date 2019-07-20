@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Numerics;
 using System.Windows.Forms;
 using ThinNeo;
@@ -45,13 +46,11 @@ namespace MultiTransfer
                 return;
             }
             decimal decimals = 1;
-            if (tbxTokenHash.Text.Contains("04e31cee0443bb916534dad2adf508458920e66d"))
-                decimals = 100000000;
-            else if (tbxTokenHash.Text.Contains("40a80749ef62da6fc3d74dbf6fc7745148922372"))
-                decimals = 10000;
+            if (tbxTokenHash.Text.Contains("0x7e2b538aa6015e06b0a036f2bfdc07077c5368b4")|| tbxTokenHash.Text.Contains("0x6ac01fb3dfe0509fb31d27a49ec0d3dc553b4ec6"))
+                decimals = 100000000;           
             else
             {
-                MessageBox.Show("暂时只支持 bcp 和 bct！");
+                MessageBox.Show("暂时只支持 ZORO ！");
                 return;
             }
             GetBalance(decimals);
@@ -60,11 +59,15 @@ namespace MultiTransfer
 
         private void GetBalance(decimal decimals)
         {
+            string api = tbxRpcUrl.Text;
             try
             {
                 byte[] prikey = Helper_NEO.GetPrivateKeyFromWIF(tbxFromWif.Text);
                 byte[] pubkey = Helper_NEO.GetPublicKey_FromPrivateKey(prikey);
                 string address = Helper_NEO.GetAddress_FromPublicKey(pubkey);
+
+                tbxAddress.Text = address;
+
                 using (ScriptBuilder sb = new ScriptBuilder())
                 {
                     JArray array = new JArray();
@@ -93,53 +96,80 @@ namespace MultiTransfer
             }
         }
 
+        private static object logLock = new object();
+
         private void SendTransaction(string wif, string toAddress)
         {
+            string path = Path.Combine($"{DateTime.Now:yyyy-MM-dd}.txt");
+
             byte[] prikey = Helper_NEO.GetPrivateKeyFromWIF(wif);
             byte[] pubkey = Helper_NEO.GetPublicKey_FromPrivateKey(prikey);
             string address = Helper_NEO.GetAddress_FromPublicKey(pubkey);
             var toAddrArray = toAddress.Split(new string[] { "\n" }, StringSplitOptions.None);
             decimal decimals = 0;
-            if (tbxTokenHash.Text.Contains("04e31cee0443bb916534dad2adf508458920e66d"))
-                decimals = 100000000;
-            else if (tbxTokenHash.Text.Contains("40a80749ef62da6fc3d74dbf6fc7745148922372"))
-                decimals = 10000;
+            if (tbxTokenHash.Text.Contains("7e2b538aa6015e06b0a036f2bfdc07077c5368b4") || tbxTokenHash.Text.Contains("6ac01fb3dfe0509fb31d27a49ec0d3dc553b4ec6"))
+                decimals = 100000000;            
             else
             {
-                MessageBox.Show("暂时只支持 bcp 和 bct！");
+                MessageBox.Show("暂时只支持 ZORO ！");
                 return;
             }
 
-            decimal amount = Math.Round(decimal.Parse(tbxValue.Text) * decimals, 0);
+            //if (toAddrArray.Length > 20)
+            //{
+            //    MessageBox.Show("一次最多支持20个地址！");
+            //    return;
+            //}
 
-            foreach (var toAddr in toAddrArray)
+            foreach (var str in toAddrArray)
             {
-                if (toAddr.Length < 1)
+                if (str.Length < 1)
                     continue;
+
                 ScriptBuilder sb = new ScriptBuilder();
-                byte[] data = null;
                 JArray array = new JArray();
+
+                int index = str.IndexOf(";");
+                string addr = str.Substring(0, index);
+                string valueStr = str.Substring(index + 1);
+
+                decimal amount = Math.Round(decimal.Parse(valueStr) * decimals, 0);
+
                 array.Add("(addr)" + address); //from
-                array.Add("(addr)" + toAddr); //to
+                array.Add("(addr)" + addr); //to
                 array.Add("(int)" + amount); //value
                 sb.EmitParamJson(array);
                 sb.EmitPushString("transfer");
                 sb.EmitAppCall(new Hash160(tbxTokenHash.Text));//合约脚本hash
 
-                data = sb.ToArray();
-                var result = SendrawTransaction(wif, data);
+                string result = Helper.SendTransWithoutUtxo(prikey, tbxRpcUrl.Text, tbxTokenHash.Text, "transfer", array);
+
+                //byte[] data = null;
+                //data = sb.ToArray();
+                //var result = SendrawTransaction(wif, data);
+
                 if (result != null && result.Contains("result"))
                 {
                     var res = JObject.Parse(result)["result"] as JArray;
                     var sendTxid = (string)res[0]["txid"];
                     if (!string.IsNullOrEmpty(sendTxid))
-                        rtbxResult.Text += $"交易发送成功，To:{toAddr}; txid:{sendTxid}\n";
+                        rtbxResult.Text += $"{addr} :交易发送成功; txid:{sendTxid}\n";
                     else
-                        rtbxResult.Text += $"交易发送失败，To:{toAddr}; 返回:{result.ToString()}\n";
+                    {
+                        rtbxResult.Text += $"{addr} :交易发送失败; 返回:{result.ToString()}\n";
+                        lock (logLock)
+                        {                            
+                            File.AppendAllLines(path, new[] { addr });
+                        }
+                    }
                 }
                 else
                 {
-                    rtbxResult.Text += $"交易发送失败，To:{toAddr}; 返回:{result.ToString()}\n";
+                    rtbxResult.Text += $"{addr} :交易发送失败; 返回:{result.ToString()}\n";
+                    lock (logLock)
+                    {
+                        File.AppendAllLines(path, new[] { addr });
+                    }
                 }
             }
         }
@@ -147,16 +177,19 @@ namespace MultiTransfer
         private static Dictionary<string, string> usedUtxoDic = new Dictionary<string, string>();
         private static Dictionary<string, List<Utxo>> dic_UTXO = new Dictionary<string, List<Utxo>>();
         private static List<Utxo> list_Gas = new List<Utxo>();
-        private static string api = "https://api.nel.group/api/testnet";
+        
         private static string gas_Id = "0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7";
 
-        public static string SendrawTransaction(string wif, byte[] data)
+        public string SendrawTransaction(string wif, byte[] data)
         {
+            string api = tbxRpcUrl.Text;
             byte[] prikey = Helper_NEO.GetPrivateKeyFromWIF(wif);
             byte[] pubkey = Helper_NEO.GetPublicKey_FromPrivateKey(prikey);
             var address = Helper_NEO.GetAddress_FromPublicKey(pubkey);
 
-            if (dic_UTXO.ContainsKey(gas_Id) == false)
+            //dic_UTXO = Helper.GetBalanceByAddress(api, address);
+
+            if (!dic_UTXO.ContainsKey(gas_Id)||dic_UTXO[gas_Id].Count == 0)
             {
                 dic_UTXO = Helper.GetBalanceByAddress(api, address, ref usedUtxoDic);
             }
@@ -180,36 +213,33 @@ namespace MultiTransfer
             var trandata = tran.GetRawData();
             var strtrandata = ThinNeo.Helper.Bytes2HexString(trandata);
             var txid = tran.GetHash().ToString();
+
             foreach (var item in tran.inputs)
             {
                 usedUtxoDic[((Hash256)item.hash).ToString() + item.index] = txid;
             }
-            string input = @"{
+
+            string inputStr = @"{
 	            'jsonrpc': '2.0',
                 'method': 'sendrawtransaction',
 	            'params': ['#'],
 	            'id': '1'
             }";
 
-            input = input.Replace("#", strtrandata);
-            string result = Helper.Post(api, input, System.Text.Encoding.UTF8, 1);
+            inputStr = inputStr.Replace("#", strtrandata);
+            string result = Helper.Post(api, inputStr, System.Text.Encoding.UTF8, 1);
 
             return result;
         }
 
         private void tbxFromWif_TextChanged_1(object sender, EventArgs e)
         {
-            decimal decimals = 0;
-            if (tbxTokenHash.Text.Contains("04e31cee0443bb916534dad2adf508458920e66d"))
-                decimals = 100000000;
-            else if (tbxTokenHash.Text.Contains("40a80749ef62da6fc3d74dbf6fc7745148922372"))
-                decimals = 10000;
-            else
-            {
-                MessageBox.Show("暂时只支持 bcp 和 bct！");
-                return;
-            }
-            GetBalance(decimals);
+            GetBalance(100000000);
+        }
+
+        private void BtnClear_Click(object sender, EventArgs e)
+        {
+            this.rtbxResult.Clear();
         }
     }
 }

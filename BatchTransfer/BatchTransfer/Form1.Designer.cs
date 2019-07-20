@@ -28,13 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.rtbxToAddress = new System.Windows.Forms.RichTextBox();
             this.tbxFromWif = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.btnTransfer = new System.Windows.Forms.Button();
-            this.label3 = new System.Windows.Forms.Label();
-            this.tbxValue = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.tbxTokenHash = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
@@ -42,119 +40,92 @@
             this.btnGetBalance = new System.Windows.Forms.Button();
             this.rtbxResult = new System.Windows.Forms.RichTextBox();
             this.label6 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
+            this.tbxRpcUrl = new System.Windows.Forms.TextBox();
+            this.btnSend = new System.Windows.Forms.Button();
+            this.btnClear = new System.Windows.Forms.Button();
+            this.label3 = new System.Windows.Forms.Label();
+            this.tbxAddress = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // rtbxToAddress
             // 
             this.rtbxToAddress.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.rtbxToAddress.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.rtbxToAddress.Location = new System.Drawing.Point(37, 411);
+            this.rtbxToAddress.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.rtbxToAddress.Location = new System.Drawing.Point(24, 275);
             this.rtbxToAddress.Name = "rtbxToAddress";
-            this.rtbxToAddress.Size = new System.Drawing.Size(348, 400);
+            this.rtbxToAddress.Size = new System.Drawing.Size(386, 540);
             this.rtbxToAddress.TabIndex = 0;
-            this.rtbxToAddress.Text = "";
+            this.rtbxToAddress.Text = "AUVu2WHbpJX5xB9yFEoWRq9VNS5qQkT1jF;1.0";
             // 
             // tbxFromWif
             // 
             this.tbxFromWif.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.tbxFromWif.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tbxFromWif.Location = new System.Drawing.Point(34, 154);
+            this.tbxFromWif.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tbxFromWif.Location = new System.Drawing.Point(25, 122);
             this.tbxFromWif.Name = "tbxFromWif";
-            this.tbxFromWif.Size = new System.Drawing.Size(495, 22);
+            this.tbxFromWif.PasswordChar = '*';
+            this.tbxFromWif.Size = new System.Drawing.Size(385, 18);
             this.tbxFromWif.TabIndex = 1;
             this.tbxFromWif.TextChanged += new System.EventHandler(this.tbxFromWif_TextChanged_1);
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("微软雅黑", 13F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label1.Location = new System.Drawing.Point(31, 117);
+            this.label1.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label1.Location = new System.Drawing.Point(22, 100);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(84, 24);
+            this.label1.Size = new System.Drawing.Size(58, 17);
             this.label1.TabIndex = 2;
             this.label1.Text = "钱包 Wif:";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("微软雅黑", 13F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label2.Location = new System.Drawing.Point(33, 371);
+            this.label2.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label2.Location = new System.Drawing.Point(24, 255);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(260, 24);
+            this.label2.Size = new System.Drawing.Size(286, 17);
             this.label2.TabIndex = 3;
-            this.label2.Text = "收款地址(多个地址用换行分隔):";
-            // 
-            // btnTransfer
-            // 
-            this.btnTransfer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
-            this.btnTransfer.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnTransfer.Font = new System.Drawing.Font("微软雅黑", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btnTransfer.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.btnTransfer.Location = new System.Drawing.Point(213, 314);
-            this.btnTransfer.Name = "btnTransfer";
-            this.btnTransfer.Size = new System.Drawing.Size(57, 26);
-            this.btnTransfer.TabIndex = 4;
-            this.btnTransfer.Text = "转  账";
-            this.btnTransfer.UseVisualStyleBackColor = false;
-            this.btnTransfer.Click += new System.EventHandler(this.btnTransfer_Click);
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("微软雅黑", 13F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label3.Location = new System.Drawing.Point(31, 278);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(86, 24);
-            this.label3.TabIndex = 6;
-            this.label3.Text = "转账金额:";
-            // 
-            // tbxValue
-            // 
-            this.tbxValue.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.tbxValue.Font = new System.Drawing.Font("微软雅黑", 13F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tbxValue.Location = new System.Drawing.Point(33, 315);
-            this.tbxValue.Name = "tbxValue";
-            this.tbxValue.Size = new System.Drawing.Size(172, 23);
-            this.tbxValue.TabIndex = 5;
-            this.tbxValue.Text = "1";
+            this.label2.Text = "收款地址(多个地址用换行分隔，地址和金额用;分隔):";
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Font = new System.Drawing.Font("微软雅黑", 13F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label4.Location = new System.Drawing.Point(33, 35);
+            this.label4.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label4.Location = new System.Drawing.Point(24, 54);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(185, 24);
+            this.label4.Size = new System.Drawing.Size(111, 17);
             this.label4.TabIndex = 8;
-            this.label4.Text = "代币 Hash(BCP/BCT):";
+            this.label4.Text = "代币 Hash(ZORO):";
             // 
             // tbxTokenHash
             // 
             this.tbxTokenHash.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.tbxTokenHash.Font = new System.Drawing.Font("微软雅黑", 13F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tbxTokenHash.Location = new System.Drawing.Point(35, 72);
+            this.tbxTokenHash.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tbxTokenHash.Location = new System.Drawing.Point(26, 78);
             this.tbxTokenHash.Name = "tbxTokenHash";
-            this.tbxTokenHash.Size = new System.Drawing.Size(495, 23);
+            this.tbxTokenHash.Size = new System.Drawing.Size(384, 16);
             this.tbxTokenHash.TabIndex = 7;
-            this.tbxTokenHash.Text = "0x04e31cee0443bb916534dad2adf508458920e66d";
+            this.tbxTokenHash.Text = "0x6ac01fb3dfe0509fb31d27a49ec0d3dc553b4ec6";
             // 
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("微软雅黑", 13F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label5.Location = new System.Drawing.Point(33, 203);
+            this.label5.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label5.Location = new System.Drawing.Point(24, 187);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(86, 24);
+            this.label5.Size = new System.Drawing.Size(59, 17);
             this.label5.TabIndex = 11;
             this.label5.Text = "钱包余额:";
             // 
             // tbxBalance
             // 
             this.tbxBalance.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.tbxBalance.Font = new System.Drawing.Font("微软雅黑", 13F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tbxBalance.Location = new System.Drawing.Point(35, 240);
+            this.tbxBalance.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tbxBalance.Location = new System.Drawing.Point(26, 215);
             this.tbxBalance.Name = "tbxBalance";
-            this.tbxBalance.Size = new System.Drawing.Size(172, 23);
+            this.tbxBalance.Size = new System.Drawing.Size(172, 18);
             this.tbxBalance.TabIndex = 10;
             this.tbxBalance.Text = "1";
             // 
@@ -162,11 +133,11 @@
             // 
             this.btnGetBalance.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
             this.btnGetBalance.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnGetBalance.Font = new System.Drawing.Font("微软雅黑", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnGetBalance.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.btnGetBalance.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.btnGetBalance.Location = new System.Drawing.Point(213, 239);
+            this.btnGetBalance.Location = new System.Drawing.Point(204, 214);
             this.btnGetBalance.Name = "btnGetBalance";
-            this.btnGetBalance.Size = new System.Drawing.Size(57, 26);
+            this.btnGetBalance.Size = new System.Drawing.Size(57, 22);
             this.btnGetBalance.TabIndex = 12;
             this.btnGetBalance.Text = "刷  新";
             this.btnGetBalance.UseVisualStyleBackColor = false;
@@ -175,28 +146,103 @@
             // rtbxResult
             // 
             this.rtbxResult.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.rtbxResult.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.rtbxResult.Location = new System.Drawing.Point(599, 72);
+            this.rtbxResult.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.rtbxResult.Location = new System.Drawing.Point(432, 47);
             this.rtbxResult.Name = "rtbxResult";
-            this.rtbxResult.Size = new System.Drawing.Size(574, 739);
+            this.rtbxResult.Size = new System.Drawing.Size(445, 768);
             this.rtbxResult.TabIndex = 13;
             this.rtbxResult.Text = "";
+            this.rtbxResult.WordWrap = false;
             // 
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Font = new System.Drawing.Font("微软雅黑", 13F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label6.Location = new System.Drawing.Point(606, 35);
+            this.label6.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label6.Location = new System.Drawing.Point(431, 16);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(100, 24);
+            this.label6.Size = new System.Drawing.Size(68, 17);
             this.label6.TabIndex = 14;
             this.label6.Text = "转账结果：";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label7.Location = new System.Drawing.Point(24, 5);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(50, 17);
+            this.label7.TabIndex = 16;
+            this.label7.Text = "RpcUrl:";
+            // 
+            // tbxRpcUrl
+            // 
+            this.tbxRpcUrl.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.tbxRpcUrl.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tbxRpcUrl.Location = new System.Drawing.Point(26, 28);
+            this.tbxRpcUrl.Name = "tbxRpcUrl";
+            this.tbxRpcUrl.Size = new System.Drawing.Size(384, 16);
+            this.tbxRpcUrl.TabIndex = 15;
+            this.tbxRpcUrl.Text = "https://api.nel.group/api/testnet";
+            // 
+            // btnSend
+            // 
+            this.btnSend.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
+            this.btnSend.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnSend.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnSend.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.btnSend.Location = new System.Drawing.Point(353, 213);
+            this.btnSend.Name = "btnSend";
+            this.btnSend.Size = new System.Drawing.Size(57, 22);
+            this.btnSend.TabIndex = 17;
+            this.btnSend.Text = "转 账";
+            this.btnSend.UseVisualStyleBackColor = false;
+            this.btnSend.Click += new System.EventHandler(this.btnTransfer_Click);
+            // 
+            // btnClear
+            // 
+            this.btnClear.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
+            this.btnClear.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnClear.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnClear.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.btnClear.Location = new System.Drawing.Point(516, 14);
+            this.btnClear.Name = "btnClear";
+            this.btnClear.Size = new System.Drawing.Size(57, 22);
+            this.btnClear.TabIndex = 18;
+            this.btnClear.Text = "清 除";
+            this.btnClear.UseVisualStyleBackColor = false;
+            this.btnClear.Click += new System.EventHandler(this.BtnClear_Click);
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label3.Location = new System.Drawing.Point(22, 144);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(59, 17);
+            this.label3.TabIndex = 20;
+            this.label3.Text = "Address:";
+            // 
+            // tbxAddress
+            // 
+            this.tbxAddress.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.tbxAddress.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tbxAddress.Location = new System.Drawing.Point(25, 166);
+            this.tbxAddress.Name = "tbxAddress";
+            this.tbxAddress.Size = new System.Drawing.Size(385, 18);
+            this.tbxAddress.TabIndex = 19;
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1204, 841);
+            this.AutoScroll = true;
+            this.ClientSize = new System.Drawing.Size(909, 841);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.tbxAddress);
+            this.Controls.Add(this.btnClear);
+            this.Controls.Add(this.btnSend);
+            this.Controls.Add(this.label7);
+            this.Controls.Add(this.tbxRpcUrl);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.rtbxResult);
             this.Controls.Add(this.btnGetBalance);
@@ -204,14 +250,12 @@
             this.Controls.Add(this.tbxBalance);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.tbxTokenHash);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.tbxValue);
-            this.Controls.Add(this.btnTransfer);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.tbxFromWif);
             this.Controls.Add(this.rtbxToAddress);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "批量转账";
@@ -226,9 +270,6 @@
         private System.Windows.Forms.TextBox tbxFromWif;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Button btnTransfer;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox tbxValue;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox tbxTokenHash;
         private System.Windows.Forms.Label label5;
@@ -236,6 +277,12 @@
         private System.Windows.Forms.Button btnGetBalance;
         private System.Windows.Forms.RichTextBox rtbxResult;
         private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.TextBox tbxRpcUrl;
+        private System.Windows.Forms.Button btnSend;
+        private System.Windows.Forms.Button btnClear;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox tbxAddress;
     }
 }
 

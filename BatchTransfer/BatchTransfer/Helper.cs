@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Numerics;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using ThinNeo;
@@ -91,7 +93,7 @@ namespace MultiTransfer
                 {
                     decimal splitvalue = (decimal)0.01;
                     int i = 0;
-                    while (change > splitvalue && list_Gas.Count - 10 < usedUtxoDic.Count)
+                    while (change > splitvalue && list_Gas.Count < 20)
                     {
                         ThinNeo.TransactionOutput outputchange = new ThinNeo.TransactionOutput();
                         outputchange.toAddress = Helper_NEO.GetScriptHash_FromAddress(scraddr);
@@ -100,7 +102,7 @@ namespace MultiTransfer
                         list_outputs.Add(outputchange);
                         change -= splitvalue;
                         i += 1;
-                        if (i > 50)
+                        if (i > 20)
                         {
                             break;
                         }
@@ -116,7 +118,6 @@ namespace MultiTransfer
                     }
 
                 }
-
                 tran.outputs = list_outputs.ToArray();
             }
             else
@@ -125,6 +126,61 @@ namespace MultiTransfer
             }
             return tran;
         }
+
+        public static string SendTransWithoutUtxo(byte[] prikey, string url, string contractHash, string method, JArray array)
+        {            
+            byte[] pubkey = Helper_NEO.GetPublicKey_FromPrivateKey(prikey);
+            var address = Helper_NEO.GetAddress_FromPublicKey(pubkey);
+
+            byte[] data = null;
+            ScriptBuilder sb = new ScriptBuilder();
+
+            sb.EmitParamJson(array);
+            byte[] randomBytes = new byte[32];
+            using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomBytes);
+            }
+            BigInteger randomNum = new BigInteger(randomBytes);
+            sb.EmitPushNumber(randomNum);
+            sb.Emit(ThinNeo.VM.OpCode.DROP);
+            sb.EmitPushString(method);
+            sb.EmitAppCall(new Hash160(contractHash));//合约脚本hash
+            data = sb.ToArray();
+
+            ThinNeo.Transaction tran = new Transaction();
+            tran.inputs = new ThinNeo.TransactionInput[0];
+            tran.outputs = new TransactionOutput[0];
+            tran.attributes = new ThinNeo.Attribute[1];
+            tran.attributes[0] = new ThinNeo.Attribute();
+            tran.attributes[0].usage = TransactionAttributeUsage.Script;
+            tran.attributes[0].data = ThinNeo.Helper_NEO.GetScriptHash_FromAddress(address);
+            tran.version = 1;
+            tran.type = ThinNeo.TransactionType.InvocationTransaction;
+
+            var idata = new ThinNeo.InvokeTransData();
+            tran.extdata = idata;
+            idata.script = data;
+            idata.gas = 0;
+
+            byte[] msg = tran.GetMessage();
+            byte[] signdata = ThinNeo.Helper_NEO.Sign(msg, prikey);
+            tran.AddWitness(signdata, pubkey, address);
+            byte[] trandata = tran.GetRawData();
+
+            string input = @"{
+	            'jsonrpc': '2.0',
+                'method': 'sendrawtransaction',
+	            'params': ['#'],
+	            'id': '1'
+            }";
+
+            input = input.Replace("#", ThinNeo.Helper.Bytes2HexString(trandata));
+            string result = Helper.Post(url, input, System.Text.Encoding.UTF8, 1);
+
+            return result;
+        }
+
 
         public static string Post(string url, string data, Encoding encoding, int type = 3)
         {
