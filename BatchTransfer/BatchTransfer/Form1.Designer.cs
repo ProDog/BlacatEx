@@ -34,18 +34,18 @@
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.tbxTokenHash = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.tbxBalance = new System.Windows.Forms.TextBox();
             this.btnGetBalance = new System.Windows.Forms.Button();
             this.rtbxResult = new System.Windows.Forms.RichTextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
-            this.tbxRpcUrl = new System.Windows.Forms.TextBox();
             this.btnSend = new System.Windows.Forms.Button();
             this.btnClear = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.tbxAddress = new System.Windows.Forms.TextBox();
+            this.cbxRpc = new System.Windows.Forms.ComboBox();
+            this.cbxHash = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // rtbxToAddress
@@ -98,16 +98,6 @@
             this.label4.Size = new System.Drawing.Size(111, 17);
             this.label4.TabIndex = 8;
             this.label4.Text = "代币 Hash(ZORO):";
-            // 
-            // tbxTokenHash
-            // 
-            this.tbxTokenHash.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.tbxTokenHash.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tbxTokenHash.Location = new System.Drawing.Point(26, 78);
-            this.tbxTokenHash.Name = "tbxTokenHash";
-            this.tbxTokenHash.Size = new System.Drawing.Size(384, 16);
-            this.tbxTokenHash.TabIndex = 7;
-            this.tbxTokenHash.Text = "0x6ac01fb3dfe0509fb31d27a49ec0d3dc553b4ec6";
             // 
             // label5
             // 
@@ -174,16 +164,6 @@
             this.label7.TabIndex = 16;
             this.label7.Text = "RpcUrl:";
             // 
-            // tbxRpcUrl
-            // 
-            this.tbxRpcUrl.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.tbxRpcUrl.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tbxRpcUrl.Location = new System.Drawing.Point(26, 28);
-            this.tbxRpcUrl.Name = "tbxRpcUrl";
-            this.tbxRpcUrl.Size = new System.Drawing.Size(384, 16);
-            this.tbxRpcUrl.TabIndex = 15;
-            this.tbxRpcUrl.Text = "https://api.nel.group/api/testnet";
-            // 
             // btnSend
             // 
             this.btnSend.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
@@ -231,25 +211,51 @@
             this.tbxAddress.Size = new System.Drawing.Size(385, 18);
             this.tbxAddress.TabIndex = 19;
             // 
+            // cbxRpc
+            // 
+            this.cbxRpc.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.cbxRpc.FormattingEnabled = true;
+            this.cbxRpc.Items.AddRange(new object[] {
+            "https://api.nel.group/api/testnet",
+            "https://api.nel.group/api/mainnet"});
+            this.cbxRpc.Location = new System.Drawing.Point(27, 26);
+            this.cbxRpc.Name = "cbxRpc";
+            this.cbxRpc.Size = new System.Drawing.Size(383, 25);
+            this.cbxRpc.TabIndex = 21;
+            this.cbxRpc.SelectedIndexChanged += new System.EventHandler(this.CbxRpc_SelectedIndexChanged);
+            // 
+            // cbxHash
+            // 
+            this.cbxHash.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.cbxHash.FormattingEnabled = true;
+            this.cbxHash.Items.AddRange(new object[] {
+            "0x6ac01fb3dfe0509fb31d27a49ec0d3dc553b4ec6",
+            "0x7e2b538aa6015e06b0a036f2bfdc07077c5368b4"});
+            this.cbxHash.Location = new System.Drawing.Point(27, 74);
+            this.cbxHash.Name = "cbxHash";
+            this.cbxHash.Size = new System.Drawing.Size(383, 25);
+            this.cbxHash.TabIndex = 22;
+            this.cbxHash.SelectedIndexChanged += new System.EventHandler(this.CbxHash_SelectedIndexChanged);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
             this.ClientSize = new System.Drawing.Size(909, 841);
+            this.Controls.Add(this.cbxHash);
+            this.Controls.Add(this.cbxRpc);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.tbxAddress);
             this.Controls.Add(this.btnClear);
             this.Controls.Add(this.btnSend);
             this.Controls.Add(this.label7);
-            this.Controls.Add(this.tbxRpcUrl);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.rtbxResult);
             this.Controls.Add(this.btnGetBalance);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.tbxBalance);
             this.Controls.Add(this.label4);
-            this.Controls.Add(this.tbxTokenHash);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.tbxFromWif);
@@ -271,18 +277,18 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.TextBox tbxTokenHash;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox tbxBalance;
         private System.Windows.Forms.Button btnGetBalance;
         private System.Windows.Forms.RichTextBox rtbxResult;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.TextBox tbxRpcUrl;
         private System.Windows.Forms.Button btnSend;
         private System.Windows.Forms.Button btnClear;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox tbxAddress;
+        private System.Windows.Forms.ComboBox cbxRpc;
+        private System.Windows.Forms.ComboBox cbxHash;
     }
 }
 

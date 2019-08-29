@@ -13,6 +13,7 @@ namespace MultiTransfer
         public MainForm()
         {
             InitializeComponent();
+            cbxRpc.SelectedIndex = 0;
         }
 
         private void btnTransfer_Click(object sender, EventArgs e)
@@ -45,21 +46,15 @@ namespace MultiTransfer
                 MessageBox.Show("请输入钱包账户 Wif！");
                 return;
             }
-            decimal decimals = 1;
-            if (tbxTokenHash.Text.Contains("0x7e2b538aa6015e06b0a036f2bfdc07077c5368b4")|| tbxTokenHash.Text.Contains("0x6ac01fb3dfe0509fb31d27a49ec0d3dc553b4ec6"))
-                decimals = 100000000;           
-            else
-            {
-                MessageBox.Show("暂时只支持 ZORO ！");
-                return;
-            }
+            decimal decimals = 100000000;           
+
             GetBalance(decimals);
 
         }
 
         private void GetBalance(decimal decimals)
         {
-            string api = tbxRpcUrl.Text;
+            string api = cbxRpc.Text;
             try
             {
                 byte[] prikey = Helper_NEO.GetPrivateKeyFromWIF(tbxFromWif.Text);
@@ -74,7 +69,7 @@ namespace MultiTransfer
                     array.Add("(addr)" + address);
                     sb.EmitParamJson(array);
                     sb.EmitPushString("balanceOf");
-                    sb.EmitAppCall(new Hash160(tbxTokenHash.Text)); //合约脚本hash
+                    sb.EmitAppCall(new Hash160(cbxHash.Text)); //合约脚本hash
                     byte[] data = sb.ToArray();
 
                     decimal balance = 0;
@@ -106,14 +101,7 @@ namespace MultiTransfer
             byte[] pubkey = Helper_NEO.GetPublicKey_FromPrivateKey(prikey);
             string address = Helper_NEO.GetAddress_FromPublicKey(pubkey);
             var toAddrArray = toAddress.Split(new string[] { "\n" }, StringSplitOptions.None);
-            decimal decimals = 0;
-            if (tbxTokenHash.Text.Contains("7e2b538aa6015e06b0a036f2bfdc07077c5368b4") || tbxTokenHash.Text.Contains("6ac01fb3dfe0509fb31d27a49ec0d3dc553b4ec6"))
-                decimals = 100000000;            
-            else
-            {
-                MessageBox.Show("暂时只支持 ZORO ！");
-                return;
-            }
+            decimal decimals = 100000000;            
 
             //if (toAddrArray.Length > 20)
             //{
@@ -140,9 +128,9 @@ namespace MultiTransfer
                 array.Add("(int)" + amount); //value
                 sb.EmitParamJson(array);
                 sb.EmitPushString("transfer");
-                sb.EmitAppCall(new Hash160(tbxTokenHash.Text));//合约脚本hash
+                sb.EmitAppCall(new Hash160(cbxHash.Text));//合约脚本hash
 
-                string result = Helper.SendTransWithoutUtxo(prikey, tbxRpcUrl.Text, tbxTokenHash.Text, "transfer", array);
+                string result = Helper.SendTransWithoutUtxo(prikey, cbxRpc.Text, cbxHash.Text, "transfer", array);
 
                 //byte[] data = null;
                 //data = sb.ToArray();
@@ -182,7 +170,7 @@ namespace MultiTransfer
 
         public string SendrawTransaction(string wif, byte[] data)
         {
-            string api = tbxRpcUrl.Text;
+            string api = cbxRpc.Text;
             byte[] prikey = Helper_NEO.GetPrivateKeyFromWIF(wif);
             byte[] pubkey = Helper_NEO.GetPublicKey_FromPrivateKey(prikey);
             var address = Helper_NEO.GetAddress_FromPublicKey(pubkey);
@@ -240,6 +228,16 @@ namespace MultiTransfer
         private void BtnClear_Click(object sender, EventArgs e)
         {
             this.rtbxResult.Clear();
+        }
+
+        private void CbxRpc_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            cbxHash.SelectedIndex = cbxRpc.SelectedIndex;
+        }
+
+        private void CbxHash_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            cbxHash.SelectedIndex = cbxRpc.SelectedIndex;
         }
     }
 }
