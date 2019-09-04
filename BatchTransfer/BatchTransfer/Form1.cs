@@ -114,7 +114,7 @@ namespace MultiTransfer
                 if (str.Length < 1)
                     continue;
 
-                ScriptBuilder sb = new ScriptBuilder();
+                //ScriptBuilder sb = new ScriptBuilder();
                 JArray array = new JArray();
 
                 int index = str.IndexOf(";");
@@ -126,9 +126,9 @@ namespace MultiTransfer
                 array.Add("(addr)" + address); //from
                 array.Add("(addr)" + addr); //to
                 array.Add("(int)" + amount); //value
-                sb.EmitParamJson(array);
-                sb.EmitPushString("transfer");
-                sb.EmitAppCall(new Hash160(cbxHash.Text));//合约脚本hash
+                //sb.EmitParamJson(array);
+                //sb.EmitPushString("transfer");
+                //sb.EmitAppCall(new Hash160(cbxHash.Text));//合约脚本hash
 
                 string result = Helper.SendTransWithoutUtxo(prikey, cbxRpc.Text, cbxHash.Text, "transfer", array);
 
